@@ -58,7 +58,7 @@ import org.json.JSONObject
 
 data class Release(val version: String, val pageUrl: String, val apkUrl: String, val notes: String = "")
 
-private const val LATEST = "https://api.github.com/repos/Ufoex/Materialbook/releases/latest"
+private const val LATEST = "https://api.github.com/repos/Ufoex/Faceboost/releases/latest"
 
 /** Newest GitHub release if it is newer than this build, else null. Null also on any failure. */
 suspend fun checkForUpdate(): Release? = runCatching {

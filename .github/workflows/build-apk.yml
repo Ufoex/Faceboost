@@ -41,7 +41,7 @@ jobs:
             --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
             --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
             --key-pass pass:${{ secrets.KEY_PASSWORD }} \
-            --out Materialbook-1.1.${{ github.run_number }}.apk \
+            --out Faceboost-1.1.${{ github.run_number }}.apk \
             app/build/outputs/apk/release/app-release.apk
           rm -f "$RUNNER_TEMP/keystore.jks"
 
@@ -49,6 +49,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create v1.1.${{ github.run_number }} Materialbook-1.1.${{ github.run_number }}.apk \
-            --title "Materialbook v1.1.${{ github.run_number }}" \
+          gh release create v1.1.${{ github.run_number }} Faceboost-1.1.${{ github.run_number }}.apk \
+            --title "Faceboost v1.1.${{ github.run_number }}" \
             --generate-notes --target "${{ github.sha }}"

@@ -23,6 +23,7 @@
 * Fix: Facebook resets the page to its Home after the app has been in the background for a few minutes (its connection is lost when Android freezes the page); the app now takes you back to the page you were on.
 * Tweak: Messenger settings: "Messages in desktop mode" became **Use an external Messenger app** (off by default = Messages opens inside the app). Turning it on shows a Messenger app row with a list of the installed compatible apps (instead of typing a package name).
 * Tweak: Sharing to the app no longer asks where to send: it goes to the in-app Messages (you pick the chat) or, with the external option on, straight to the chosen Messenger app. The "Post on Facebook" choice was removed.
+* Tweak: The repository is now Ufoex/Faceboost; the app checks it for updates and scripts, and the APK of each release is named Faceboost-<version>.apk. Signing keys (*.jks) are git-ignored.
 * Tweak: New applicationId `com.ufoex.materialbook`; runtime scripts are fetched from this repo.
 
 ---

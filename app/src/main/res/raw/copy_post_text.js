@@ -215,7 +215,7 @@
     if (!a) return;
     var href = a.getAttribute("href") || "";
     if (/react|like|emoji|reel|feedback/i.test(href)) {
-      console.warn("[Materialbook] Reaction-related navigation:", href, a);
+      console.warn("[Faceboost] Reaction-related navigation:", href, a);
     }
   }, true);
 })();

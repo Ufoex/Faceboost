@@ -11,7 +11,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withTimeoutOrNull
 
 
-const val SCRIPT_SRC = "https://raw.githubusercontent.com/Ufoex/Materialbook/refs/heads/main/app/src/main/res/raw/"
+const val SCRIPT_SRC = "https://raw.githubusercontent.com/Ufoex/Faceboost/refs/heads/main/app/src/main/res/raw/"
 
 // Fetches were previously unbounded (no timeout at all - success or
 // exception, whichever came first, however long that took) and strictly
