@@ -59,7 +59,8 @@ On by default:
 *  Long-press the app icon for shortcuts to Messages, Search, Marketplace, Reels and Notifications
 *  Opens Facebook links from other apps, including `fb.me`, `fb.com` and the Facebook app's `fb://` links
 *  Checks GitHub for a new version when the app opens (Settings → *Check for updates on start*); *Check for updates now* does it on demand, and the dialog downloads the new APK
-*  Reel controls: time, seek bar, fullscreen and volume on paused reels, a button to hide the reel icons and one to switch between filling the screen and showing the whole video
+*  Reel controls: time, seek bar, fullscreen and volume on paused reels, a button to hide the reel icons (fading out) and, optionally, resizing so the whole video shows without cropping
+*  Reel gestures (Settings, off by default): hold a reel to play it faster, double tap the left or right side to skip 5-30 seconds
 
 Off by default (opt-in):
 *  Uses Material You colors instead of Facebook's blues (Facebook's own blue is the default theme)

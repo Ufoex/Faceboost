@@ -5,6 +5,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
@@ -29,6 +31,10 @@ class SettingsDataStore(private val context: Context) {
         val AUTO_UPDATE_CHECK = booleanPreferencesKey("auto_update_check")
         val NOTIFICATIONS_ASKED = booleanPreferencesKey("notifications_asked")
         val REEL_CONTROLS = booleanPreferencesKey("reel_controls")
+        val REEL_GESTURES = booleanPreferencesKey("reel_gestures")
+        val REEL_FIT = booleanPreferencesKey("reel_fit")
+        val REEL_HOLD_RATE = floatPreferencesKey("reel_hold_rate")
+        val REEL_SKIP_SECONDS = intPreferencesKey("reel_skip_seconds")
         val COLLAPSING_TOOLBAR = booleanPreferencesKey("collapsing_toolbar")
         val PINCH_TO_ZOOM = booleanPreferencesKey("pinch_to_zoom")
         val MATERIAL_YOU = booleanPreferencesKey("material_you")
@@ -139,6 +145,15 @@ class SettingsDataStore(private val context: Context) {
     suspend fun setReelControls(reelControls: Boolean) {
         context.dataStore.edit { it[REEL_CONTROLS] = reelControls }
     }
+
+    val reelGestures = context.dataStore.data.map { it[REEL_GESTURES] ?: false }
+    suspend fun setReelGestures(v: Boolean) { context.dataStore.edit { it[REEL_GESTURES] = v } }
+    val reelFit = context.dataStore.data.map { it[REEL_FIT] ?: false }
+    suspend fun setReelFit(v: Boolean) { context.dataStore.edit { it[REEL_FIT] = v } }
+    val reelHoldRate = context.dataStore.data.map { it[REEL_HOLD_RATE] ?: 2f }
+    suspend fun setReelHoldRate(v: Float) { context.dataStore.edit { it[REEL_HOLD_RATE] = v } }
+    val reelSkipSeconds = context.dataStore.data.map { it[REEL_SKIP_SECONDS] ?: 10 }
+    suspend fun setReelSkipSeconds(v: Int) { context.dataStore.edit { it[REEL_SKIP_SECONDS] = v } }
 
     val collapsingToolbar = context.dataStore.data.map { it[COLLAPSING_TOOLBAR] ?: true }
     suspend fun setCollapsingToolbar(collapsingToolbar: Boolean) {

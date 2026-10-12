@@ -106,4 +106,11 @@
     <string name="share_title">Wyślij przez…</string>\n    <string name="share_in_messages">Wiadomości (w tej aplikacji)</string>\n    <string name="share_in_messenger_app">Aplikacja Messenger</string>\n    <string name="share_on_facebook">Opublikuj na Facebooku</string>\n    <string name="share_cancel">Anuluj</string>\n    <string name="share_pick_chat">Wybierz czat, aby to wysłać</string>\n    <plurals name="share_files">\n        <item quantity="one">%d plik</item>\n        <item quantity="other">%d pliki</item>\n    </plurals>\n    <string name="use_external_messenger_title">Użyj zewnętrznej aplikacji Messenger</string>
     <string name="use_external_messenger_desc">Wyłączone: Wiadomości otwierają się w tej aplikacji. Włączone: Wiadomości i to, co tu udostępnisz, trafiają do wybranej aplikacji Messenger</string>
     <string name="messenger_none_installed">Brak zainstalowanej zgodnej aplikacji Messenger</string>
+    <string name="reel_gestures_title">Gesty w rolkach</string>
+    <string name="reel_gestures_desc">Przytrzymaj wideo, aby przyspieszyć (zamiast kopiowania linku), dotknij dwukrotnie lewej lub prawej strony, aby przewinąć</string>
+    <string name="reel_hold_speed_title">Prędkość przy przytrzymaniu</string>
+    <string name="reel_skip_title">Przewijanie po dwukrotnym dotknięciu</string>
+    <string name="reel_value_tap_to_change">%1$s · dotknij, aby zmienić</string>
+    <string name="reel_fit_title">Zmiana rozmiaru wideo</string>
+    <string name="reel_fit_desc">Dopasowuje całe wideo do ekranu bez przycinania; przycisk w przeglądarce wyłącza to tymczasowo</string>
 </resources>

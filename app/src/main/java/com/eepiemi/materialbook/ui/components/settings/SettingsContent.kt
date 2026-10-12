@@ -29,6 +29,8 @@ import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.SkipNext
+import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.FastForward
 import androidx.compose.material.icons.outlined.Headset
 import androidx.compose.material.icons.outlined.SwipeVertical
 import androidx.compose.material.icons.outlined.Palette
@@ -113,6 +115,10 @@ fun SettingsContent(
     val stickyNavbar = viewModel.stickyNavbar.collectAsState()
     val collapsingToolbar = viewModel.collapsingToolbar.collectAsState()
     val reelControls = viewModel.reelControls.collectAsState()
+    val reelGestures = viewModel.reelGestures.collectAsState()
+    val reelFit = viewModel.reelFit.collectAsState()
+    val reelHoldRate = viewModel.reelHoldRate.collectAsState()
+    val reelSkipSeconds = viewModel.reelSkipSeconds.collectAsState()
     val autoUpdateCheck = viewModel.autoUpdateCheck.collectAsState()
     // Re-read when coming back from the system settings screen.
     var notificationsOn by remember { mutableStateOf(NotificationManagerCompat.from(context).areNotificationsEnabled()) }
@@ -287,7 +293,7 @@ fun SettingsContent(
         )
 
         SettingsGroup(
-            items = listOf(
+            items = listOfNotNull(
                 SettingsItem(
                     icon = Icons.Outlined.Pinch,
                     title = stringResource(R.string.pinch_to_zoom_title),
@@ -346,6 +352,38 @@ fun SettingsContent(
                     isActive = reelControls.value,
                     onClick = { viewModel.setReelControls(!reelControls.value) }
                 ),
+                if (reelControls.value) SettingsItem(
+                    icon = Icons.Outlined.AspectRatio,
+                    title = stringResource(R.string.reel_fit_title),
+                    supportingText = stringResource(R.string.reel_fit_desc),
+                    isActive = reelFit.value,
+                    onClick = { viewModel.setReelFit(!reelFit.value) }
+                ) else null,
+                if (reelControls.value) SettingsItem(
+                    icon = Icons.Outlined.Speed,
+                    title = stringResource(R.string.reel_gestures_title),
+                    supportingText = stringResource(R.string.reel_gestures_desc),
+                    isActive = reelGestures.value,
+                    onClick = { viewModel.setReelGestures(!reelGestures.value) }
+                ) else null,
+                if (reelControls.value && reelGestures.value) SettingsItem(
+                    icon = Icons.Outlined.Speed,
+                    title = stringResource(R.string.reel_hold_speed_title),
+                    supportingText = stringResource(R.string.reel_value_tap_to_change, "${reelHoldRate.value}x"),
+                    onClick = {
+                        val l = listOf(1.5f, 2f, 2.5f, 3f, 4f)
+                        viewModel.setReelHoldRate(l[(l.indexOf(reelHoldRate.value) + 1) % l.size])
+                    }
+                ) else null,
+                if (reelControls.value && reelGestures.value) SettingsItem(
+                    icon = Icons.Outlined.FastForward,
+                    title = stringResource(R.string.reel_skip_title),
+                    supportingText = stringResource(R.string.reel_value_tap_to_change, "${reelSkipSeconds.value} s"),
+                    onClick = {
+                        val l = listOf(5, 10, 15, 30)
+                        viewModel.setReelSkipSeconds(l[(l.indexOf(reelSkipSeconds.value) + 1) % l.size])
+                    }
+                ) else null,
                 SettingsItem(
                     icon = Icons.Outlined.SwipeVertical,
                     title = stringResource(R.string.collapsing_toolbar_title),

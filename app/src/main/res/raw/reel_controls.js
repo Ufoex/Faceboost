@@ -48,8 +48,11 @@
         seek.addEventListener('change', () => { dragging = false; });
         fsBtn.addEventListener('click', () => {
             if (!vid) return;
-            const req = vid.requestFullscreen || vid.webkitRequestFullscreen;
-            if (req) req.call(vid);
+            // The video's container, like Facebook's own fullscreen button: fullscreen on the <video> itself
+            // makes Chromium lock the orientation and Facebook then leaves fullscreen right away.
+            const el = vid.parentElement || vid;
+            const req = el.requestFullscreen || el.webkitRequestFullscreen;
+            if (req) req.call(el);
         });
         muteBtn.addEventListener('click', () => {
             if (!vid) return;
@@ -84,18 +87,53 @@
     const FIT_FILL = 'M19 12h-2v3h-3v2h5v-5zM7 9h3V7H5v5h2V9zm14-6H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16.01H3V4.99h18v14.02z';
     const HEADSET = 'M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z';
     const SKIP_NEXT = 'M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z';
-    let hideBtn, fitBtn, autoBtn, audioBtn, hideOn = false, fit = null, hasMarks = false;
+    // Resize option from the settings (prepended by the app): off = no fit button and no resizing.
+    const FIT = !!(window.__mbReel && window.__mbReel.fit);
+    let hideBtn, fitBtn, autoBtn, audioBtn, hideOn = false, fit = null, hasMarks = false, offAt = 0, lastV = null, lastMark = 0;
+
+    // Centre-screen feedback: the icon of the option that was just toggled, fading out in ~1 s.
+    // A slash over it means "off".
+    let flashEl;
+    const flash = (d, off) => {
+        if (!flashEl) {
+            flashEl = document.createElement('div');
+            flashEl.id = 'mb-reel-flash';
+            flashEl.style.cssText = 'position:fixed;left:50%;top:45%;width:96px;height:96px;margin:-48px 0 0 -48px;' +
+                'border-radius:50%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;' +
+                'z-index:2147483000;pointer-events:none;opacity:0';
+            document.body.appendChild(flashEl);
+        }
+        flashEl.innerHTML = '<svg width="56" height="56" viewBox="0 0 24 24" fill="#fff"><path d="' + d + '"/>' +
+            (off ? '<path d="M3 3.5L20.5 21" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>' : '') + '</svg>';
+        if (flashEl._a) flashEl._a.cancel();
+        // pop in, hold, fade out
+        flashEl._a = flashEl.animate([
+            { opacity: 0, transform: 'scale(.6)', offset: 0 },
+            { opacity: 1, transform: 'scale(1.08)', offset: .15 },
+            { opacity: 1, transform: 'scale(1)', offset: .25 },
+            { opacity: 1, transform: 'scale(1)', offset: .6 },
+            { opacity: 0, transform: 'scale(1.25)', offset: 1 }
+        ], { duration: 1100, easing: 'ease-out' });
+    };
 
     const style = document.createElement('style');
     style.textContent = 'html.mb-hide-reel-ui [data-mb-hid]{opacity:0 !important;pointer-events:none !important}' +
         'html.mb-hide-reel-ui [data-mb-fade]{opacity:0 !important}' +
-        // top tab bar leaves the layout; the reel list is then scaled to fill the freed strip
-        'html.mb-hide-reel-ui [data-mb-gone]{display:none !important}' +
-        'html.mb-hide-reel-ui [data-mb-scale]{transform:scale(var(--mb-k,1)) !important;transform-origin:50% 0 !important}' +
+        // fade / slide when hiding and showing; the marks stay ~0.45 s after showing so the way back animates too
+        '[data-mb-hid],[data-mb-fade]{transition:opacity .3s ease}' +
+        '[data-mb-scale]{transition:transform .3s ease}' +
+        'html.mb-hide-reel-ui [data-mb-scale]{transform:translateY(var(--mb-y,0px)) scale(var(--mb-k,1)) !important;transform-origin:50% 0 !important}' +
         // fit button: show the whole video (contain) or fill the screen (cover)
         'html.mb-fit-contain video{object-fit:contain !important}' +
         'html.mb-fit-cover video{object-fit:cover !important}';
     document.head.appendChild(style);
+    // Button feedback: shrink while pressed, small bounce on tap.
+    style.textContent += '#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio{transition:transform .12s ease-out,background .2s}' +
+        '#mb-reel-hide:active,#mb-reel-fit:active,#mb-reel-auto:active,#mb-reel-audio:active{transform:scale(.82);background:rgba(255,255,255,.28) !important}';
+    document.addEventListener('click', (e) => {
+        const b = e.target.closest && e.target.closest('#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio');
+        if (b) b.animate([{ transform: 'scale(.8)' }, { transform: 'scale(1.18)' }, { transform: 'scale(1)' }], { duration: 260, easing: 'ease-out' });
+    }, true);
 
     const lca = (els) => {
         let a = els[0];
@@ -112,13 +150,28 @@
     const markIcons = (v) => {
         // Nothing marked and hide mode off: skip the DOM query (this runs every 250 ms).
         if (!hideOn && !hasMarks) return;
+        if (!hideOn) {
+            if (!offAt) offAt = Date.now();
+            if (Date.now() - offAt < 450) return;
+        }
+        offAt = 0;
         hasMarks = hideOn;
-        document.querySelectorAll('[data-mb-hid],[data-mb-fade],[data-mb-gone],[data-mb-scale]').forEach(e => {
+        if (hideOn) {
+            // Already marked for this reel: re-marking every tick re-runs layout and restarts the transitions.
+            if (v === lastV && Date.now() - lastMark < 2000) return;
+            lastV = v; lastMark = Date.now();
+        } else lastV = null;
+        // Re-marking keeps the scale; only turning hide off removes it.
+        // While hidden, the old marks stay in place during the pass and only stale ones are removed at
+        // the end: clearing first lets a style recalc (elementFromPoint) show the UI for a moment.
+        const stale = hideOn ? [...document.querySelectorAll('[data-mb-hid],[data-mb-fade]')] : [];
+        const cur = new Set();
+        if (!hideOn) document.querySelectorAll('[data-mb-hid],[data-mb-fade],[data-mb-scale]').forEach(e => {
             e.removeAttribute('data-mb-hid');
             e.removeAttribute('data-mb-fade');
-            e.removeAttribute('data-mb-gone');
             e.removeAttribute('data-mb-scale');
             e.style.removeProperty('--mb-k');
+            e.style.removeProperty('--mb-y');
         });
         if (!hideOn) return;
         const cont = v.closest('.vertically-snappable') || v.parentElement;
@@ -129,7 +182,7 @@
         const inSeek = (e) => !!seekbox && seekbox.contains(e);
         const keep = [v, seekbox].filter(Boolean);
         const holdsKept = (e) => keep.some(k => e.contains(k));
-        const hid = (e) => { if (e && !holdsKept(e) && !inSeek(e)) e.setAttribute('data-mb-hid', ''); };
+        const hid = (e) => { if (e && !holdsKept(e) && !inSeek(e)) { e.removeAttribute('data-mb-fade'); e.setAttribute('data-mb-hid', ''); cur.add(e); } };
 
         // element under the screen centre: the tap-to-pause surface lives in its ancestors
         const center = document.elementFromPoint(iw / 2, ih / 2);
@@ -139,7 +192,7 @@
             for (const c of node.children) {
                 if (inSeek(c)) continue;
                 if (holdsKept(c)) walk(c);
-                else if (center && c.contains(center)) c.setAttribute('data-mb-fade', '');
+                else if (center && c.contains(center)) { c.removeAttribute('data-mb-hid'); c.setAttribute('data-mb-fade', ''); cur.add(c); }
                 else hid(c);
             }
         };
@@ -160,7 +213,7 @@
         // header (back / search / profile) and the top tab bar
         const top = [...document.querySelectorAll('[aria-label]')]
             .filter(e => e.tagName !== 'INPUT' && e.tagName !== 'BUTTON' && e.getAttribute('role') !== 'tab' &&
-                !e.closest('#mb-reel-hide, #mb-reel-controls, [role="tablist"]'))
+                !e.closest('#mb-reel-hide, #mb-reel-controls, #mb-reel-badge, [role="tablist"]'))
             .filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.top < 0.2 * ih; });
         if (top.length) {
             const row = lca(top);
@@ -169,28 +222,30 @@
         }
         // header title text ("Reels") has no label: hide text nodes in the top strip
         document.querySelectorAll('div, span').forEach(e => {
-            if (e.closest('#mb-reel-hide, #mb-reel-controls, [role="tablist"]')) return;
+            if (e.closest('#mb-reel-hide, #mb-reel-controls, #mb-reel-badge, [role="tablist"]')) return;
             if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) return;
             const b = e.getBoundingClientRect();
             if (b.width > 0 && b.top < 0.2 * ih) hid(e);
         });
-        // top tab bar: remove it from the layout, then stretch the reels over its space
-        let freed = false;
+        // top tab bar: hidden like the rest, and the reel list slides up over its strip and is
+        // scaled to fill the screen. Only a transform: the tab bar keeps its layout, because
+        // Facebook re-snaps the reels when a container resizes and never restores them properly.
         document.querySelectorAll('[role="tablist"]').forEach(t => {
             hid(t);
             const wrap = t.parentElement;
-            if (wrap && !holdsKept(wrap)) { wrap.setAttribute('data-mb-gone', ''); freed = true; }
-        });
-        const scroller = v.closest('.vscroller');
-        if (freed && scroller && scroller.offsetHeight > 0) {
+            const scroller = v.closest('.vscroller');
+            if (!wrap || holdsKept(wrap) || !scroller || scroller.hasAttribute('data-mb-scale') || scroller.offsetHeight <= 0) return;
+            const top = scroller.getBoundingClientRect().top;
             const k = ih / scroller.offsetHeight;
-            if (k > 1.01 && k < 1.3) {
+            if (top > 0 && k > 1.01 && k < 1.3) {
                 scroller.setAttribute('data-mb-scale', '');
+                scroller.style.setProperty('--mb-y', -top + 'px');
                 scroller.style.setProperty('--mb-k', k);
             }
-        }
+        });
         // our own buttons
         document.querySelectorAll('button[aria-label="Download content"], button[aria-label="Copy image to clipboard"]').forEach(hid);
+        stale.forEach(e => { if (!cur.has(e)) { e.removeAttribute('data-mb-hid'); e.removeAttribute('data-mb-fade'); } });
     };
 
     const setFit = (mode) => {
@@ -219,6 +274,7 @@
             } else {
                 setFit(fit === 'contain' ? 'cover' : 'contain');
             }
+            flash(fit === 'contain' ? FIT_FULL : FIT_FILL, false);
         });
         document.body.appendChild(fitBtn);
     };
@@ -234,7 +290,7 @@
             .forEach(t => autoBtn.addEventListener(t, e => e.stopPropagation()));
         autoBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (window.__mbAutoScroll) window.__mbAutoScroll.enabled = !window.__mbAutoScroll.enabled;
+            if (window.__mbAutoScroll) { window.__mbAutoScroll.enabled = !window.__mbAutoScroll.enabled; flash(SKIP_NEXT, !window.__mbAutoScroll.enabled); }
         });
         document.body.appendChild(autoBtn);
     };
@@ -251,7 +307,7 @@
             .forEach(t => audioBtn.addEventListener(t, e => e.stopPropagation()));
         audioBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (window.__mbBgAudio) window.__mbBgAudio.enabled = !window.__mbBgAudio.enabled;
+            if (window.__mbBgAudio) { window.__mbBgAudio.enabled = !window.__mbBgAudio.enabled; flash(HEADSET, !window.__mbBgAudio.enabled); }
         });
         document.body.appendChild(audioBtn);
     };
@@ -270,6 +326,9 @@
             document.documentElement.classList.toggle('mb-hide-reel-ui', hideOn);
             hideBtn.innerHTML = svg(hideOn ? EYE : EYE_OFF);
             hideBtn.style.opacity = hideOn ? '0.35' : '1';
+            flash(hideOn ? EYE_OFF : EYE, false);
+            const av = activeVideo();
+            if (av) markIcons(av);
         });
         document.body.appendChild(hideBtn);
     };
@@ -300,6 +359,19 @@
         }
     }).observe(document.body, { attributes: true, attributeOldValue: true, attributeFilter: ['class'], subtree: true });
 
+    // New reel / re-rendered UI while the icons are hidden: mark it right away instead of waiting
+    // for the next 250 ms tick, or its interface shows for a moment. Throttled, element nodes only.
+    let remarkT = 0, lastRemark = 0;
+    new MutationObserver((muts) => {
+        if (!hideOn || remarkT) return;
+        if (!muts.some(m => [...m.addedNodes].some(n => n.nodeType === 1 && !(n.id && n.id.indexOf('mb-reel') === 0)))) return;
+        remarkT = setTimeout(() => {
+            remarkT = 0; lastRemark = Date.now();
+            const v = activeVideo();
+            if (v && hideOn) { lastMark = 0; markIcons(v); }
+        }, Math.max(0, 120 - (Date.now() - lastRemark)));
+    }).observe(document.body, { childList: true, subtree: true });
+
     setInterval(() => {
         const path = location.pathname;
         const inReels = path.indexOf('/reel/') === 0 || path.indexOf('/videos/') !== -1 && !!document.querySelector('.vertically-snappable video');
@@ -315,21 +387,25 @@
             hideBtn.style.top = ((r && r.width ? r.top : 70) + 48) + 'px';
             hideBtn.style.left = (r && r.width ? r.left : 345) + 'px';
             hideBtn.style.display = 'flex';
-            if (!fitBtn || !fitBtn.isConnected) buildFitBtn();
-            fitBtn.style.top = (parseFloat(hideBtn.style.top) + 48) + 'px';
-            fitBtn.style.left = hideBtn.style.left;
-            fitBtn.style.display = 'flex';
-            fitBtn.style.opacity = hideOn ? '0.35' : '1';
+            let slot = 1; // buttons stack under the hide button, skipping the ones that are off
+            if (FIT) {
+                if (!fitBtn || !fitBtn.isConnected) buildFitBtn();
+                fitBtn.style.top = (parseFloat(hideBtn.style.top) + 48 * slot++) + 'px';
+                fitBtn.style.left = hideBtn.style.left;
+                fitBtn.style.display = 'flex';
+                fitBtn.style.opacity = hideOn ? '0.35' : '1';
+                if (fit === null) setFit('contain'); // default: whole video, no crop
+            } else if (fitBtn) fitBtn.style.display = 'none';
             if (window.__mbAutoScroll) {
                 if (!autoBtn || !autoBtn.isConnected) buildAutoBtn();
-                autoBtn.style.top = (parseFloat(fitBtn.style.top) + 48) + 'px';
+                autoBtn.style.top = (parseFloat(hideBtn.style.top) + 48 * slot++) + 'px';
                 autoBtn.style.left = hideBtn.style.left;
                 autoBtn.style.display = 'flex';
                 autoBtn.style.opacity = hideOn ? '0.35' : (window.__mbAutoScroll.enabled ? '1' : '0.45');
             } else if (autoBtn) autoBtn.style.display = 'none';
             if (window.__mbBgAudio) {
                 if (!audioBtn || !audioBtn.isConnected) buildAudioBtn();
-                audioBtn.style.top = (parseFloat(hideBtn.style.top) + 48 * (window.__mbAutoScroll ? 3 : 2)) + 'px';
+                audioBtn.style.top = (parseFloat(hideBtn.style.top) + 48 * slot++) + 'px';
                 audioBtn.style.left = hideBtn.style.left;
                 audioBtn.style.display = 'flex';
                 audioBtn.style.opacity = hideOn ? '0.35' : (window.__mbBgAudio.enabled ? '1' : '0.45');
@@ -345,6 +421,7 @@
                 hideOn = false;
                 document.documentElement.classList.remove('mb-hide-reel-ui');
                 if (hideBtn) { hideBtn.innerHTML = svg(EYE_OFF); hideBtn.style.opacity = '1'; }
+                offAt = 1; // left the reels: clear the marks right away
                 markIcons(document.body);
             }
         }

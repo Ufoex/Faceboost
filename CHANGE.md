@@ -24,6 +24,12 @@
 * Tweak: Messenger settings: "Messages in desktop mode" became **Use an external Messenger app** (off by default = Messages opens inside the app). Turning it on shows a Messenger app row with a list of the installed compatible apps (instead of typing a package name).
 * Tweak: Sharing to the app no longer asks where to send: it goes to the in-app Messages (you pick the chat) or, with the external option on, straight to the chosen Messenger app. The "Post on Facebook" choice was removed.
 * Tweak: The repository is now Ufoex/Faceboost; the app checks it for updates and scripts, and the APK of each release is named Faceboost-<version>.apk. Signing keys (*.jks) are git-ignored.
+* Feature: Reel gestures (setting, under Reel controls): hold the video to play it faster (1.5x to 4x) instead of Facebook's copy-link, and double tap the left or right side to go back or forward 5, 10, 15 or 30 seconds, with a small overlay showing it.
+* Feature: Resize videos (setting, under Reel controls, off by default): shows the whole video without cropping, with a button in the reel viewer to switch it off temporarily.
+* Feature: The reel viewer buttons show the option you just toggled in the middle of the screen (hide icons, fit, auto-scroll, audio) and bounce when pressed.
+* Tweak: Hiding the reel icons fades them out and slides the reels over the top bar instead of cutting; showing them again fades them back without moving the layout.
+* Fix: The fullscreen button of the extra seek bar now lets you rotate the phone (it asks for fullscreen on the video's container like Facebook's own button).
+* Fix: The reel interface no longer flashes back while the icons are hidden.
 * Tweak: New applicationId `com.ufoex.materialbook`; runtime scripts are fetched from this repo.
 
 ---

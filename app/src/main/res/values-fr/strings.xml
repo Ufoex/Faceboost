@@ -104,4 +104,11 @@
     <string name="share_title">Envoyer avec…</string>\n    <string name="share_in_messages">Messages (dans cette appli)</string>\n    <string name="share_in_messenger_app">Appli Messenger</string>\n    <string name="share_on_facebook">Publier sur Facebook</string>\n    <string name="share_cancel">Annuler</string>\n    <string name="share_pick_chat">Choisissez une discussion pour l\'envoyer</string>\n    <plurals name="share_files">\n        <item quantity="one">%d fichier</item>\n        <item quantity="other">%d fichiers</item>\n    </plurals>\n    <string name="use_external_messenger_title">Utiliser une appli Messenger externe</string>
     <string name="use_external_messenger_desc">Désactivé : Messages s\'ouvre dans cette appli. Activé : Messages et ce que vous partagez ici vont vers l\'appli Messenger choisie</string>
     <string name="messenger_none_installed">Aucune appli Messenger compatible n\'est installée</string>
+    <string name="reel_gestures_title">Gestes des reels</string>
+    <string name="reel_gestures_desc">Maintenez la vidéo pour accélérer la lecture (remplace la copie du lien), touchez deux fois à gauche ou à droite pour avancer ou reculer</string>
+    <string name="reel_hold_speed_title">Vitesse en maintenant</string>
+    <string name="reel_skip_title">Saut au double appui</string>
+    <string name="reel_value_tap_to_change">%1$s · touchez pour changer</string>
+    <string name="reel_fit_title">Redimensionner les vidéos</string>
+    <string name="reel_fit_desc">Affiche toute la vidéo sans recadrage, avec un bouton dans le lecteur pour la désactiver temporairement</string>
 </resources>

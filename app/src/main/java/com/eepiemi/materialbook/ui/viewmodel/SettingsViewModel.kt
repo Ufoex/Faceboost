@@ -30,6 +30,10 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.AUTO_SCRO
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.COLLAPSING_TOOLBAR
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REEL_BACKGROUND_AUDIO
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REEL_CONTROLS
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REEL_GESTURES
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REEL_FIT
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REEL_HOLD_RATE
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REEL_SKIP_SECONDS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.AUTO_UPDATE_CHECK
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.STICKY_NAVBAR
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.MESSENGER_PACKAGE
@@ -111,6 +115,26 @@ class SettingsViewModel(
     val reelControls = dataStore.reelControls.stateIn(
         scope = viewModelScope,
         initialValue = initialPrefs[REEL_CONTROLS] ?: true,
+        started = SharingStarted.WhileSubscribed()
+    )
+    val reelGestures = dataStore.reelGestures.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[REEL_GESTURES] ?: false,
+        started = SharingStarted.WhileSubscribed()
+    )
+    val reelFit = dataStore.reelFit.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[REEL_FIT] ?: false,
+        started = SharingStarted.WhileSubscribed()
+    )
+    val reelHoldRate = dataStore.reelHoldRate.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[REEL_HOLD_RATE] ?: 2f,
+        started = SharingStarted.WhileSubscribed()
+    )
+    val reelSkipSeconds = dataStore.reelSkipSeconds.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[REEL_SKIP_SECONDS] ?: 10,
         started = SharingStarted.WhileSubscribed()
     )
     val collapsingToolbar = dataStore.collapsingToolbar.stateIn(
@@ -257,6 +281,11 @@ class SettingsViewModel(
             dataStore.setReelControls(reelControls)
         }
     }
+
+    fun setReelGestures(v: Boolean) { viewModelScope.launch { dataStore.setReelGestures(v) } }
+    fun setReelFit(v: Boolean) { viewModelScope.launch { dataStore.setReelFit(v) } }
+    fun setReelHoldRate(v: Float) { viewModelScope.launch { dataStore.setReelHoldRate(v) } }
+    fun setReelSkipSeconds(v: Int) { viewModelScope.launch { dataStore.setReelSkipSeconds(v) } }
 
     fun setCollapsingToolbar(collapsingToolbar: Boolean) {
         viewModelScope.launch {

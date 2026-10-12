@@ -105,4 +105,11 @@
     <string name="share_title">傳送方式…</string>\n    <string name="share_in_messages">訊息（在此應用程式）</string>\n    <string name="share_in_messenger_app">Messenger 應用程式</string>\n    <string name="share_on_facebook">發佈到 Facebook</string>\n    <string name="share_cancel">取消</string>\n    <string name="share_pick_chat">選擇要傳送的聊天</string>\n    <plurals name="share_files">\n        <item quantity="one">%d 個檔案</item>\n        <item quantity="other">%d 個檔案</item>\n    </plurals>\n    <string name="use_external_messenger_title">使用外部 Messenger 應用程式</string>
     <string name="use_external_messenger_desc">關閉：訊息在此應用程式內開啟。開啟：訊息和在此分享的內容會交給你選擇的 Messenger 應用程式</string>
     <string name="messenger_none_installed">未安裝相容的 Messenger 應用程式</string>
+    <string name="reel_gestures_title">Reels 手勢</string>
+    <string name="reel_gestures_desc">按住影片可加速播放（取代複製連結），在左側或右側連按兩下可快轉或倒轉</string>
+    <string name="reel_hold_speed_title">按住時的速度</string>
+    <string name="reel_skip_title">連按兩下的跳轉秒數</string>
+    <string name="reel_value_tap_to_change">%1$s · 點一下切換</string>
+    <string name="reel_fit_title">調整影片大小</string>
+    <string name="reel_fit_desc">完整顯示影片而不裁切，並在播放器中提供按鈕可暫時關閉</string>
 </resources>

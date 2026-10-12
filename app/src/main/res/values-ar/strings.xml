@@ -104,4 +104,11 @@
     <string name="share_title">إرسال عبر…</string>\n    <string name="share_in_messages">الرسائل (في هذا التطبيق)</string>\n    <string name="share_in_messenger_app">تطبيق ماسنجر</string>\n    <string name="share_on_facebook">النشر على فيسبوك</string>\n    <string name="share_cancel">إلغاء</string>\n    <string name="share_pick_chat">اختر محادثة لإرسال هذا</string>\n    <plurals name="share_files">\n        <item quantity="one">%d ملف</item>\n        <item quantity="other">%d ملفات</item>\n    </plurals>\n    <string name="use_external_messenger_title">استخدام تطبيق ماسنجر خارجي</string>
     <string name="use_external_messenger_desc">متوقف: تُفتح الرسائل داخل هذا التطبيق. مفعّل: تذهب الرسائل وما تشاركه هنا إلى تطبيق ماسنجر الذي تختاره</string>
     <string name="messenger_none_installed">لا يوجد تطبيق ماسنجر متوافق مثبّت</string>
+    <string name="reel_gestures_title">إيماءات الريلز</string>
+    <string name="reel_gestures_desc">اضغط مطولاً على الفيديو لتسريعه (بدل نسخ الرابط)، وانقر مرتين على اليسار أو اليمين للتقديم أو الإرجاع</string>
+    <string name="reel_hold_speed_title">سرعة الضغط المطول</string>
+    <string name="reel_skip_title">القفز عند النقر المزدوج</string>
+    <string name="reel_value_tap_to_change">%1$s · انقر للتغيير</string>
+    <string name="reel_fit_title">تغيير حجم الفيديو</string>
+    <string name="reel_fit_desc">يعرض الفيديو كاملاً دون قص، مع زر في العارض لإيقافه مؤقتاً</string>
 </resources>

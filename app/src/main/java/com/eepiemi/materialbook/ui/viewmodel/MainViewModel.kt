@@ -47,6 +47,7 @@ class MainViewModel(
             Script(true, R.raw.copy_post_text, "copy_post_text.js"),
             Script(settings.stickyNavbar.value, R.raw.sticky_navbar, "sticky_navbar.js"),
             Script(settings.reelControls.value, R.raw.reel_controls, "reel_controls.js"),
+            Script(settings.reelControls.value && settings.reelGestures.value, R.raw.reel_gestures, "reel_gestures.js"),
             Script(settings.reelBackgroundAudio.value, R.raw.reel_bg_audio, "reel_bg_audio.js"),
             Script(settings.autoScrollReels.value, R.raw.autoscroll_reels, "autoscroll_reels.js"),
             // Needs the bars pinned by the sticky navbar script.
@@ -70,7 +71,8 @@ class MainViewModel(
         )
 
         viewModelScope.launch {
-            _scripts.value =
+            val cfg = "window.__mbReel={rate:${settings.reelHoldRate.value},skip:${settings.reelSkipSeconds.value},fit:${settings.reelFit.value && settings.reelControls.value}};\n"
+            _scripts.value = cfg +
                 fetchScripts(
                     scripts = scripts,
                     fallbackContent = { resId ->
