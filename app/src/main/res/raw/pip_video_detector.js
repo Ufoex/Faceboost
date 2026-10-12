@@ -71,7 +71,10 @@
       lastWidth = videoWidth;
       lastHeight = videoHeight;
 
-      if (window.PipBridge && window.PipBridge.setVideoState) {
+      // FaceboostPage: the app's Facebook-only message listener; PipBridge: older WebViews.
+      if (window.FaceboostPage) {
+        window.FaceboostPage.postMessage(JSON.stringify({ call: 'videoState', playing: playing, width: videoWidth, height: videoHeight }));
+      } else if (window.PipBridge && window.PipBridge.setVideoState) {
         window.PipBridge.setVideoState(playing, videoWidth, videoHeight);
       } else if (window.PipBridge && window.PipBridge.setVideoPlaying) {
         window.PipBridge.setVideoPlaying(playing);

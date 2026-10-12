@@ -129,4 +129,14 @@
     <string name="external_link_open">פתח</string>
     <string name="text_size_title">גודל טקסט</string>
     <string name="text_size_desc">%1$d%% · הקש לשינוי</string>
+    <string name="open_links_title">פתיחת קישורי פייסבוק באפליקציה זו</string>
+    <string name="open_links_summary">אנדרואיד 12+: אפשר לאפליקציה לפתוח קישורי פייסבוק כברירת מחדל</string>
+    <string name="share_page_title">שיתוף הדף הזה</string>
+    <string name="share_page_desc">שליחת הדף הנוכחי כקישור נקי</string>
+    <string name="log_out_title">התנתקות</string>
+    <string name="log_out_desc">שכחת ההתחברות לפייסבוק בטלפון זה</string>
+    <string name="log_out_confirm">להתנתק מפייסבוק? תצטרך להתחבר שוב.</string>
+    <string name="media_permission_title">המצלמה או המיקרופון כבויים</string>
+    <string name="media_permission_text">שיחות דורשות מצלמה ומיקרופון. הפעל אותם בהרשאות האפליקציה.</string>
+    <string name="media_permission_open_settings">פתח הגדרות</string>
 </resources>

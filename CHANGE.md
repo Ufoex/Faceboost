@@ -37,6 +37,10 @@
 * Feature: The Messages layer follows the phone's rotation (chat list beside the conversation in landscape), and videos in it can use Picture-in-Picture.
 * Tweak: Security hardening: backups no longer carry the Facebook session, third-party cookies are off in the Messages layer, the WebView pins file access, Safe Browsing and geolocation, and downloads only accept photos and videos from Facebook pages and Facebook's hosts.
 * Tweak: Links that leave the app: web, email and phone open directly, other apps' links ask first, javascript:/file:/content:/data: are refused and intent:// links only follow their web fallback. Links sent to the app must be Facebook pages. Tracking parameters (fbclid, utm_*, __tn__, mibextid...) are removed without touching ref, set or source.
+* Feature: Messenger voice and video calls in the Messages layer. The app asks for the camera and microphone when a call starts (only Facebook's own pages can use them) and, if you said no, a window sends you to the app's settings to turn them on.
+* Feature: Back on the feed sends the app to the background instead of closing it, so coming back keeps the page.
+* Feature: Settings rows to allow opening Facebook links in this app (Android 12+), share the page you are on as a clean link, and log out of Facebook on this phone.
+* Tweak: The page can only reach the app's Settings, theme, video state, clipboard, reel audio and Messages calls from the main frame of Facebook or Messenger, not from ads or embeds.
 * Tweak: LICENSE updated from upstream.
 * Tweak: Settings dialog status bar icons follow its background.
 * Tweak: New applicationId `com.ufoex.materialbook`; runtime scripts are fetched from this repo.

@@ -128,4 +128,14 @@
     <string name="external_link_open">فتح</string>
     <string name="text_size_title">حجم النص</string>
     <string name="text_size_desc">%1$d%% · انقر للتغيير</string>
+    <string name="open_links_title">فتح روابط فيسبوك في هذا التطبيق</string>
+    <string name="open_links_summary">أندرويد 12+: اسمح لهذا التطبيق بفتح روابط فيسبوك افتراضياً</string>
+    <string name="share_page_title">مشاركة هذه الصفحة</string>
+    <string name="share_page_desc">أرسل الصفحة الحالية كرابط نظيف</string>
+    <string name="log_out_title">تسجيل الخروج</string>
+    <string name="log_out_desc">انسَ جلسة فيسبوك على هذا الهاتف</string>
+    <string name="log_out_confirm">تسجيل الخروج من فيسبوك؟ ستحتاج إلى تسجيل الدخول مرة أخرى.</string>
+    <string name="media_permission_title">الكاميرا أو الميكروفون معطلان</string>
+    <string name="media_permission_text">تحتاج المكالمات إلى الكاميرا والميكروفون. فعّلهما من أذونات التطبيق.</string>
+    <string name="media_permission_open_settings">فتح الإعدادات</string>
 </resources>

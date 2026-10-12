@@ -130,4 +130,14 @@
     <string name="external_link_open">Open</string>
     <string name="text_size_title">Text size</string>
     <string name="text_size_desc">%1$d%% · tap to change</string>
+    <string name="open_links_title">Open Facebook links in this app</string>
+    <string name="open_links_summary">Android 12+: allow this app to open Facebook links by default</string>
+    <string name="share_page_title">Share this page</string>
+    <string name="share_page_desc">Send the page you are on as a clean link</string>
+    <string name="log_out_title">Log out</string>
+    <string name="log_out_desc">Forget the Facebook session on this phone</string>
+    <string name="log_out_confirm">Log out of Facebook? You will need to sign in again.</string>
+    <string name="media_permission_title">Camera or microphone is off</string>
+    <string name="media_permission_text">Calls need the camera and the microphone. Turn them on in the app\'s permissions.</string>
+    <string name="media_permission_open_settings">Open settings</string>
 </resources>

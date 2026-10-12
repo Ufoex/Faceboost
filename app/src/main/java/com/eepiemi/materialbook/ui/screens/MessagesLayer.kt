@@ -40,7 +40,9 @@ import com.eepiemi.materialbook.utils.hardenWebView
 import com.eepiemi.materialbook.utils.MessagesLayerRoute
 import com.eepiemi.materialbook.utils.appWebViewParams
 import com.eepiemi.materialbook.utils.jsBridge.ClipboardBridge
+import com.eepiemi.materialbook.utils.jsBridge.PageBridges
 import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
+import com.eepiemi.materialbook.utils.jsBridge.installPageBridges
 import com.eepiemi.materialbook.utils.jsBridge.MaterialYouBridge
 import com.eepiemi.materialbook.utils.jsBridge.PipBridge
 import com.eepiemi.materialbook.utils.jsBridge.MessagesBridge
@@ -192,14 +194,15 @@ fun MessagesLayer(
                 webView.apply {
                     addJavascriptInterface(ShareBridge(context) { webView.post { ShareBox.inChat = null } }, "ShareBridge")
                     installDownloadBridge(this, context)
-                    addJavascriptInterface(ClipboardBridge(context), "ClipboardBridge")
-                    addJavascriptInterface(MaterialYouBridge(primaryColor, onPrimaryColor), "MaterialYouBridge")
-                    addJavascriptInterface(
-                        // Called on the JavaBridge thread: hop to the UI thread first.
-                        MessagesBridge { leftTo -> webView.post { currentOnOpenInMain(leftTo) } },
-                        "MessagesBridge"
+                    installPageBridges(
+                        this,
+                        PageBridges(
+                            clipboard = ClipboardBridge(context),
+                            layer = MessagesBridge { leftTo -> webView.post { currentOnOpenInMain(leftTo) } },
+                            pip = PipBridge(currentOnVideoPlayingChanged, onPipPageVisible),
+                        )
                     )
-                    addJavascriptInterface(PipBridge(currentOnVideoPlayingChanged, onPipPageVisible), "PipBridge")
+                    addJavascriptInterface(MaterialYouBridge(primaryColor, onPrimaryColor), "MaterialYouBridge")
                     setLayerType(View.LAYER_TYPE_HARDWARE, null)
                     overScrollMode = View.OVER_SCROLL_NEVER
                     isVerticalScrollBarEnabled = false

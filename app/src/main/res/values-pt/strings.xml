@@ -128,4 +128,14 @@
     <string name="external_link_open">Abrir</string>
     <string name="text_size_title">Tamanho do texto</string>
     <string name="text_size_desc">%1$d%% · toque para alterar</string>
+    <string name="open_links_title">Abrir links do Facebook neste app</string>
+    <string name="open_links_summary">Android 12+: permita que este app abra links do Facebook por padrão</string>
+    <string name="share_page_title">Compartilhar esta página</string>
+    <string name="share_page_desc">Envia a página atual como um link limpo</string>
+    <string name="log_out_title">Sair</string>
+    <string name="log_out_desc">Esquece a sessão do Facebook neste telefone</string>
+    <string name="log_out_confirm">Sair do Facebook? Você precisará entrar novamente.</string>
+    <string name="media_permission_title">Câmera ou microfone desativados</string>
+    <string name="media_permission_text">As chamadas precisam da câmera e do microfone. Ative-os nas permissões do app.</string>
+    <string name="media_permission_open_settings">Abrir configurações</string>
 </resources>

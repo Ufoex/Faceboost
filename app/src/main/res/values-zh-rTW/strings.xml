@@ -129,4 +129,14 @@
     <string name="external_link_open">開啟</string>
     <string name="text_size_title">文字大小</string>
     <string name="text_size_desc">%1$d%% · 點一下切換</string>
+    <string name="open_links_title">在此應用程式中開啟 Facebook 連結</string>
+    <string name="open_links_summary">Android 12+：允許此應用程式預設開啟 Facebook 連結</string>
+    <string name="share_page_title">分享此頁面</string>
+    <string name="share_page_desc">將目前頁面以乾淨連結傳送</string>
+    <string name="log_out_title">登出</string>
+    <string name="log_out_desc">忘記此手機上的 Facebook 登入</string>
+    <string name="log_out_confirm">要登出 Facebook 嗎？你需要重新登入。</string>
+    <string name="media_permission_title">相機或麥克風未開啟</string>
+    <string name="media_permission_text">通話需要相機和麥克風。請在應用程式權限中開啟。</string>
+    <string name="media_permission_open_settings">開啟設定</string>
 </resources>

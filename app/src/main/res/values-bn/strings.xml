@@ -129,4 +129,14 @@
     <string name="external_link_open">খুলুন</string>
     <string name="text_size_title">টেক্সটের আকার</string>
     <string name="text_size_desc">%1$d%% · বদলাতে ট্যাপ করুন</string>
+    <string name="open_links_title">এই অ্যাপে ফেসবুক লিংক খুলুন</string>
+    <string name="open_links_summary">অ্যান্ড্রয়েড ১২+: এই অ্যাপকে ডিফল্টভাবে ফেসবুক লিংক খুলতে দিন</string>
+    <string name="share_page_title">এই পেজ শেয়ার করুন</string>
+    <string name="share_page_desc">বর্তমান পেজ পরিষ্কার লিংক হিসেবে পাঠান</string>
+    <string name="log_out_title">লগ আউট</string>
+    <string name="log_out_desc">এই ফোনে ফেসবুক সেশন ভুলে যান</string>
+    <string name="log_out_confirm">ফেসবুক থেকে লগ আউট করবেন? আবার সাইন ইন করতে হবে।</string>
+    <string name="media_permission_title">ক্যামেরা বা মাইক্রোফোন বন্ধ</string>
+    <string name="media_permission_text">কলের জন্য ক্যামেরা ও মাইক্রোফোন লাগে। অ্যাপের অনুমতি থেকে চালু করুন।</string>
+    <string name="media_permission_open_settings">সেটিংস খুলুন</string>
 </resources>

@@ -9,7 +9,8 @@
   const check = () => {
     try {
       if (/^\/(messages|messenger|login|checkpoint)/.test(location.pathname)) return;
-      if (window.MessagesBridge) window.MessagesBridge.onLeftMessages(location.href);
+      if (window.FaceboostPage) window.FaceboostPage.postMessage(JSON.stringify({ call: 'leftMessages', url: location.href }));
+      else if (window.MessagesBridge) window.MessagesBridge.onLeftMessages(location.href);
     } catch (e) {}
   };
   ['pushState', 'replaceState'].forEach((k) => {

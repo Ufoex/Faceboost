@@ -114,7 +114,9 @@
   var copyPostText = function(container) {
     var text = extractPostText(container);
     if (!text) return;
-    if (window.ClipboardBridge && window.ClipboardBridge.copyText) {
+    if (window.FaceboostPage) {
+      window.FaceboostPage.postMessage(JSON.stringify({ call: 'copyText', text: text }));
+    } else if (window.ClipboardBridge && window.ClipboardBridge.copyText) {
       window.ClipboardBridge.copyText(text);
     } else {
       try {

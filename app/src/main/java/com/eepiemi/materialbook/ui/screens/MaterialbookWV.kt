@@ -68,7 +68,9 @@ import com.eepiemi.materialbook.utils.sendWithMessengerApp
 import com.eepiemi.materialbook.utils.isWebViewRenderable
 import com.eepiemi.materialbook.utils.appWebViewParams
 import com.eepiemi.materialbook.utils.jsBridge.ClipboardBridge
+import com.eepiemi.materialbook.utils.jsBridge.PageBridges
 import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
+import com.eepiemi.materialbook.utils.jsBridge.installPageBridges
 import com.eepiemi.materialbook.utils.jsBridge.MaterialbookSettings
 import com.eepiemi.materialbook.utils.jsBridge.ThemeChange
 import com.eepiemi.materialbook.utils.jsBridge.MaterialYouBridge
@@ -354,7 +356,9 @@ internal const val PIP_FOCUS_MODE_JS = """
     leaked.push(desc);
     if (leaked.length >= 8) break;
   }
-  if (leaked.length && window.PipBridge && window.PipBridge.logPipAnomaly) {
+  if (leaked.length && window.FaceboostPage) {
+    window.FaceboostPage.postMessage(JSON.stringify({ call: 'pipAnomaly', message: leaked.join(' | ') }));
+  } else if (leaked.length && window.PipBridge && window.PipBridge.logPipAnomaly) {
     window.PipBridge.logPipAnomaly(leaked.join(' | '));
   }
 })();
@@ -598,7 +602,10 @@ internal const val PIP_HANDOFF_ARM_JS = """
   var listener = function() {
     if (document.visibilityState !== 'hidden') {
       if (document.querySelector('[data-astryx-handoff-muted]')) {
-        try { PipBridge.onPageVisible(); } catch (e) {}
+        try {
+          if (window.FaceboostPage) window.FaceboostPage.postMessage(JSON.stringify({ call: 'pageVisible' }));
+          else PipBridge.onPageVisible();
+        } catch (e) {}
       }
       return;
     }
@@ -982,9 +989,12 @@ fun MaterialbookWebView(
 
     // allow exiting while scrolling to top.
     var exitScroll by remember { mutableStateOf(false) }
+    // Leaving the app from the feed sends it to the background, like Home does: finishing dropped
+    // the WebView, so coming back reloaded the feed from the top.
+    val leaveApp = { activity?.moveTaskToBack(true); Unit }
     BackHandler {
         if (exitScroll) {
-            activity?.finish()
+            leaveApp()
         } else {
             navigator.evaluateJavaScript("backHandlerNB();") {
                 val backHandled = it.removeSurrounding("\"")
@@ -993,10 +1003,10 @@ fun MaterialbookWebView(
                         if (navigator.canGoBack) {
                             navigator.navigateBack()
                         } else {
-                            activity?.finish()
+                            leaveApp()
                         }
                     }
-                    "exit" -> activity?.finish()
+                    "exit" -> leaveApp()
                     "scrolling" -> exitScroll = true
                 }
             }
@@ -1178,6 +1188,16 @@ fun MaterialbookWebView(
     if (settingsToggle) {
         setWindow(false, hideNav = false)
         SettingsDialog(
+            pageUrl = state.lastLoadedUrl,
+            onLogout = {
+                // Forget the Facebook session: cookies and the page's stored data, then start over.
+                CookieManager.getInstance().removeAllCookies(null)
+                CookieManager.getInstance().flush()
+                android.webkit.WebStorage.getInstance().deleteAllData()
+                settingsToggle = false
+                setWindow(settingsVM.immersiveMode.value)
+                navigator.loadUrl("https://m.facebook.com/")
+            },
             onDismiss = {
                 setWindow(settingsVM.immersiveMode.value)
                 viewModel.setThemeColor(originalColor.value)
@@ -1313,27 +1333,20 @@ fun MaterialbookWebView(
             }
 
             webView.apply {
-                addJavascriptInterface(
-                    MaterialbookSettings { settingsToggle = true },
-                    "SettingsBridge"
-                )
-                addJavascriptInterface(
-                    ThemeChange { if (!settingsToggle) viewModel.setThemeColor(Color(it)) },
-                    "ThemeBridge"
-                )
                 installDownloadBridge(this, context)
-                addJavascriptInterface(
-                    ClipboardBridge(context),
-                    "ClipboardBridge"
+                installPageBridges(
+                    this,
+                    PageBridges(
+                        settings = MaterialbookSettings { settingsToggle = true },
+                        theme = ThemeChange { if (!settingsToggle) viewModel.setThemeColor(Color(it)) },
+                        pip = PipBridge(onVideoPlayingChanged, onPipPageVisible),
+                        clipboard = ClipboardBridge(context),
+                        bgAudio = (this as? BackgroundAudioWebView)?.Bridge(),
+                    )
                 )
                 addJavascriptInterface(
                     MaterialYouBridge(primaryColor, onPrimaryColor),
                     "MaterialYouBridge"
-                )
-                (this as? BackgroundAudioWebView)?.let { addJavascriptInterface(it.Bridge(), "BgAudioBridge") }
-                addJavascriptInterface(
-                    PipBridge(onVideoPlayingChanged, onPipPageVisible),
-                    "PipBridge"
                 )
 
                 setLayerType(View.LAYER_TYPE_HARDWARE, null)

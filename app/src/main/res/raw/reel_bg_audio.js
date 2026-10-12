@@ -11,6 +11,9 @@
         const want = state.enabled && onReel;
         if (want === state.sent) return;
         state.sent = want;
-        try { BgAudioBridge.set(want); } catch (e) {}
+        try {
+          if (window.FaceboostPage) window.FaceboostPage.postMessage(JSON.stringify({ call: 'bgAudio', on: want }));
+          else BgAudioBridge.set(want);
+        } catch (e) {}
     }, 250);
 })();

@@ -435,7 +435,9 @@ if (!window._mbBannerObserver) {
         pointer-events: auto;
       `);
       btn.innerHTML = ICON_SVG.replace('%FILL%', getFillColor());
-      btn.onclick = () => SettingsBridge?.onSettingsToggle?.();
+      btn.onclick = () => window.FaceboostPage
+        ? window.FaceboostPage.postMessage(JSON.stringify({ call: 'openSettings' }))
+        : window.SettingsBridge?.onSettingsToggle?.();
       return btn;
     };
 
@@ -474,7 +476,10 @@ if (!window._mbBannerObserver) {
 // Color Extraction Script
 (function() {
     const meta = document.querySelector('meta[name="theme-color"]');
-    const notify = () => window.ThemeBridge?.onThemeColorChanged?.(meta?.content ?? "null");
+    // FaceboostPage: the app's Facebook-only message listener; ThemeBridge: older WebViews.
+    const notify = () => window.FaceboostPage
+        ? window.FaceboostPage.postMessage(JSON.stringify({ call: 'themeColor', color: meta?.content ?? '' }))
+        : window.ThemeBridge?.onThemeColorChanged?.(meta?.content ?? "null");
     if (meta) {
         notify();
         new MutationObserver(() => notify())

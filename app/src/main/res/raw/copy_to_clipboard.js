@@ -129,14 +129,15 @@
     fetch(url)
       .then(response => response.blob())
       .then(blob => {
-        if (window.ClipboardBridge && window.ClipboardBridge.copyImageToClipboard) {
+        if (window.FaceboostPage || (window.ClipboardBridge && window.ClipboardBridge.copyImageToClipboard)) {
           const reader = new FileReader();
           reader.onloadend = function() {
-            if (reader.result) {
-              window.ClipboardBridge.copyImageToClipboard(
-                reader.result,
-                blob.type || "image/jpeg"
-              );
+            if (!reader.result) return;
+            const type = blob.type || "image/jpeg";
+            if (window.FaceboostPage) {
+              window.FaceboostPage.postMessage(JSON.stringify({ call: 'copyImage', data: reader.result, mimeType: type }));
+            } else {
+              window.ClipboardBridge.copyImageToClipboard(reader.result, type);
             }
           };
           reader.readAsDataURL(blob);

@@ -67,6 +67,11 @@ import android.provider.Settings
 import android.os.PowerManager
 import androidx.compose.material.icons.outlined.BatteryChargingFull
 import androidx.core.net.toUri
+import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.automirrored.outlined.Logout
+import com.eepiemi.materialbook.utils.isWebViewRenderable
+import com.eepiemi.materialbook.utils.stripTrackingParams
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -103,11 +108,14 @@ import com.eepiemi.materialbook.utils.openMessenger
 @Composable
 fun SettingsContent(
     modifier: Modifier,
-    viewModel: SettingsViewModel = viewModel()
+    viewModel: SettingsViewModel = viewModel(),
+    pageUrl: String? = null,
+    onLogout: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val messengerRedirectToast = stringResource(R.string.messenger_redirect_toast)
     var isOpenDialog by rememberSaveable { mutableStateOf(false) }
+    var isLogoutDialog by rememberSaveable { mutableStateOf(false) }
     var isPipRatioDialog by rememberSaveable { mutableStateOf(false) }
     var isMessengerDialog by rememberSaveable { mutableStateOf(false) }
     val messengerApps = remember { installedMessengerApps(context) }
@@ -189,7 +197,7 @@ fun SettingsContent(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         SettingsGroup(
-            items = listOf(
+            items = listOfNotNull(
                 SettingsItem(
                     icon = Icons.Outlined.Notifications,
                     title = stringResource(R.string.notifications_title),
@@ -286,6 +294,40 @@ fun SettingsContent(
                     title = stringResource(R.string.import_settings_title),
                     supportingText = stringResource(R.string.import_settings_desc),
                     onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
+                ),
+                // Android 12+ opens Facebook links in the browser until the user allows them for this app.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) SettingsItem(
+                    icon = Icons.Outlined.Link,
+                    title = stringResource(R.string.open_links_title),
+                    supportingText = stringResource(R.string.open_links_summary),
+                    onClick = {
+                        runCatching {
+                            context.startActivity(
+                                Intent(Settings.ACTION_APP_OPEN_BY_DEFAULT_SETTINGS, "package:${context.packageName}".toUri())
+                            )
+                        }
+                    }
+                ) else null,
+                if (pageUrl != null && isWebViewRenderable(pageUrl)) SettingsItem(
+                    icon = Icons.Outlined.Share,
+                    title = stringResource(R.string.share_page_title),
+                    supportingText = stringResource(R.string.share_page_desc),
+                    onClick = {
+                        // The page on screen as a clean link: www host, no tracking parameters.
+                        val link = stripTrackingParams(pageUrl.replaceFirst(Regex("^https://(m|mobile|touch|web|mbasic)\\.facebook\\.com"), "https://www.facebook.com"))
+                        context.startActivity(
+                            Intent.createChooser(
+                                Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, link),
+                                null
+                            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    }
+                ) else null,
+                SettingsItem(
+                    icon = Icons.AutoMirrored.Outlined.Logout,
+                    title = stringResource(R.string.log_out_title),
+                    supportingText = stringResource(R.string.log_out_desc),
+                    onClick = { isLogoutDialog = true }
                 )
             )
         )
@@ -526,6 +568,23 @@ fun SettingsContent(
 
     }
 
+    if (isLogoutDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { isLogoutDialog = false },
+            title = { Text(stringResource(R.string.log_out_title)) },
+            text = { Text(stringResource(R.string.log_out_confirm)) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = { isLogoutDialog = false; onLogout() }) {
+                    Text(stringResource(R.string.log_out_title), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { isLogoutDialog = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            }
+        )
+    }
     update?.let { UpdateDialog(it) { update = null } }
 
     if (isOpenDialog) {
