@@ -60,6 +60,14 @@ class AutoDesktopTest {
     }
 
     @Test
+    fun phone_messagesLayer_followsAutoRotate() {
+        assertEquals(
+            ActivityInfo.SCREEN_ORIENTATION_FULL_USER,
+            appOrientation(384, isFullscreen = false, isMessagesLayerOpen = true)
+        )
+    }
+
+    @Test
     fun largeScreen_isNeverLocked() {
         assertEquals(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED, appOrientation(600, isFullscreen = false))
         assertEquals(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED, appOrientation(800, isFullscreen = true))

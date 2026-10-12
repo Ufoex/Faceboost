@@ -112,4 +112,21 @@
     <string name="reel_value_tap_to_change">%1$s · 點一下切換</string>
     <string name="reel_fit_title">調整影片大小</string>
     <string name="reel_fit_desc">完整顯示影片而不裁切，並在播放器中提供按鈕可暫時關閉</string>
+    <string name="open_links_in_tab_title">在自訂分頁中開啟網頁連結</string>
+    <string name="open_links_in_tab_desc">連到其他網站的連結會在應用程式上方的瀏覽器分頁中開啟，使用瀏覽器自己的登入而非 Facebook 的</string>
+    <string name="keep_screen_on_title">保持螢幕開啟</string>
+    <string name="keep_screen_on_off">保持螢幕開啟：關閉（點一下切換）</string>
+    <string name="keep_screen_on_video">保持螢幕開啟：影片播放時（點一下切換）</string>
+    <string name="keep_screen_on_always">保持螢幕開啟：應用程式開啟時一律保持（點一下切換）</string>
+    <string name="export_settings_title">匯出設定</string>
+    <string name="export_settings_desc">將設定儲存為檔案</string>
+    <string name="import_settings_title">匯入設定</string>
+    <string name="import_settings_desc">從 Faceboost 檔案載入設定</string>
+    <string name="settings_exported_toast">設定已儲存</string>
+    <string name="settings_imported_toast">已匯入。重新開啟設定或重新啟動應用程式即可看到全部</string>
+    <string name="settings_import_bad_file_toast">無法使用該檔案</string>
+    <string name="external_link_title">要在其他應用程式中開啟嗎？</string>
+    <string name="external_link_open">開啟</string>
+    <string name="text_size_title">文字大小</string>
+    <string name="text_size_desc">%1$d%% · 點一下切換</string>
 </resources>

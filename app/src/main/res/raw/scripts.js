@@ -511,7 +511,12 @@ if (!window._mbBannerObserver) {
         if (!blob) return;
         const reader = new FileReader();
         reader.onloadend = function() {
-            if (reader.result)
+            if (!reader.result) return;
+            // FaceboostDownloads: the app's Facebook-only message listener;
+            // DownloadBridge: older WebViews and older app versions.
+            if (window.FaceboostDownloads)
+                FaceboostDownloads.postMessage(JSON.stringify({ call: 'downloadBase64File', a: reader.result, b: blob.type }));
+            else if (window.DownloadBridge)
                 DownloadBridge.downloadBase64File(reader.result, blob.type);
         };
         reader.readAsDataURL(blob);

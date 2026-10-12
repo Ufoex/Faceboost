@@ -31,6 +31,9 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.COLLAPSIN
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REEL_BACKGROUND_AUDIO
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REEL_CONTROLS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REEL_GESTURES
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.KEEP_SCREEN_ON
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.OPEN_LINKS_IN_TAB
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.TEXT_ZOOM
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REEL_FIT
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REEL_HOLD_RATE
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REEL_SKIP_SECONDS
@@ -126,6 +129,21 @@ class SettingsViewModel(
         scope = viewModelScope,
         initialValue = initialPrefs[REEL_FIT] ?: false,
         started = SharingStarted.WhileSubscribed()
+    )
+    val textZoom = dataStore.textZoom.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[TEXT_ZOOM] ?: 100,
+        started = SharingStarted.Eagerly
+    )
+    val openLinksInTab = dataStore.openLinksInTab.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[OPEN_LINKS_IN_TAB] ?: false,
+        started = SharingStarted.WhileSubscribed()
+    )
+    val keepScreenOn = dataStore.keepScreenOn.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[KEEP_SCREEN_ON] ?: "off",
+        started = SharingStarted.Eagerly
     )
     val reelHoldRate = dataStore.reelHoldRate.stateIn(
         scope = viewModelScope,
@@ -283,6 +301,14 @@ class SettingsViewModel(
     }
 
     fun setReelGestures(v: Boolean) { viewModelScope.launch { dataStore.setReelGestures(v) } }
+    fun setTextZoom(v: Int) { viewModelScope.launch { dataStore.setTextZoom(v) } }
+    fun setOpenLinksInTab(v: Boolean) { viewModelScope.launch { dataStore.setOpenLinksInTab(v) } }
+    fun setKeepScreenOn(v: String) { viewModelScope.launch { dataStore.setKeepScreenOn(v) } }
+    suspend fun exportSettings(): String = dataStore.exportSettings()
+    /** Returns the number of settings applied, or null when the text isn't a Faceboost settings file. */
+    suspend fun importSettings(json: String): Int? =
+        runCatching { dataStore.importSettings(json) }.getOrNull()
+
     fun setReelFit(v: Boolean) { viewModelScope.launch { dataStore.setReelFit(v) } }
     fun setReelHoldRate(v: Float) { viewModelScope.launch { dataStore.setReelHoldRate(v) } }
     fun setReelSkipSeconds(v: Int) { viewModelScope.launch { dataStore.setReelSkipSeconds(v) } }

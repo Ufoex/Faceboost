@@ -112,4 +112,21 @@
     <string name="reel_value_tap_to_change">%1$s · הקש לשינוי</string>
     <string name="reel_fit_title">שינוי גודל סרטונים</string>
     <string name="reel_fit_desc">מתאים את כל הסרטון למסך בלי לחתוך, עם כפתור בצופה לכיבוי זמני</string>
+    <string name="open_links_in_tab_title">פתיחת קישורי אינטרנט בכרטיסייה מותאמת</string>
+    <string name="open_links_in_tab_desc">קישורים לאתרים אחרים נפתחים בכרטיסיית הדפדפן מעל האפליקציה, עם ההתחברות של הדפדפן ולא של פייסבוק</string>
+    <string name="keep_screen_on_title">השארת המסך דולק</string>
+    <string name="keep_screen_on_off">מסך דולק: כבוי (הקש לשינוי)</string>
+    <string name="keep_screen_on_video">מסך דולק: בזמן ניגון סרטון (הקש לשינוי)</string>
+    <string name="keep_screen_on_always">מסך דולק: תמיד כשהאפליקציה פתוחה (הקש לשינוי)</string>
+    <string name="export_settings_title">ייצוא הגדרות</string>
+    <string name="export_settings_desc">שמירת ההגדרות בקובץ</string>
+    <string name="import_settings_title">ייבוא הגדרות</string>
+    <string name="import_settings_desc">טעינת הגדרות מקובץ של Faceboost</string>
+    <string name="settings_exported_toast">ההגדרות נשמרו</string>
+    <string name="settings_imported_toast">יובא. פתח שוב את ההגדרות או הפעל מחדש את האפליקציה כדי לראות הכול</string>
+    <string name="settings_import_bad_file_toast">לא ניתן להשתמש בקובץ הזה</string>
+    <string name="external_link_title">לפתוח באפליקציה אחרת?</string>
+    <string name="external_link_open">פתח</string>
+    <string name="text_size_title">גודל טקסט</string>
+    <string name="text_size_desc">%1$d%% · הקש לשינוי</string>
 </resources>

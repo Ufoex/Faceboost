@@ -44,6 +44,9 @@ class SettingsDataStore(private val context: Context) {
         val HIDE_STORIES = booleanPreferencesKey("hide_stories")
         val HIDE_PEOPLE_YOU_MAY_KNOW = booleanPreferencesKey("hide_people_you_may_know")
         val HIDE_GROUPS = booleanPreferencesKey("hide_groups")
+        val TEXT_ZOOM = intPreferencesKey("text_zoom")
+        val OPEN_LINKS_IN_TAB = booleanPreferencesKey("open_links_in_tab")
+        val KEEP_SCREEN_ON = stringPreferencesKey("keep_screen_on")
         val BRAVE_BLOCK_LIST = booleanPreferencesKey("brave_block_list")
         val MESSAGES_DESKTOP = booleanPreferencesKey("messages_desktop")
         val PIP_ENABLED = booleanPreferencesKey("pip_enabled")
@@ -154,6 +157,22 @@ class SettingsDataStore(private val context: Context) {
     suspend fun setReelHoldRate(v: Float) { context.dataStore.edit { it[REEL_HOLD_RATE] = v } }
     val reelSkipSeconds = context.dataStore.data.map { it[REEL_SKIP_SECONDS] ?: 10 }
     suspend fun setReelSkipSeconds(v: Int) { context.dataStore.edit { it[REEL_SKIP_SECONDS] = v } }
+
+    // Page text size in percent (85..150, 100 = as Facebook draws it).
+    val textZoom = context.dataStore.data.map { it[TEXT_ZOOM] ?: 100 }
+    suspend fun setTextZoom(v: Int) { context.dataStore.edit { it[TEXT_ZOOM] = v } }
+    val openLinksInTab = context.dataStore.data.map { it[OPEN_LINKS_IN_TAB] ?: false }
+    suspend fun setOpenLinksInTab(v: Boolean) { context.dataStore.edit { it[OPEN_LINKS_IN_TAB] = v } }
+    // "off", "video" (while a video plays) or "always" (while the app is on screen)
+    val keepScreenOn = context.dataStore.data.map { it[KEEP_SCREEN_ON] ?: "off" }
+    suspend fun setKeepScreenOn(v: String) { context.dataStore.edit { it[KEEP_SCREEN_ON] = v } }
+
+    suspend fun exportSettings(): String = exportSettingsJson(context.dataStore.data.first())
+    suspend fun importSettings(json: String): Int {
+        var applied = 0
+        context.dataStore.edit { applied = importSettingsJson(json, it) }
+        return applied
+    }
 
     val collapsingToolbar = context.dataStore.data.map { it[COLLAPSING_TOOLBAR] ?: true }
     suspend fun setCollapsingToolbar(collapsingToolbar: Boolean) {

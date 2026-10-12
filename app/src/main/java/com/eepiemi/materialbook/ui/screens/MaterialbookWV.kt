@@ -53,6 +53,13 @@ import com.eepiemi.materialbook.utils.DESKTOP_USER_AGENT
 import com.eepiemi.materialbook.utils.BraveBlockList
 import com.eepiemi.materialbook.utils.ExternalRequestInterceptor
 import com.eepiemi.materialbook.utils.FullscreenController
+import com.eepiemi.materialbook.utils.hardenWebView
+import com.eepiemi.materialbook.ui.components.ExternalLinkDialog
+import com.eepiemi.materialbook.utils.ExternalLinkAction
+import com.eepiemi.materialbook.utils.externalLinkAction
+import com.eepiemi.materialbook.utils.externalTarget
+import com.eepiemi.materialbook.utils.isWebUrl
+import com.eepiemi.materialbook.utils.openInCustomTab
 import com.eepiemi.materialbook.utils.appOrientation
 import com.eepiemi.materialbook.utils.MESSAGES_DESKTOP_URL
 import com.eepiemi.materialbook.utils.ShareBox
@@ -61,7 +68,7 @@ import com.eepiemi.materialbook.utils.sendWithMessengerApp
 import com.eepiemi.materialbook.utils.isWebViewRenderable
 import com.eepiemi.materialbook.utils.appWebViewParams
 import com.eepiemi.materialbook.utils.jsBridge.ClipboardBridge
-import com.eepiemi.materialbook.utils.jsBridge.DownloadBridge
+import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
 import com.eepiemi.materialbook.utils.jsBridge.MaterialbookSettings
 import com.eepiemi.materialbook.utils.jsBridge.ThemeChange
 import com.eepiemi.materialbook.utils.jsBridge.MaterialYouBridge
@@ -700,8 +707,11 @@ fun MaterialbookWebView(
     val isAutoDesktop = rememberAutoDesktop()
     val isEffectiveDesktop = effectiveDesktop(isDesktop, isAutoDesktop)
 
-    val openExternalLink: (String) -> Unit = { externalUrl ->
-        val opened = openExternalUrl(context, externalUrl)
+    // A link into another app (not web, email or phone) waits here for the user's OK.
+    var pendingExternalLink by remember { mutableStateOf<String?>(null) }
+    val launchExternalLink: (String) -> Unit = { externalUrl ->
+        val opened = (settingsVM.openLinksInTab.value && isWebUrl(externalUrl) && openInCustomTab(context, externalUrl)) ||
+            openExternalUrl(context, externalUrl)
         if (!opened) {
             Toast.makeText(
                 context,
@@ -709,6 +719,28 @@ fun MaterialbookWebView(
                 Toast.LENGTH_SHORT
             ).show()
         }
+    }
+    // Text size setting: applied when the WebView is created and live when it changes.
+    var mainWebView by remember { mutableStateOf<android.webkit.WebView?>(null) }
+    val textZoom by settingsVM.textZoom.collectAsState()
+    LaunchedEffect(textZoom, mainWebView) { mainWebView?.settings?.textZoom = textZoom }
+
+    val openExternalLink: (String) -> Unit = { externalUrl ->
+        val target = externalTarget(externalUrl)
+        when (if (target == null) ExternalLinkAction.BLOCK else externalLinkAction(target)) {
+            ExternalLinkAction.OPEN -> launchExternalLink(target!!)
+            ExternalLinkAction.CONFIRM -> pendingExternalLink = target
+            ExternalLinkAction.BLOCK -> Toast.makeText(
+                context, resources.getString(R.string.open_external_failed_toast), Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+    pendingExternalLink?.let { link ->
+        ExternalLinkDialog(
+            link = link,
+            onOpen = { pendingExternalLink = null; launchExternalLink(link) },
+            onDismiss = { pendingExternalLink = null }
+        )
     }
 
     // Messages in desktop mode: Messages links open in MessagesLayer, a separate desktop
@@ -796,12 +828,18 @@ fun MaterialbookWebView(
         }
     }
 
+    // PiP follows the page on screen: the Messages layer's while it is open (it reports its own
+    // videos through PipBridge too), else this view's. Everything below acts on that page.
+    var layerPipTarget by remember { mutableStateOf<PipTarget?>(null) }
+    val pipNavigator = layerPipTarget?.navigator ?: navigator
+    val pipState = layerPipTarget?.state ?: state
+
     // Fired from the PiP overlay's native Play/Pause button (see MainActivity's
     // pipActionReceiver) — the only reverse (native -> JS) channel we have,
     // vs PipBridge which only goes JS -> native.
     LaunchedEffect(pipToggleTrigger) {
         if (pipToggleTrigger > 0) {
-            navigator.evaluateJavaScript(PIP_TOGGLE_JS) {}
+            pipNavigator.evaluateJavaScript(PIP_TOGGLE_JS) {}
         }
     }
 
@@ -813,7 +851,7 @@ fun MaterialbookWebView(
     // ~3.5s later) — too late to close this race.
     LaunchedEffect(pipEnteringTrigger) {
         if (pipEnteringTrigger > 0) {
-            navigator.evaluateJavaScript(PIP_FREEZE_ACTIVE_VIDEO_JS) {}
+            pipNavigator.evaluateJavaScript(PIP_FREEZE_ACTIVE_VIDEO_JS) {}
         }
     }
 
@@ -826,14 +864,14 @@ fun MaterialbookWebView(
     // restyle the <video>) is skipped. Restore still always runs outside PiP:
     // it also unfreezes the active-video tracker that PIP_FREEZE_ACTIVE_VIDEO_JS
     // sets on every PiP attempt, fullscreen or not.
-    LaunchedEffect(isInPipMode, state.loadingState) {
-        if (state.loadingState is LoadingState.Finished) {
+    LaunchedEffect(isInPipMode, pipState.loadingState) {
+        if (pipState.loadingState is LoadingState.Finished) {
             if (!isInPipMode) {
-                navigator.evaluateJavaScript(PIP_RESTORE_MODE_JS) {}
+                pipNavigator.evaluateJavaScript(PIP_RESTORE_MODE_JS) {}
             } else if (isFullscreen) {
                 Log.d("AstryxbookPiP", "PiP entered while fullscreen: skipping focus mode")
             } else {
-                navigator.evaluateJavaScript(PIP_FOCUS_MODE_JS) {}
+                pipNavigator.evaluateJavaScript(PIP_FOCUS_MODE_JS) {}
             }
         }
     }
@@ -846,32 +884,32 @@ fun MaterialbookWebView(
     var fullscreenEndedInPip by remember { mutableStateOf(false) }
     var holdingFullscreenChange by remember { mutableStateOf(false) }
     LaunchedEffect(isInPipMode) {
-        if (isInPipMode && isFullscreen && state.loadingState is LoadingState.Finished) {
+        if (isInPipMode && isFullscreen && pipState.loadingState is LoadingState.Finished) {
             holdingFullscreenChange = true
-            navigator.evaluateJavaScript(PIP_HOLD_FULLSCREENCHANGE_JS) {}
+            pipNavigator.evaluateJavaScript(PIP_HOLD_FULLSCREENCHANGE_JS) {}
         } else if (!isInPipMode && holdingFullscreenChange) {
             holdingFullscreenChange = false
             if (fullscreenEndedInPip) {
                 fullscreenEndedInPip = false
-                navigator.evaluateJavaScript(PIP_RELAYOUT_AFTER_FULLSCREEN_JS) {}
+                pipNavigator.evaluateJavaScript(PIP_RELAYOUT_AFTER_FULLSCREEN_JS) {}
             } else {
-                navigator.evaluateJavaScript(PIP_RELEASE_FULLSCREENCHANGE_JS) {}
+                pipNavigator.evaluateJavaScript(PIP_RELEASE_FULLSCREENCHANGE_JS) {}
             }
         }
     }
     LaunchedEffect(isFullscreen) {
-        if (!isFullscreen && isInPipMode && state.loadingState is LoadingState.Finished) {
+        if (!isFullscreen && isInPipMode && pipState.loadingState is LoadingState.Finished) {
             Log.d("AstryxbookPiP", "fullscreen ended during PiP: applying focus mode")
             fullscreenEndedInPip = true
-            navigator.evaluateJavaScript(PIP_FOCUS_MODE_JS) {}
+            pipNavigator.evaluateJavaScript(PIP_FOCUS_MODE_JS) {}
         }
     }
 
     // Separate from focus mode on purpose (see PIP_PIN_SCREEN_JS): keeps
     // rotation during PiP from making Facebook drop the reel.
-    LaunchedEffect(isInPipMode, state.loadingState) {
-        if (state.loadingState is LoadingState.Finished) {
-            navigator.evaluateJavaScript(
+    LaunchedEffect(isInPipMode, pipState.loadingState) {
+        if (pipState.loadingState is LoadingState.Finished) {
+            pipNavigator.evaluateJavaScript(
                 if (isInPipMode) PIP_PIN_SCREEN_JS else PIP_UNPIN_SCREEN_JS
             ) {}
         }
@@ -893,7 +931,7 @@ fun MaterialbookWebView(
     // unlikely to stick.
     LaunchedEffect(isInPipMode) {
         delay(150)
-        val webView = state.nativeWebView
+        val webView = pipState.nativeWebView
         webView.setLayerType(View.LAYER_TYPE_NONE, null)
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
         webView.invalidate()
@@ -907,7 +945,7 @@ fun MaterialbookWebView(
     LaunchedEffect(isInPipMode) {
         if (isInPipMode) {
             delay(150)
-            navigator.evaluateJavaScript(PIP_NUDGE_COMPOSITOR_JS) {}
+            pipNavigator.evaluateJavaScript(PIP_NUDGE_COMPOSITOR_JS) {}
         }
     }
 
@@ -919,9 +957,9 @@ fun MaterialbookWebView(
     // navigator replays just its last event to a WebView that isn't attached
     // yet, so an unconditional evaluate at startup would replace the initial
     // loadUrl and the page would never load.
-    LaunchedEffect(isInPipMode, pipLockscreenAudio, state.loadingState) {
-        if (state.loadingState is LoadingState.Finished) {
-            navigator.evaluateJavaScript(
+    LaunchedEffect(isInPipMode, pipLockscreenAudio, pipState.loadingState) {
+        if (pipState.loadingState is LoadingState.Finished) {
+            pipNavigator.evaluateJavaScript(
                 if (isInPipMode && pipLockscreenAudio) PIP_HANDOFF_ARM_JS else PIP_HANDOFF_DISARM_JS
             ) {}
         }
@@ -929,12 +967,12 @@ fun MaterialbookWebView(
     val currentOnPipHandoffRead by rememberUpdatedState(onPipHandoffRead)
     LaunchedEffect(pipHandoffReadTrigger) {
         if (pipHandoffReadTrigger > 0) {
-            navigator.evaluateJavaScript(PIP_HANDOFF_READ_JS) { currentOnPipHandoffRead(it) }
+            pipNavigator.evaluateJavaScript(PIP_HANDOFF_READ_JS) { currentOnPipHandoffRead(it) }
         }
     }
     LaunchedEffect(pipHandback) {
         pipHandback?.let { request ->
-            navigator.evaluateJavaScript(
+            pipNavigator.evaluateJavaScript(
                 pipHandbackJs(request.positionMs, request.play, request.rearm)
             ) {
                 Log.d("AstryxbookPiP", "handback JS: $request -> $it")
@@ -1064,11 +1102,16 @@ fun MaterialbookWebView(
                 }
                 overlay = null
                 activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                (activity as? com.eepiemi.materialbook.MainActivity)?.refreshKeepScreenOn()
                 setWindow(settingsVM.immersiveMode.value)
                 isFullscreen = false
                 activity?.let {
                     it.requestedOrientation =
-                        appOrientation(it.resources.configuration.smallestScreenWidthDp, isFullscreen = false)
+                        appOrientation(
+                            it.resources.configuration.smallestScreenWidthDp,
+                            isFullscreen = false,
+                            isMessagesLayerOpen = messagesLayerUrl != null
+                        )
                 }
                 Log.d("AstryxbookPiP", "HTML5 fullscreen: hidden")
             }
@@ -1182,11 +1225,37 @@ fun MaterialbookWebView(
 
     // The page underneath keeps running while the Messages layer is open: pause its videos
     // so a playing reel doesn't go on behind the chat.
-    LaunchedEffect(messagesLayerUrl) {
-        if (messagesLayerUrl != null && state.loadingState is LoadingState.Finished) {
+    // While it is open the phone may rotate (see appOrientation) and the feed underneath reflows,
+    // so its scroll position is noted on open and put back after the rotation back.
+    val isMessagesLayerOpen = messagesLayerUrl != null
+    LaunchedEffect(isMessagesLayerOpen) {
+        // While fullscreen, the fullscreen host owns the orientation (and resets it on exit).
+        if (!isFullscreen) {
+            activity?.let {
+                it.requestedOrientation = appOrientation(
+                    it.resources.configuration.smallestScreenWidthDp,
+                    isFullscreen = false,
+                    isMessagesLayerOpen = isMessagesLayerOpen
+                )
+            }
+        }
+    }
+    LaunchedEffect(isMessagesLayerOpen) {
+        if (state.loadingState !is LoadingState.Finished) return@LaunchedEffect
+        if (isMessagesLayerOpen) {
             navigator.evaluateJavaScript(
-                "document.querySelectorAll('video').forEach(function(v) { v.pause(); });"
+                "document.querySelectorAll('video').forEach(function(v) { v.pause(); });" +
+                    "window.__mbLayerScrollY = window.scrollY;"
             ) {}
+        } else {
+            val restore = "if (typeof window.__mbLayerScrollY === 'number' && " +
+                "Math.abs(window.scrollY - window.__mbLayerScrollY) > 4) " +
+                "window.scrollTo(0, window.__mbLayerScrollY);"
+            // The rotation back and Facebook's reflow take a moment: try twice, then forget it.
+            delay(400)
+            navigator.evaluateJavaScript(restore) {}
+            delay(600)
+            navigator.evaluateJavaScript("$restore window.__mbLayerScrollY = undefined;") {}
         }
     }
 
@@ -1228,6 +1297,9 @@ fun MaterialbookWebView(
             // Privacy: third parties not on the block list can't set/read cross-site cookies.
             cookieManager.setAcceptThirdPartyCookies(webView, false)
             cookieManager.flush()
+            hardenWebView(state, webView)
+            mainWebView = webView
+            webView.settings.textZoom = settingsVM.textZoom.value
 
             state.webSettings.apply {
                 isJavaScriptEnabled = true
@@ -1249,10 +1321,7 @@ fun MaterialbookWebView(
                     ThemeChange { if (!settingsToggle) viewModel.setThemeColor(Color(it)) },
                     "ThemeBridge"
                 )
-                addJavascriptInterface(
-                    DownloadBridge(context),
-                    "DownloadBridge"
-                )
+                installDownloadBridge(this, context)
                 addJavascriptInterface(
                     ClipboardBridge(context),
                     "ClipboardBridge"
@@ -1292,6 +1361,11 @@ fun MaterialbookWebView(
                 background = themeColor,
                 primaryColor = primaryColor,
                 onPrimaryColor = onPrimaryColor,
+                textZoom = textZoom,
+                pipEnabled = pipEnabled,
+                onPipTarget = { layerPipTarget = it },
+                onVideoPlayingChanged = onVideoPlayingChanged,
+                onPipPageVisible = onPipPageVisible,
                 onClose = { messagesLayerUrl = null },
                 onOpenInMain = { pageUrl ->
                     messagesLayerUrl = null

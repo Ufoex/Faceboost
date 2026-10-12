@@ -20,9 +20,16 @@ fun isAutoDesktopScreen(smallestScreenWidthDp: Int): Boolean = smallestScreenWid
  * the video, same in Chrome). Large screens (the auto-desktop ones) rotate
  * freely as before.
  */
-fun appOrientation(smallestScreenWidthDp: Int, isFullscreen: Boolean): Int = when {
+fun appOrientation(
+    smallestScreenWidthDp: Int,
+    isFullscreen: Boolean,
+    isMessagesLayerOpen: Boolean = false,
+): Int = when {
     isAutoDesktopScreen(smallestScreenWidthDp) -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     isFullscreen -> ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
+    // The Messages layer shows the desktop site, which has room for the chat list beside the
+    // conversation: it follows the system auto-rotate setting while it is open.
+    isMessagesLayerOpen -> ActivityInfo.SCREEN_ORIENTATION_FULL_USER
     else -> ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
 }
 

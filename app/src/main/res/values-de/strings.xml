@@ -111,4 +111,21 @@
     <string name="reel_value_tap_to_change">%1$s · zum Ändern tippen</string>
     <string name="reel_fit_title">Videos anpassen</string>
     <string name="reel_fit_desc">Zeigt das ganze Video ohne Zuschnitt; ein Button im Viewer schaltet es vorübergehend aus</string>
+    <string name="open_links_in_tab_title">Weblinks in einem Custom Tab öffnen</string>
+    <string name="open_links_in_tab_desc">Links zu anderen Websites öffnen sich im Tab deines Browsers über der App, mit dessen eigener Anmeldung statt der von Facebook</string>
+    <string name="keep_screen_on_title">Bildschirm anlassen</string>
+    <string name="keep_screen_on_off">Bildschirm anlassen: aus (zum Ändern tippen)</string>
+    <string name="keep_screen_on_video">Bildschirm anlassen: während ein Video läuft (zum Ändern tippen)</string>
+    <string name="keep_screen_on_always">Bildschirm anlassen: immer bei geöffneter App (zum Ändern tippen)</string>
+    <string name="export_settings_title">Einstellungen exportieren</string>
+    <string name="export_settings_desc">Einstellungen in einer Datei speichern</string>
+    <string name="import_settings_title">Einstellungen importieren</string>
+    <string name="import_settings_desc">Einstellungen aus einer Faceboost-Datei laden</string>
+    <string name="settings_exported_toast">Einstellungen gespeichert</string>
+    <string name="settings_imported_toast">Importiert. Einstellungen erneut öffnen oder App neu starten</string>
+    <string name="settings_import_bad_file_toast">Diese Datei konnte nicht verwendet werden</string>
+    <string name="external_link_title">In einer anderen App öffnen?</string>
+    <string name="external_link_open">Öffnen</string>
+    <string name="text_size_title">Textgröße</string>
+    <string name="text_size_desc">%1$d%% · zum Ändern tippen</string>
 </resources>

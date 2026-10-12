@@ -111,4 +111,21 @@
     <string name="reel_value_tap_to_change">%1$s · انقر للتغيير</string>
     <string name="reel_fit_title">تغيير حجم الفيديو</string>
     <string name="reel_fit_desc">يعرض الفيديو كاملاً دون قص، مع زر في العارض لإيقافه مؤقتاً</string>
+    <string name="open_links_in_tab_title">فتح روابط الويب في علامة تبويب مخصصة</string>
+    <string name="open_links_in_tab_desc">تُفتح الروابط إلى مواقع أخرى في علامة تبويب متصفحك فوق التطبيق، بتسجيل دخول المتصفح نفسه لا فيسبوك</string>
+    <string name="keep_screen_on_title">إبقاء الشاشة قيد التشغيل</string>
+    <string name="keep_screen_on_off">الشاشة قيد التشغيل: متوقف (انقر للتغيير)</string>
+    <string name="keep_screen_on_video">الشاشة قيد التشغيل: أثناء تشغيل فيديو (انقر للتغيير)</string>
+    <string name="keep_screen_on_always">الشاشة قيد التشغيل: دائماً والتطبيق مفتوح (انقر للتغيير)</string>
+    <string name="export_settings_title">تصدير الإعدادات</string>
+    <string name="export_settings_desc">احفظ إعداداتك في ملف</string>
+    <string name="import_settings_title">استيراد الإعدادات</string>
+    <string name="import_settings_desc">حمّل الإعدادات من ملف Faceboost</string>
+    <string name="settings_exported_toast">تم حفظ الإعدادات</string>
+    <string name="settings_imported_toast">تم الاستيراد. أعد فتح الإعدادات أو أعد تشغيل التطبيق لرؤية كل شيء</string>
+    <string name="settings_import_bad_file_toast">تعذر استخدام هذا الملف</string>
+    <string name="external_link_title">هل تريد الفتح في تطبيق آخر؟</string>
+    <string name="external_link_open">فتح</string>
+    <string name="text_size_title">حجم النص</string>
+    <string name="text_size_desc">%1$d%% · انقر للتغيير</string>
 </resources>

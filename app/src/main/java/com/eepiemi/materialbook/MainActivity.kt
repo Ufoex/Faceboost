@@ -14,6 +14,7 @@ import android.content.IntentFilter
 import android.graphics.Rect
 import android.graphics.drawable.Icon
 import android.os.Build
+import android.view.WindowManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -28,7 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import com.eepiemi.materialbook.utils.Release
-import com.eepiemi.materialbook.utils.intentUrl
+import com.eepiemi.materialbook.utils.appLinkUrl
 import com.eepiemi.materialbook.utils.AppVisibility
 import com.eepiemi.materialbook.utils.ShareBox
 import com.eepiemi.materialbook.utils.sharedContentFrom
@@ -313,7 +314,7 @@ class MainActivity : ComponentActivity() {
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
 
-        urlState.value = intent?.data?.toString()?.let(::intentUrl)
+        urlState.value = appLinkUrl(intent?.data?.toString())
         receiveShare(intent)
 
         setContent {
@@ -347,6 +348,9 @@ class MainActivity : ComponentActivity() {
         // changes the portrait ratio — no app restart required.
         lifecycleScope.launch {
             settingsVM.pipEnabled.collect { reapplyPipParams() }
+        }
+        lifecycleScope.launch {
+            settingsVM.keepScreenOn.collect { refreshKeepScreenOn() }
         }
         lifecycleScope.launch {
             settingsVM.pipPortraitRatio.collect { reapplyPipParams() }
@@ -486,12 +490,24 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** "Keep screen on" setting: never, while a video plays, or while the app is on screen. */
+    fun refreshKeepScreenOn() {
+        val keep = when (settingsVM.keepScreenOn.value) {
+            "always" -> true
+            "video" -> isVideoPlaying
+            else -> false
+        }
+        if (keep) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
     private fun updateVideoPlaybackState(
         isPlaying: Boolean,
         videoWidth: Int,
         videoHeight: Int
     ) {
         isVideoPlaying = isPlaying
+        refreshKeepScreenOn()
         lastVideoWidth = videoWidth
         lastVideoHeight = videoHeight
         if (videoWidth > 0 && videoHeight > 0) {
@@ -524,8 +540,8 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         receiveShare(intent)
-        intent.data?.toString()?.let {
-            urlState.value = intentUrl(it)
+        appLinkUrl(intent.data?.toString())?.let {
+            urlState.value = it
             urlNonce.intValue++
         }
     }

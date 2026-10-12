@@ -68,6 +68,14 @@ import android.os.PowerManager
 import androidx.compose.material.icons.outlined.BatteryChargingFull
 import androidx.core.net.toUri
 import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.outlined.FileUpload
+import androidx.compose.material.icons.outlined.FormatSize
+import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.OpenInBrowser
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.runtime.DisposableEffect
 import androidx.core.app.NotificationManagerCompat
@@ -135,6 +143,32 @@ fun SettingsContent(
         onDispose { owner?.lifecycle?.removeObserver(observer) }
     }
     val scope = rememberCoroutineScope()
+    val openLinksInTab = viewModel.openLinksInTab.collectAsState()
+    val textZoom = viewModel.textZoom.collectAsState()
+    val keepScreenOn = viewModel.keepScreenOn.collectAsState()
+    val settingsSavedToast = stringResource(R.string.settings_exported_toast)
+    val settingsBadFileToast = stringResource(R.string.settings_import_bad_file_toast)
+    val settingsImportedToast = stringResource(R.string.settings_imported_toast)
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri != null) scope.launch {
+            val ok = runCatching {
+                val json = viewModel.exportSettings()
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) } ?: error("no stream")
+                }
+            }.isSuccess
+            Toast.makeText(context, if (ok) settingsSavedToast else settingsBadFileToast, Toast.LENGTH_SHORT).show()
+        }
+    }
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) scope.launch {
+            val text = runCatching {
+                withContext(Dispatchers.IO) { context.contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) } }
+            }.getOrNull()
+            val applied = text?.let { viewModel.importSettings(it) }
+            Toast.makeText(context, if (applied != null) settingsImportedToast else settingsBadFileToast, Toast.LENGTH_LONG).show()
+        }
+    }
     var update by remember { mutableStateOf<Release?>(null) }
     val upToDateToast = stringResource(R.string.update_up_to_date)
     val autoScrollReels = viewModel.autoScrollReels.collectAsState()
@@ -209,6 +243,49 @@ fun SettingsContent(
                             if (update == null) Toast.makeText(context, upToDateToast, Toast.LENGTH_SHORT).show()
                         }
                     }
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.FormatSize,
+                    title = stringResource(R.string.text_size_title),
+                    supportingText = stringResource(R.string.text_size_desc, textZoom.value),
+                    onClick = {
+                        val l = listOf(85, 100, 115, 130, 150)
+                        viewModel.setTextZoom(l[(l.indexOf(textZoom.value) + 1) % l.size])
+                    }
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.OpenInBrowser,
+                    title = stringResource(R.string.open_links_in_tab_title),
+                    supportingText = stringResource(R.string.open_links_in_tab_desc),
+                    isActive = openLinksInTab.value,
+                    onClick = { viewModel.setOpenLinksInTab(!openLinksInTab.value) }
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.LightMode,
+                    title = stringResource(R.string.keep_screen_on_title),
+                    supportingText = stringResource(
+                        when (keepScreenOn.value) {
+                            "always" -> R.string.keep_screen_on_always
+                            "video" -> R.string.keep_screen_on_video
+                            else -> R.string.keep_screen_on_off
+                        }
+                    ),
+                    onClick = {
+                        val l = listOf("off", "video", "always")
+                        viewModel.setKeepScreenOn(l[(l.indexOf(keepScreenOn.value) + 1) % l.size])
+                    }
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.FileDownload,
+                    title = stringResource(R.string.export_settings_title),
+                    supportingText = stringResource(R.string.export_settings_desc),
+                    onClick = { exportLauncher.launch("faceboost-settings.json") }
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.FileUpload,
+                    title = stringResource(R.string.import_settings_title),
+                    supportingText = stringResource(R.string.import_settings_desc),
+                    onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
                 )
             )
         )

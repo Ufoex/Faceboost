@@ -19,6 +19,9 @@ import android.util.Base64
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.MimeTypeMap
+import android.webkit.WebView
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import android.widget.Toast
 import com.eepiemi.materialbook.R
 import java.io.ByteArrayOutputStream
@@ -32,6 +35,66 @@ import java.nio.ByteBuffer
 import org.json.JSONArray
 import org.json.JSONObject
 
+// The page object scripts post downloads to (download_content.js, scripts.js).
+const val DOWNLOAD_LISTENER_NAME = "FaceboostDownloads"
+
+// Only Facebook/Messenger pages get the download object at all.
+private val DOWNLOAD_ORIGINS = setOf(
+    "https://facebook.com", "https://*.facebook.com",
+    "https://messenger.com", "https://*.messenger.com"
+)
+
+private val DOWNLOAD_HOSTS = listOf("facebook.com", "fb.com", "messenger.com", "fbcdn.net")
+
+/** Hosts the native downloader may fetch from (media comes from Facebook's CDN): https only. */
+fun isDownloadUrl(url: String): Boolean {
+    val uri = runCatching { java.net.URI(url) }.getOrNull() ?: return false
+    val host = uri.host?.lowercase() ?: return false
+    return uri.scheme.equals("https", ignoreCase = true) &&
+        DOWNLOAD_HOSTS.any { host == it || host.endsWith(".$it") }
+}
+
+/**
+ * The MIME type to save a download as, or null when it isn't a photo or video. Parameters
+ * (`;codecs=...`) and case are dropped, so a page can't drop an APK or an HTML file into the
+ * user's storage.
+ */
+fun downloadMimeType(mimeType: String): String? {
+    val type = mimeType.substringBefore(';').trim().lowercase()
+    val (major, minor) = type.split('/', limit = 2).takeIf { it.size == 2 } ?: return null
+    if (major != "image" && major != "video") return null
+    if (minor.isEmpty() || !minor.all { it.isLetterOrDigit() || it in ".+-" }) return null
+    return type
+}
+
+/**
+ * Exposes downloads to the page. With WebView's message listener (WebView 83+, nearly every
+ * device) only the main frame of a Facebook or Messenger page can reach it, not iframes or other
+ * origins; on older WebViews it falls back to the `DownloadBridge` JS interface, which still
+ * limits what is saved to photos and videos from Facebook's hosts.
+ */
+fun installDownloadBridge(webView: WebView, context: Context) {
+    val bridge = DownloadBridge(context)
+    if (!WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
+        webView.addJavascriptInterface(bridge, "DownloadBridge")
+        return
+    }
+    WebViewCompat.addWebMessageListener(webView, DOWNLOAD_LISTENER_NAME, DOWNLOAD_ORIGINS) { _, message, sourceOrigin, isMainFrame, _ ->
+        if (!isMainFrame) return@addWebMessageListener
+        val host = sourceOrigin.host?.lowercase() ?: return@addWebMessageListener
+        if (DOWNLOAD_HOSTS.none { host == it || host.endsWith(".$it") }) return@addWebMessageListener
+        val msg = message.data?.let { runCatching { JSONObject(it) }.getOrNull() }
+            ?: return@addWebMessageListener
+        val a = msg.optString("a")
+        val b = msg.optString("b")
+        when (msg.optString("call")) {
+            "downloadUrl" -> bridge.downloadUrl(a, b)
+            "downloadBase64File" -> Thread { bridge.downloadBase64File(a, b) }.start()
+            "toast" -> bridge.toast(a)
+        }
+    }
+}
+
 class DownloadBridge(private val context: Context) {
     @JavascriptInterface
     @Suppress("unused")
@@ -44,6 +107,7 @@ class DownloadBridge(private val context: Context) {
     @JavascriptInterface
     @Suppress("unused")
     fun downloadUrl(raw: String, mimeType: String) {
+        if (downloadMimeType(mimeType) == null) return
         Thread {
             runCatching {
                 val candidates = parseCandidateUrls(raw)
@@ -237,9 +301,7 @@ class DownloadBridge(private val context: Context) {
     // Download a URL to a temp file, following redirects and rejecting non-media
     // responses (an expired signed URL is answered with an HTML page).
     private fun downloadToTemp(initialUrl: String, mimeType: String): File {
-        if (!initialUrl.startsWith("http://") && !initialUrl.startsWith("https://")) {
-            throw IOException("Invalid URL")
-        }
+        if (!isDownloadUrl(initialUrl)) throw IOException("Invalid URL")
 
         var currentUrl = initialUrl
         var connection: HttpURLConnection? = null
@@ -488,19 +550,21 @@ class DownloadBridge(private val context: Context) {
     fun downloadBase64File(base64Data: String, mimeType: String) {
         runCatching {
             if (!base64Data.contains(",")) {
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.download_failed_invalid_data),
-                    Toast.LENGTH_SHORT
-                ).show()
+                showToast(context.getString(R.string.download_failed_invalid_data))
                 return
             }
 
+            // Only photos and videos are saved, whatever type the page claims.
+            val type = downloadMimeType(mimeType)
+            if (type == null) {
+                showToast(context.getString(R.string.download_failed_invalid_data))
+                return
+            }
             val data = Base64.decode(base64Data.split(",")[1], Base64.DEFAULT)
 
             // Determine if it's an image or video
-            val isImage = mimeType.startsWith("image/")
-            val isVideo = mimeType.startsWith("video/")
+            val isImage = type.startsWith("image/")
+            val isVideo = type.startsWith("video/")
 
             val (finalData, finalMimeType, extension) = when {
                 isImage -> {
@@ -512,19 +576,19 @@ class DownloadBridge(private val context: Context) {
                         Triple(outputStream.toByteArray(), "image/png", "png")
                     } else {
                         // If bitmap decoding fails, use original data
-                        val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "bin"
-                        Triple(data, mimeType, ext)
+                        val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(type) ?: "bin"
+                        Triple(data, type, ext)
                     }
                 }
                 isVideo -> {
                     // Keep videos as-is
-                    val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "mp4"
-                    Triple(data, mimeType, ext)
+                    val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(type) ?: "mp4"
+                    Triple(data, type, ext)
                 }
                 else -> {
                     // Unknown type, keep as-is
-                    val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "bin"
-                    Triple(data, mimeType, ext)
+                    val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(type) ?: "bin"
+                    Triple(data, type, ext)
                 }
             }
 
@@ -565,13 +629,9 @@ class DownloadBridge(private val context: Context) {
                     contentValues.put(pendingColumn, 0)
                     resolver.update(uri, contentValues, null, null)
 
-                    Toast.makeText(
-                        context,
-                        context.getString(
+                    showToast(context.getString(
                             if (isVideo) R.string.saved_to_movies else R.string.saved_to_downloads
-                        ),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                        ))
                 }
             } else {
                 val dirName = if (isVideo) {
@@ -592,20 +652,17 @@ class DownloadBridge(private val context: Context) {
                         null
                     )
                 }
-                Toast.makeText(
-                    context,
-                    context.getString(
+                showToast(context.getString(
                         if (isVideo) R.string.saved_to_movies else R.string.saved_to_downloads
-                    ),
-                    Toast.LENGTH_SHORT
-                ).show()
+                    ))
             }
         }.onFailure {
-            Toast.makeText(
-                context,
-                context.getString(R.string.failed_to_save_file),
-                Toast.LENGTH_SHORT
-            ).show()
+            showToast(context.getString(R.string.failed_to_save_file))
         }
+    }
+
+    // May be called from a plain worker thread (the message listener): toasts go to the main looper.
+    private fun showToast(message: String) {
+        Handler(Looper.getMainLooper()).post { Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
     }
 }

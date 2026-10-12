@@ -113,4 +113,21 @@
     <string name="reel_value_tap_to_change">%1$s · dotknij, aby zmienić</string>
     <string name="reel_fit_title">Zmiana rozmiaru wideo</string>
     <string name="reel_fit_desc">Dopasowuje całe wideo do ekranu bez przycinania; przycisk w przeglądarce wyłącza to tymczasowo</string>
+    <string name="open_links_in_tab_title">Otwieraj linki w karcie niestandardowej</string>
+    <string name="open_links_in_tab_desc">Linki do innych stron otwierają się w karcie przeglądarki nad aplikacją, z jej własnym logowaniem, a nie z Facebooka</string>
+    <string name="keep_screen_on_title">Utrzymuj ekran włączony</string>
+    <string name="keep_screen_on_off">Ekran włączony: wyłączone (dotknij, aby zmienić)</string>
+    <string name="keep_screen_on_video">Ekran włączony: gdy odtwarzane jest wideo (dotknij, aby zmienić)</string>
+    <string name="keep_screen_on_always">Ekran włączony: zawsze przy otwartej aplikacji (dotknij, aby zmienić)</string>
+    <string name="export_settings_title">Eksportuj ustawienia</string>
+    <string name="export_settings_desc">Zapisz ustawienia w pliku</string>
+    <string name="import_settings_title">Importuj ustawienia</string>
+    <string name="import_settings_desc">Wczytaj ustawienia z pliku Faceboost</string>
+    <string name="settings_exported_toast">Ustawienia zapisane</string>
+    <string name="settings_imported_toast">Zaimportowano. Otwórz ustawienia ponownie lub uruchom aplikację, aby zobaczyć wszystko</string>
+    <string name="settings_import_bad_file_toast">Nie można użyć tego pliku</string>
+    <string name="external_link_title">Otworzyć w innej aplikacji?</string>
+    <string name="external_link_open">Otwórz</string>
+    <string name="text_size_title">Rozmiar tekstu</string>
+    <string name="text_size_desc">%1$d%% · dotknij, aby zmienić</string>
 </resources>

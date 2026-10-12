@@ -112,4 +112,21 @@
     <string name="reel_value_tap_to_change">%1$s · বদলাতে ট্যাপ করুন</string>
     <string name="reel_fit_title">ভিডিও রিসাইজ</string>
     <string name="reel_fit_desc">পুরো ভিডিও না কেটে স্ক্রিনে দেখায়, ভিউয়ারের বোতাম দিয়ে সাময়িকভাবে বন্ধ করা যায়</string>
+    <string name="open_links_in_tab_title">ওয়েব লিংক কাস্টম ট্যাবে খুলুন</string>
+    <string name="open_links_in_tab_desc">অন্য সাইটের লিংক অ্যাপের ওপরে আপনার ব্রাউজারের ট্যাবে খোলে, ফেসবুকের নয়, ব্রাউজারের নিজস্ব লগইনসহ</string>
+    <string name="keep_screen_on_title">স্ক্রিন চালু রাখুন</string>
+    <string name="keep_screen_on_off">স্ক্রিন চালু: বন্ধ (বদলাতে ট্যাপ করুন)</string>
+    <string name="keep_screen_on_video">স্ক্রিন চালু: ভিডিও চলার সময় (বদলাতে ট্যাপ করুন)</string>
+    <string name="keep_screen_on_always">স্ক্রিন চালু: অ্যাপ খোলা থাকলে সবসময় (বদলাতে ট্যাপ করুন)</string>
+    <string name="export_settings_title">সেটিংস এক্সপোর্ট</string>
+    <string name="export_settings_desc">সেটিংস একটি ফাইলে সংরক্ষণ করুন</string>
+    <string name="import_settings_title">সেটিংস ইমপোর্ট</string>
+    <string name="import_settings_desc">Faceboost ফাইল থেকে সেটিংস লোড করুন</string>
+    <string name="settings_exported_toast">সেটিংস সংরক্ষিত</string>
+    <string name="settings_imported_toast">ইমপোর্ট হয়েছে। সব দেখতে সেটিংস আবার খুলুন বা অ্যাপ রিস্টার্ট করুন</string>
+    <string name="settings_import_bad_file_toast">ফাইলটি ব্যবহার করা যায়নি</string>
+    <string name="external_link_title">অন্য অ্যাপে খুলবেন?</string>
+    <string name="external_link_open">খুলুন</string>
+    <string name="text_size_title">টেক্সটের আকার</string>
+    <string name="text_size_desc">%1$d%% · বদলাতে ট্যাপ করুন</string>
 </resources>

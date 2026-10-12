@@ -60,9 +60,12 @@ On by default:
 *  Opens Facebook links from other apps, including `fb.me`, `fb.com` and the Facebook app's `fb://` links
 *  Checks GitHub for a new version when the app opens (Settings → *Check for updates on start*); *Check for updates now* does it on demand, and the dialog downloads the new APK
 *  Reel controls: time, seek bar, fullscreen and volume on paused reels, a button to hide the reel icons (fading out) and, optionally, resizing so the whole video shows without cropping
+*  Exports and imports your settings as a file; the Messages layer rotates to landscape; text size from 85% to 150%
 *  Reel gestures (Settings, off by default): hold a reel to play it faster, double tap the left or right side to skip 5-30 seconds
 
 Off by default (opt-in):
+*  Opens links to other websites in a Custom Tab (your browser's tab over the app)
+*  Keeps the screen on while a video plays, or always
 *  Uses Material You colors instead of Facebook's blues (Facebook's own blue is the default theme)
 *  Makes Facebook AMOLED Black
 *  Hides distractions like:

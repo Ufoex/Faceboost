@@ -86,8 +86,13 @@ class ExternalLinkTest {
     @Test
     fun sanitizerStripsFbclidAndKeepsFragment() {
         assertEquals(
-            "https://news.example.com/story?utm_source=fb",
-            fbRedirectSanitizer("https://news.example.com/story?utm_source=fb&fbclid=xyz")
+            "https://news.example.com/story?id=7",
+            fbRedirectSanitizer("https://news.example.com/story?utm_source=fb&id=7&fbclid=xyz")
+        )
+        // Functional parameters stay: ref/set/source are part of Facebook's own pages.
+        assertEquals(
+            "https://example.com/a?set=a.12&ref=x&source=y",
+            fbRedirectSanitizer("https://example.com/a?set=a.12&ref=x&source=y&__tn__=-R")
         )
         assertEquals(
             "https://example.com/page#section-3",

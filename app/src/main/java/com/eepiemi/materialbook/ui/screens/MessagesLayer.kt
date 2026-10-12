@@ -20,8 +20,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,11 +36,13 @@ import androidx.compose.ui.zIndex
 import com.eepiemi.materialbook.R
 import com.eepiemi.materialbook.utils.DESKTOP_USER_AGENT
 import com.eepiemi.materialbook.utils.FullscreenController
+import com.eepiemi.materialbook.utils.hardenWebView
 import com.eepiemi.materialbook.utils.MessagesLayerRoute
 import com.eepiemi.materialbook.utils.appWebViewParams
 import com.eepiemi.materialbook.utils.jsBridge.ClipboardBridge
-import com.eepiemi.materialbook.utils.jsBridge.DownloadBridge
+import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
 import com.eepiemi.materialbook.utils.jsBridge.MaterialYouBridge
+import com.eepiemi.materialbook.utils.jsBridge.PipBridge
 import com.eepiemi.materialbook.utils.jsBridge.MessagesBridge
 import com.eepiemi.materialbook.utils.messagesLayerRoute
 import com.multiplatform.webview.request.RequestInterceptor
@@ -45,6 +51,7 @@ import com.multiplatform.webview.request.WebRequestInterceptResult
 import com.multiplatform.webview.web.LoadingState
 import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.WebViewNavigator
+import com.multiplatform.webview.web.WebViewState
 import com.multiplatform.webview.web.rememberWebViewNavigator
 import com.multiplatform.webview.web.rememberWebViewState
 
@@ -59,6 +66,9 @@ import com.multiplatform.webview.web.rememberWebViewState
  *   and opens in the main view instead: [onOpenInMain].
  * - Non-Facebook links go to [onExternalUrl], as in the main view.
  */
+/** The page PiP acts on (see MaterialbookWebView): the Messages layer's while it is open. */
+class PipTarget(val navigator: WebViewNavigator, val state: WebViewState)
+
 @Composable
 fun MessagesLayer(
     url: String,
@@ -69,12 +79,19 @@ fun MessagesLayer(
     background: Color,
     primaryColor: Int,
     onPrimaryColor: Int,
+    textZoom: Int = 100,
+    pipEnabled: Boolean = false,
+    onPipTarget: (PipTarget?) -> Unit = {},
+    onVideoPlayingChanged: (Boolean, Int, Int) -> Unit = { _, _, _ -> },
+    onPipPageVisible: () -> Unit = {},
     onClose: () -> Unit,
     onOpenInMain: (String) -> Unit,
     onExternalUrl: (String) -> Unit,
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
+    var layerWebView by remember { mutableStateOf<android.webkit.WebView?>(null) }
+    LaunchedEffect(textZoom, layerWebView) { layerWebView?.settings?.textZoom = textZoom }
     val currentOnOpenInMain by rememberUpdatedState(onOpenInMain)
     val currentOnExternalUrl by rememberUpdatedState(onExternalUrl)
 
@@ -116,6 +133,27 @@ fun MessagesLayer(
         if (canGoBack) navigator.navigateBack() else onClose()
     }
 
+    // PiP for videos in the layer (a shared reel, a video in a chat): the same detector as the
+    // main view reports them through PipBridge, and while the layer is open PiP acts on its
+    // page. When it closes its videos are gone: say so, or leaving the app afterwards would
+    // still count as "video playing".
+    LaunchedEffect(state.loadingState, pipEnabled) {
+        if (state.loadingState is LoadingState.Finished && pipEnabled) {
+            val detector = resources.openRawResource(R.raw.pip_video_detector)
+                .bufferedReader().use { it.readText() }
+            navigator.evaluateJavaScript(detector) {}
+        }
+    }
+    val currentOnPipTarget by rememberUpdatedState(onPipTarget)
+    val currentOnVideoPlayingChanged by rememberUpdatedState(onVideoPlayingChanged)
+    DisposableEffect(navigator, state) {
+        currentOnPipTarget(PipTarget(navigator, state))
+        onDispose {
+            currentOnPipTarget(null)
+            currentOnVideoPlayingChanged(false, 0, 0)
+        }
+    }
+
     // Same page scripts as the main view (download hook, theme, ...), plus the layer's own
     // in-page navigation watcher, loaded from the bundled resource like the PiP detector.
     val loadingState = state.loadingState
@@ -139,7 +177,10 @@ fun MessagesLayer(
             // The layer is gone for good once closed: free its WebView (and its page).
             onDispose = { webView -> webView.destroy() },
             onCreated = { webView ->
-                CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
+                CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false)
+                hardenWebView(state, webView)
+                layerWebView = webView
+                webView.settings.textZoom = textZoom
                 state.webSettings.apply {
                     isJavaScriptEnabled = true
                     androidWebSettings.apply {
@@ -150,7 +191,7 @@ fun MessagesLayer(
                 }
                 webView.apply {
                     addJavascriptInterface(ShareBridge(context) { webView.post { ShareBox.inChat = null } }, "ShareBridge")
-                    addJavascriptInterface(DownloadBridge(context), "DownloadBridge")
+                    installDownloadBridge(this, context)
                     addJavascriptInterface(ClipboardBridge(context), "ClipboardBridge")
                     addJavascriptInterface(MaterialYouBridge(primaryColor, onPrimaryColor), "MaterialYouBridge")
                     addJavascriptInterface(
@@ -158,6 +199,7 @@ fun MessagesLayer(
                         MessagesBridge { leftTo -> webView.post { currentOnOpenInMain(leftTo) } },
                         "MessagesBridge"
                     )
+                    addJavascriptInterface(PipBridge(currentOnVideoPlayingChanged, onPipPageVisible), "PipBridge")
                     setLayerType(View.LAYER_TYPE_HARDWARE, null)
                     overScrollMode = View.OVER_SCROLL_NEVER
                     isVerticalScrollBarEnabled = false

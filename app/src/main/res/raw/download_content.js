@@ -373,6 +373,14 @@
     return buckets;
   };
 
+  // FaceboostDownloads: the app's Facebook-only message listener; DownloadBridge: older
+  // WebViews and older app versions.
+  const dlHas = (name) => !!(window.FaceboostDownloads || (window.DownloadBridge && window.DownloadBridge[name]));
+  const dlCall = (name, a, b) => {
+    if (window.FaceboostDownloads) window.FaceboostDownloads.postMessage(JSON.stringify({ call: name, a: a, b: b }));
+    else if (window.DownloadBridge && window.DownloadBridge[name]) window.DownloadBridge[name](a, b);
+  };
+
   const sendCandidates = (videoEl) => {
     const buckets = candidatesFor(videoEl);
     const payload = {
@@ -381,7 +389,7 @@
       video: buckets.video.map(sanitizeVideoUrl),
       audio: buckets.audio.map(sanitizeVideoUrl)
     };
-    window.DownloadBridge.downloadUrl(JSON.stringify(payload), "video/mp4");
+    dlCall("downloadUrl", JSON.stringify(payload), "video/mp4");
   };
 
   // Facebook's media URLs carry MSE range query params (bytestart/byteend)
@@ -465,12 +473,12 @@
     resolveVideoUrl(videoEl, (url) => {
       if (!url) {
         debugLog("No downloadable video URL found");
-        if (window.DownloadBridge && window.DownloadBridge.toast) {
-          window.DownloadBridge.toast("Impossible de récupérer l'URL vidéo. Relance la lecture puis réessaie.");
+        if (dlHas("toast")) {
+          dlCall("toast", "Impossible de récupérer l'URL vidéo. Relance la lecture puis réessaie.");
         }
         return;
       }
-      if (window.DownloadBridge && window.DownloadBridge.downloadUrl) {
+      if (dlHas("downloadUrl")) {
         sendCandidates(videoEl);
       } else {
         downloadBase64(sanitizeVideoUrl(url), "video/mp4");
@@ -497,7 +505,7 @@
         return;
       }
 
-      if (window.DownloadBridge && window.DownloadBridge.downloadUrl) {
+      if (dlHas("downloadUrl")) {
         // Stream the file natively to avoid loading large videos in memory.
         sendCandidates(mediaElement);
       } else {
@@ -513,14 +521,11 @@
     fetch(url)
       .then(response => response.blob())
       .then(blob => {
-        if (window.DownloadBridge && window.DownloadBridge.downloadBase64File) {
+        if (dlHas("downloadBase64File")) {
           const reader = new FileReader();
           reader.onloadend = function() {
             if (reader.result) {
-              window.DownloadBridge.downloadBase64File(
-                reader.result,
-                blob.type || fallbackMime || "image/jpeg"
-              );
+              dlCall("downloadBase64File", reader.result, blob.type || fallbackMime || "image/jpeg");
             }
           };
           reader.readAsDataURL(blob);

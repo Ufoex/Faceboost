@@ -111,4 +111,21 @@
     <string name="reel_value_tap_to_change">%1$s · touchez pour changer</string>
     <string name="reel_fit_title">Redimensionner les vidéos</string>
     <string name="reel_fit_desc">Affiche toute la vidéo sans recadrage, avec un bouton dans le lecteur pour la désactiver temporairement</string>
+    <string name="open_links_in_tab_title">Ouvrir les liens web dans un onglet personnalisé</string>
+    <string name="open_links_in_tab_desc">Les liens vers d\'autres sites s\'ouvrent dans l\'onglet de votre navigateur au-dessus de l\'app, avec sa propre session et non celle de Facebook</string>
+    <string name="keep_screen_on_title">Garder l\'écran allumé</string>
+    <string name="keep_screen_on_off">Écran allumé : désactivé (touchez pour changer)</string>
+    <string name="keep_screen_on_video">Écran allumé : pendant la lecture d\'une vidéo (touchez pour changer)</string>
+    <string name="keep_screen_on_always">Écran allumé : toujours quand l\'app est ouverte (touchez pour changer)</string>
+    <string name="export_settings_title">Exporter les réglages</string>
+    <string name="export_settings_desc">Enregistrer vos réglages dans un fichier</string>
+    <string name="import_settings_title">Importer les réglages</string>
+    <string name="import_settings_desc">Charger les réglages depuis un fichier Faceboost</string>
+    <string name="settings_exported_toast">Réglages enregistrés</string>
+    <string name="settings_imported_toast">Importé. Rouvrez les réglages ou relancez l\'app pour tout voir</string>
+    <string name="settings_import_bad_file_toast">Ce fichier n\'a pas pu être utilisé</string>
+    <string name="external_link_title">Ouvrir dans une autre application ?</string>
+    <string name="external_link_open">Ouvrir</string>
+    <string name="text_size_title">Taille du texte</string>
+    <string name="text_size_desc">%1$d%% · touchez pour changer</string>
 </resources>

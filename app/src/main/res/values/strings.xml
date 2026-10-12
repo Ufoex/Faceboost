@@ -113,4 +113,21 @@
     <string name="reel_value_tap_to_change">%1$s · tap to change</string>
     <string name="reel_fit_title">Resize videos</string>
     <string name="reel_fit_desc">Fit the whole video on screen without cropping, with a button in the viewer to switch it off temporarily</string>
+    <string name="open_links_in_tab_title">Open web links in a Custom Tab</string>
+    <string name="open_links_in_tab_desc">Links to other websites open in your browser\'s tab over the app, with the browser\'s own login, not Facebook\'s</string>
+    <string name="keep_screen_on_title">Keep screen on</string>
+    <string name="keep_screen_on_off">Keep screen on: off (tap to change)</string>
+    <string name="keep_screen_on_video">Keep screen on: while a video plays (tap to change)</string>
+    <string name="keep_screen_on_always">Keep screen on: always while the app is open (tap to change)</string>
+    <string name="export_settings_title">Export settings</string>
+    <string name="export_settings_desc">Save your settings to a file</string>
+    <string name="import_settings_title">Import settings</string>
+    <string name="import_settings_desc">Load settings from a Faceboost file</string>
+    <string name="settings_exported_toast">Settings saved</string>
+    <string name="settings_imported_toast">Imported. Reopen the settings screen or restart the app to see everything</string>
+    <string name="settings_import_bad_file_toast">That file could not be used</string>
+    <string name="external_link_title">Open in another app?</string>
+    <string name="external_link_open">Open</string>
+    <string name="text_size_title">Text size</string>
+    <string name="text_size_desc">%1$d%% · tap to change</string>
 </resources>

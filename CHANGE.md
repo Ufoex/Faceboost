@@ -30,6 +30,15 @@
 * Tweak: Hiding the reel icons fades them out and slides the reels over the top bar instead of cutting; showing them again fades them back without moving the layout.
 * Fix: The fullscreen button of the extra seek bar now lets you rotate the phone (it asks for fullscreen on the video's container like Facebook's own button).
 * Fix: The reel interface no longer flashes back while the icons are hidden.
+* Feature: Open web links in a Custom Tab (setting, off by default): links to other sites open in your browser's tab over the app, with the browser's own login instead of Facebook's.
+* Feature: Keep screen on (setting): off, while a video plays, or always while the app is open.
+* Feature: Export and import settings as a small JSON file through the system file picker.
+* Feature: Text size (setting, 85% to 150%) for the feed and the Messages layer, applied right away.
+* Feature: The Messages layer follows the phone's rotation (chat list beside the conversation in landscape), and videos in it can use Picture-in-Picture.
+* Tweak: Security hardening: backups no longer carry the Facebook session, third-party cookies are off in the Messages layer, the WebView pins file access, Safe Browsing and geolocation, and downloads only accept photos and videos from Facebook pages and Facebook's hosts.
+* Tweak: Links that leave the app: web, email and phone open directly, other apps' links ask first, javascript:/file:/content:/data: are refused and intent:// links only follow their web fallback. Links sent to the app must be Facebook pages. Tracking parameters (fbclid, utm_*, __tn__, mibextid...) are removed without touching ref, set or source.
+* Tweak: LICENSE updated from upstream.
+* Tweak: Settings dialog status bar icons follow its background.
 * Tweak: New applicationId `com.ufoex.materialbook`; runtime scripts are fetched from this repo.
 
 ---

@@ -69,19 +69,51 @@ fun isWebViewRenderable(url: String): Boolean {
         host in SHORT_HOSTS
 }
 
+/** What to do with a link a page sends out of the app. */
+enum class ExternalLinkAction { OPEN, CONFIRM, BLOCK }
+
 /**
- * Hands a URL to whatever the user set as default browser/app (Brave, Chrome, ...).
- * Returns false when nothing on the device can open it.
+ * Web, email and phone links open directly; code and local-file schemes are refused; any other
+ * scheme (another app's deep link) asks the user first.
+ */
+fun externalLinkAction(url: String): ExternalLinkAction = when (schemeOf(url)) {
+    "http", "https", "mailto", "tel" -> ExternalLinkAction.OPEN
+    null, "javascript", "file", "content", "data", "about", "blob", "intent" -> ExternalLinkAction.BLOCK
+    else -> ExternalLinkAction.CONFIRM
+}
+
+/**
+ * Where an `intent://` link goes: never into the app it names (Facebook uses them to push its
+ * own apps, and a page could aim one at any exported activity), only to its web fallback when it
+ * carries one. Other links are returned as they are; null means there is nowhere to go.
+ */
+fun externalTarget(url: String): String? {
+    if (!url.startsWith("intent:", ignoreCase = true)) return url
+    val fallback = runCatching { Intent.parseUri(url, Intent.URI_INTENT_SCHEME).getStringExtra("browser_fallback_url") }.getOrNull()
+    return fallback?.takeIf { schemeOf(it) in WEB_SCHEMES }
+}
+
+/**
+ * The page a link sent to the app (VIEW intent, shortcut) should load, or null when it isn't a
+ * Facebook web page: another app can send any data to an exported activity, and a javascript:,
+ * file: or content: URL must never reach the WebView.
+ */
+fun appLinkUrl(data: String?): String? {
+    val url = data?.let(::intentUrl) ?: return null
+    return url.takeIf { schemeOf(it) in WEB_SCHEMES && isWebViewRenderable(it) }
+}
+
+/**
+ * Hands a URL to whatever the user set as default browser/app (Brave, Chrome, ...), the way a
+ * browser would: only to activities that accept links from a browser. Returns false when
+ * nothing on the device can open it.
  */
 fun openExternalUrl(context: Context, url: String): Boolean {
-    val intent = if (url.startsWith("intent:", ignoreCase = true)) {
-        // intent://...#Intent;scheme=…;package=…;end — ACTION_VIEW on the raw string
-        // has no handler and throws.
-        runCatching { Intent.parseUri(url, Intent.URI_INTENT_SCHEME) }.getOrNull() ?: return false
-    } else {
-        val uri = runCatching { url.toUri() }.getOrNull() ?: return false
-        Intent(Intent.ACTION_VIEW, uri)
-    }
-    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    val target = externalTarget(url) ?: return false
+    val uri = runCatching { target.toUri() }.getOrNull() ?: return false
+    val intent = Intent(Intent.ACTION_VIEW, uri)
+        .addCategory(Intent.CATEGORY_BROWSABLE)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        .apply { selector = null }
     return runCatching { context.startActivity(intent) }.isSuccess
 }
