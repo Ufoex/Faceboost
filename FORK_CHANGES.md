@@ -1,4 +1,4 @@
-# Fork changes (Ufoex/Materialbook)
+# Fork changes (Ufoex/Faceboost, formerly Materialbook)
 
 Fork of [eepiemi/Materialbook](https://github.com/eepiemi/Materialbook) that combines the useful work of other forks.
 All credit to eepiemi and to the fork authors below. Package: `com.ufoex.materialbook` (installs next to the original).

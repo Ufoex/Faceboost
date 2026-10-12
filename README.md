@@ -7,11 +7,11 @@
 </h1>
 
 <p align="middle">
-    <a href='https://github.com/Ufoex/Materialbook/releases/latest'><img alt='Download' height='40' src='./assets/download.svg'/></a>
+    <a href='https://github.com/Ufoex/Faceboost/releases/latest'><img alt='Download' height='40' src='./assets/download.svg'/></a>
 </p>
 
 <p align="middle">
-    <a href='https://grev.shehryar.ae/?owner=Ufoex&repo=Materialbook'><img alt='Downloads count' height='40' src='https://img.shields.io/github/downloads/Ufoex/Materialbook/total?style=for-the-badge&logo=github&label=Downloads&color=1877F2&labelColor=24292F'/></a>
+    <a href='https://grev.shehryar.ae/?owner=Ufoex&repo=Faceboost'><img alt='Downloads count' height='40' src='https://img.shields.io/github/downloads/Ufoex/Faceboost/total?style=for-the-badge&logo=github&label=Downloads&color=1877F2&labelColor=24292F'/></a>
 </p>
 
 <h2 align="middle">
@@ -19,14 +19,14 @@
 </h2>
 
 <p align="middle">
-    <a href='https://github.com/Ufoex/Materialbook/issues/new/choose'><img alt='Open issue' height='40' src='./assets/open_issue.svg'/></a>
+    <a href='https://github.com/Ufoex/Faceboost/issues/new/choose'><img alt='Open issue' height='40' src='./assets/open_issue.svg'/></a>
 </p>
 
 <h2 align="middle">
     ✏️ About this repo
 </h2>
 
-The app is called **Faceboost** (formerly Materialbook; the package name and the repo keep the old name so updates keep working).
+The app is called **Faceboost** (formerly Materialbook). The repository was renamed too; the old address redirects here. The package name stays `com.ufoex.materialbook` so updates keep replacing the installed app.
 
 This is **not an original project**. It is a collection repo where the changes from other
 [Materialbook](https://github.com/eepiemi/Materialbook) forks are brought together in one app.
@@ -145,11 +145,11 @@ Materialbook requires Android 8.0 (API level 26) or newer.
 1.  **Clone the repository**
     * In Android Studio:
       * File > New > Project from Version Control
-      * Paste `https://github.com/Ufoex/Materialbook.git` and clone.
+      * Paste `https://github.com/Ufoex/Faceboost.git` and clone.
     * Or via terminal:
     ```
-    git clone https://github.com/Ufoex/Materialbook.git
-    cd Materialbook
+    git clone https://github.com/Ufoex/Faceboost.git
+    cd Faceboost
     ```
 2.  **Open in Android Studio.** (only if cloned via terminal)
     * Select Open an Existing Project and choose the cloned folder.
