@@ -35,6 +35,10 @@ import java.nio.ByteBuffer
 import org.json.JSONArray
 import org.json.JSONObject
 
+/** Saved files are named Facebook_<date>_<time>.<ext>, readable in the gallery and Downloads. */
+internal fun downloadFileName(extension: String): String =
+    "Facebook_" + java.text.SimpleDateFormat("yyyyMMdd_HHmmss_SSS", java.util.Locale.US).format(java.util.Date()) + "." + extension
+
 // The page object scripts post downloads to (download_content.js, scripts.js).
 const val DOWNLOAD_LISTENER_NAME = "FaceboostDownloads"
 
@@ -287,7 +291,7 @@ class DownloadBridge(private val context: Context) {
             if (!hasVideoTrack(videoFile)) throw IOException("Video fragment has no video track")
             if (!hasAudioTrack(audioFile)) throw IOException("Audio fragment has no audio track")
             mux(videoFile, audioFile, outFile)
-            val savedName = "${System.currentTimeMillis()}.mp4"
+            val savedName = downloadFileName("mp4")
             outFile.inputStream().use { input ->
                 saveVideo(input, savedName, "video/mp4")
             }
@@ -339,7 +343,7 @@ class DownloadBridge(private val context: Context) {
                 throw IOException("Response is not media content")
             }
 
-            val fileName = "${System.currentTimeMillis()}.${MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "mp4"}"
+            val fileName = downloadFileName(MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "mp4")
             val tempFile = File(context.cacheDir, fileName)
             try {
                 connection.inputStream.use { input ->
@@ -592,7 +596,7 @@ class DownloadBridge(private val context: Context) {
                 }
             }
 
-            val fileName = "${System.currentTimeMillis()}.$extension"
+            val fileName = downloadFileName(extension)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val collection = if (isVideo) {

@@ -140,4 +140,10 @@
     <string name="media_permission_title">Aparat lub mikrofon wyłączony</string>
     <string name="media_permission_text">Połączenia wymagają aparatu i mikrofonu. Włącz je w uprawnieniach aplikacji.</string>
     <string name="media_permission_open_settings">Otwórz ustawienia</string>
+    <string name="app_lock_title">Blokada aplikacji</string>
+    <string name="app_lock_desc">Prosi o odcisk palca, twarz lub PIN telefonu przy otwarciu aplikacji lub po pobycie w tle</string>
+    <string name="app_lock_unavailable">Telefon potrzebuje najpierw blokady ekranu lub odcisku palca</string>
+    <string name="app_lock_prompt">Odblokuj Faceboost</string>
+    <string name="app_lock_locked">Faceboost jest zablokowany</string>
+    <string name="app_lock_unlock">Odblokuj</string>
 </resources>

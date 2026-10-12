@@ -138,4 +138,10 @@
     <string name="media_permission_title">Cámara o micrófono desactivados</string>
     <string name="media_permission_text">Las llamadas necesitan la cámara y el micrófono. Actívalos en los permisos de la app.</string>
     <string name="media_permission_open_settings">Abrir ajustes</string>
+    <string name="app_lock_title">Bloqueo de la app</string>
+    <string name="app_lock_desc">Pide tu huella, rostro o PIN del teléfono al abrir la app o tras estar en segundo plano</string>
+    <string name="app_lock_unavailable">Tu teléfono necesita primero un bloqueo de pantalla o una huella</string>
+    <string name="app_lock_prompt">Desbloquear Faceboost</string>
+    <string name="app_lock_locked">Faceboost está bloqueado</string>
+    <string name="app_lock_unlock">Desbloquear</string>
 </resources>

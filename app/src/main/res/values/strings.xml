@@ -140,4 +140,10 @@
     <string name="media_permission_title">Camera or microphone is off</string>
     <string name="media_permission_text">Calls need the camera and the microphone. Turn them on in the app\'s permissions.</string>
     <string name="media_permission_open_settings">Open settings</string>
+    <string name="app_lock_title">App lock</string>
+    <string name="app_lock_desc">Ask for your fingerprint, face or phone PIN when the app opens or after it was in the background</string>
+    <string name="app_lock_unavailable">Your phone needs a screen lock or a fingerprint first</string>
+    <string name="app_lock_prompt">Unlock Faceboost</string>
+    <string name="app_lock_locked">Faceboost is locked</string>
+    <string name="app_lock_unlock">Unlock</string>
 </resources>

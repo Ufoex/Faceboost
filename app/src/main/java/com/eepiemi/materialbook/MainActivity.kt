@@ -14,6 +14,18 @@ import android.content.IntentFilter
 import android.graphics.Rect
 import android.graphics.drawable.Icon
 import android.os.Build
+import android.os.SystemClock
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import com.eepiemi.materialbook.utils.APP_LOCK_GRACE_MS
+import com.eepiemi.materialbook.utils.appLockAuthenticators
+import com.eepiemi.materialbook.utils.canUseAppLock
 import android.view.WindowManager
 import android.os.Bundle
 import android.os.Handler
@@ -21,7 +33,7 @@ import android.os.Looper
 import android.util.Log
 import android.util.Rational
 import android.webkit.WebView
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -68,7 +80,7 @@ private const val ACTION_PIP_TOGGLE = "com.astryx.book.PIP_TOGGLE_PLAYBACK"
 // the device spike); the foreground grace period leaves no room to wait.
 private const val HANDOFF_READ_TIMEOUT_MS = 300L
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     // Shared with the composable tree below (passed explicitly rather than
     // relying on Compose's viewModel() default resolution) so onUserLeaveHint
@@ -317,6 +329,8 @@ class MainActivity : ComponentActivity() {
         urlState.value = appLinkUrl(intent?.data?.toString())
         receiveShare(intent)
 
+        lockIfNeeded(cold = true)
+
         setContent {
             val intentUrl = urlState.value
             var update by remember { mutableStateOf<Release?>(null) }
@@ -325,6 +339,7 @@ class MainActivity : ComponentActivity() {
             }
             MaterialbookTheme {
                 update?.let { UpdateDialog(it) { update = null } }
+                androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
                 MaterialbookWebView(
                     url = intentUrl
                         ?: "https://facebook.com/",
@@ -341,6 +356,28 @@ class MainActivity : ComponentActivity() {
                         updateVideoPlaybackState(isPlaying, videoWidth, videoHeight)
                     }
                 )
+                if (locked) {
+                    androidx.compose.material3.Surface(
+                        modifier = Modifier.fillMaxSize().pointerInput(Unit) {},
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.background
+                    ) {
+                        androidx.compose.foundation.layout.Column(
+                            Modifier.fillMaxSize(),
+                            verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+                            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                        ) {
+                            androidx.compose.material3.Text(
+                                stringResource(R.string.app_lock_locked),
+                                style = androidx.compose.material3.MaterialTheme.typography.titleLarge
+                            )
+                            androidx.compose.material3.Button(
+                                onClick = { promptUnlock() },
+                                modifier = Modifier.padding(top = 24.dp)
+                            ) { androidx.compose.material3.Text(stringResource(R.string.app_lock_unlock)) }
+                        }
+                    }
+                }
+                }
             }
         }
 
@@ -380,17 +417,20 @@ class MainActivity : ComponentActivity() {
     // becoming visible again (unlock while in PiP, or back to full screen).
     override fun onStart() {
         super.onStart()
+        lockIfNeeded(cold = false)
         AppVisibility.background = false
         handBack("onStart")
     }
 
     override fun onStop() {
         super.onStop()
+        leftAt = SystemClock.elapsedRealtime()
         AppVisibility.background = true
     }
 
     override fun onResume() {
         super.onResume()
+        promptUnlock()
         handBack("onResume")
     }
 
@@ -499,6 +539,48 @@ class MainActivity : ComponentActivity() {
         }
         if (keep) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    // App lock (Settings): when on, the app asks for the fingerprint, face or phone PIN on launch
+    // and when it comes back after more than APP_LOCK_GRACE_MS in the background.
+    private var locked by mutableStateOf(false)
+    private var leftAt = 0L
+    private var unlockPrompting = false
+
+    private fun lockIfNeeded(cold: Boolean) {
+        if (!settingsVM.appLock.value || !canUseAppLock(this)) return
+        if (cold || (leftAt > 0 && SystemClock.elapsedRealtime() - leftAt > APP_LOCK_GRACE_MS)) locked = true
+    }
+
+    private fun promptUnlock() {
+        if (!locked || unlockPrompting) return
+        unlockPrompting = true
+        val prompt = BiometricPrompt(
+            this, ContextCompat.getMainExecutor(this),
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    unlockPrompting = false
+                    locked = false
+                }
+
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    unlockPrompting = false // the lock screen stays; its button asks again
+                }
+            }
+        )
+        val authenticators = appLockAuthenticators()
+        prompt.authenticate(
+            BiometricPrompt.PromptInfo.Builder()
+                .setTitle(getString(R.string.app_lock_prompt))
+                .setAllowedAuthenticators(authenticators)
+                .apply {
+                    // The negative button can't be combined with the phone PIN as an authenticator.
+                    if (authenticators and BiometricManager.Authenticators.DEVICE_CREDENTIAL == 0) {
+                        setNegativeButtonText(getString(android.R.string.cancel))
+                    }
+                }
+                .build()
+        )
     }
 
     private fun updateVideoPlaybackState(

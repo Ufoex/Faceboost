@@ -138,4 +138,10 @@
     <string name="media_permission_title">Caméra ou micro désactivés</string>
     <string name="media_permission_text">Les appels ont besoin de la caméra et du micro. Activez-les dans les autorisations de l\'app.</string>
     <string name="media_permission_open_settings">Ouvrir les réglages</string>
+    <string name="app_lock_title">Verrouillage de l\'app</string>
+    <string name="app_lock_desc">Demande votre empreinte, votre visage ou le code du téléphone à l\'ouverture ou après un passage en arrière-plan</string>
+    <string name="app_lock_unavailable">Votre téléphone a d\'abord besoin d\'un verrouillage d\'écran ou d\'une empreinte</string>
+    <string name="app_lock_prompt">Déverrouiller Faceboost</string>
+    <string name="app_lock_locked">Faceboost est verrouillé</string>
+    <string name="app_lock_unlock">Déverrouiller</string>
 </resources>

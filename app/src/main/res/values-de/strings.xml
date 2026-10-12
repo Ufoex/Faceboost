@@ -138,4 +138,10 @@
     <string name="media_permission_title">Kamera oder Mikrofon ist aus</string>
     <string name="media_permission_text">Anrufe brauchen Kamera und Mikrofon. Aktiviere sie in den App-Berechtigungen.</string>
     <string name="media_permission_open_settings">Einstellungen öffnen</string>
+    <string name="app_lock_title">App-Sperre</string>
+    <string name="app_lock_desc">Fingerabdruck, Gesicht oder Handy-PIN abfragen, wenn die App startet oder aus dem Hintergrund zurückkommt</string>
+    <string name="app_lock_unavailable">Dein Telefon braucht zuerst eine Displaysperre oder einen Fingerabdruck</string>
+    <string name="app_lock_prompt">Faceboost entsperren</string>
+    <string name="app_lock_locked">Faceboost ist gesperrt</string>
+    <string name="app_lock_unlock">Entsperren</string>
 </resources>

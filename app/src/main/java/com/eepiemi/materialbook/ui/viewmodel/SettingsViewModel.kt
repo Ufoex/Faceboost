@@ -32,6 +32,7 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REEL_BACK
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REEL_CONTROLS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REEL_GESTURES
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.KEEP_SCREEN_ON
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.APP_LOCK
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.OPEN_LINKS_IN_TAB
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.TEXT_ZOOM
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REEL_FIT
@@ -133,6 +134,11 @@ class SettingsViewModel(
     val textZoom = dataStore.textZoom.stateIn(
         scope = viewModelScope,
         initialValue = initialPrefs[TEXT_ZOOM] ?: 100,
+        started = SharingStarted.Eagerly
+    )
+    val appLock = dataStore.appLock.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[APP_LOCK] ?: false,
         started = SharingStarted.Eagerly
     )
     val openLinksInTab = dataStore.openLinksInTab.stateIn(
@@ -301,6 +307,7 @@ class SettingsViewModel(
     }
 
     fun setReelGestures(v: Boolean) { viewModelScope.launch { dataStore.setReelGestures(v) } }
+    fun setAppLock(v: Boolean) { viewModelScope.launch { dataStore.setAppLock(v) } }
     fun setTextZoom(v: Int) { viewModelScope.launch { dataStore.setTextZoom(v) } }
     fun setOpenLinksInTab(v: Boolean) { viewModelScope.launch { dataStore.setOpenLinksInTab(v) } }
     fun setKeepScreenOn(v: String) { viewModelScope.launch { dataStore.setKeepScreenOn(v) } }

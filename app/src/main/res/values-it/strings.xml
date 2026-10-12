@@ -139,4 +139,10 @@
     <string name="media_permission_title">Fotocamera o microfono disattivati</string>
     <string name="media_permission_text">Le chiamate richiedono fotocamera e microfono. Attivali nelle autorizzazioni dell\'app.</string>
     <string name="media_permission_open_settings">Apri impostazioni</string>
+    <string name="app_lock_title">Blocco dell\'app</string>
+    <string name="app_lock_desc">Chiede impronta, volto o PIN del telefono all\'apertura o dopo che l\'app è stata in background</string>
+    <string name="app_lock_unavailable">Il telefono ha prima bisogno di un blocco schermo o di un\'impronta</string>
+    <string name="app_lock_prompt">Sblocca Faceboost</string>
+    <string name="app_lock_locked">Faceboost è bloccato</string>
+    <string name="app_lock_unlock">Sblocca</string>
 </resources>

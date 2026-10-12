@@ -139,4 +139,10 @@
     <string name="media_permission_title">相機或麥克風未開啟</string>
     <string name="media_permission_text">通話需要相機和麥克風。請在應用程式權限中開啟。</string>
     <string name="media_permission_open_settings">開啟設定</string>
+    <string name="app_lock_title">應用程式鎖定</string>
+    <string name="app_lock_desc">開啟應用程式或從背景返回時，要求指紋、臉部或手機 PIN</string>
+    <string name="app_lock_unavailable">你的手機需要先設定螢幕鎖定或指紋</string>
+    <string name="app_lock_prompt">解鎖 Faceboost</string>
+    <string name="app_lock_locked">Faceboost 已鎖定</string>
+    <string name="app_lock_unlock">解鎖</string>
 </resources>

@@ -44,6 +44,7 @@ import com.eepiemi.materialbook.utils.jsBridge.PageBridges
 import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
 import com.eepiemi.materialbook.utils.jsBridge.installPageBridges
 import com.eepiemi.materialbook.utils.jsBridge.MaterialYouBridge
+import com.eepiemi.materialbook.utils.jsBridge.MaterialbookSettings
 import com.eepiemi.materialbook.utils.jsBridge.PipBridge
 import com.eepiemi.materialbook.utils.jsBridge.MessagesBridge
 import com.eepiemi.materialbook.utils.messagesLayerRoute
@@ -82,6 +83,7 @@ fun MessagesLayer(
     primaryColor: Int,
     onPrimaryColor: Int,
     textZoom: Int = 100,
+    onOpenSettings: () -> Unit = {},
     pipEnabled: Boolean = false,
     onPipTarget: (PipTarget?) -> Unit = {},
     onVideoPlayingChanged: (Boolean, Int, Int) -> Unit = { _, _, _ -> },
@@ -94,6 +96,7 @@ fun MessagesLayer(
     val resources = LocalResources.current
     var layerWebView by remember { mutableStateOf<android.webkit.WebView?>(null) }
     LaunchedEffect(textZoom, layerWebView) { layerWebView?.settings?.textZoom = textZoom }
+    val currentOnOpenSettings by rememberUpdatedState(onOpenSettings)
     val currentOnOpenInMain by rememberUpdatedState(onOpenInMain)
     val currentOnExternalUrl by rememberUpdatedState(onExternalUrl)
 
@@ -197,6 +200,8 @@ fun MessagesLayer(
                     installPageBridges(
                         this,
                         PageBridges(
+                            // The gear scripts.js adds to the desktop header opens the app's Settings.
+                            settings = MaterialbookSettings { currentOnOpenSettings() },
                             clipboard = ClipboardBridge(context),
                             layer = MessagesBridge { leftTo -> webView.post { currentOnOpenInMain(leftTo) } },
                             pip = PipBridge(currentOnVideoPlayingChanged, onPipPageVisible),

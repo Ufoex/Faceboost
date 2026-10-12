@@ -44,6 +44,7 @@ class SettingsDataStore(private val context: Context) {
         val HIDE_STORIES = booleanPreferencesKey("hide_stories")
         val HIDE_PEOPLE_YOU_MAY_KNOW = booleanPreferencesKey("hide_people_you_may_know")
         val HIDE_GROUPS = booleanPreferencesKey("hide_groups")
+        val APP_LOCK = booleanPreferencesKey("app_lock")
         val TEXT_ZOOM = intPreferencesKey("text_zoom")
         val OPEN_LINKS_IN_TAB = booleanPreferencesKey("open_links_in_tab")
         val KEEP_SCREEN_ON = stringPreferencesKey("keep_screen_on")
@@ -161,6 +162,8 @@ class SettingsDataStore(private val context: Context) {
     // Page text size in percent (85..150, 100 = as Facebook draws it).
     val textZoom = context.dataStore.data.map { it[TEXT_ZOOM] ?: 100 }
     suspend fun setTextZoom(v: Int) { context.dataStore.edit { it[TEXT_ZOOM] = v } }
+    val appLock = context.dataStore.data.map { it[APP_LOCK] ?: false }
+    suspend fun setAppLock(v: Boolean) { context.dataStore.edit { it[APP_LOCK] = v } }
     val openLinksInTab = context.dataStore.data.map { it[OPEN_LINKS_IN_TAB] ?: false }
     suspend fun setOpenLinksInTab(v: Boolean) { context.dataStore.edit { it[OPEN_LINKS_IN_TAB] = v } }
     // "off", "video" (while a video plays) or "always" (while the app is on screen)

@@ -139,4 +139,10 @@
     <string name="media_permission_title">המצלמה או המיקרופון כבויים</string>
     <string name="media_permission_text">שיחות דורשות מצלמה ומיקרופון. הפעל אותם בהרשאות האפליקציה.</string>
     <string name="media_permission_open_settings">פתח הגדרות</string>
+    <string name="app_lock_title">נעילת האפליקציה</string>
+    <string name="app_lock_desc">מבקש טביעת אצבע, פנים או קוד של הטלפון בפתיחת האפליקציה או אחרי שהייה ברקע</string>
+    <string name="app_lock_unavailable">הטלפון צריך קודם נעילת מסך או טביעת אצבע</string>
+    <string name="app_lock_prompt">שחרור הנעילה של Faceboost</string>
+    <string name="app_lock_locked">Faceboost נעול</string>
+    <string name="app_lock_unlock">שחרור</string>
 </resources>

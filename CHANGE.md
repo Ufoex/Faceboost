@@ -40,6 +40,9 @@
 * Feature: Messenger voice and video calls in the Messages layer. The app asks for the camera and microphone when a call starts (only Facebook's own pages can use them) and, if you said no, a window sends you to the app's settings to turn them on.
 * Feature: Back on the feed sends the app to the background instead of closing it, so coming back keeps the page.
 * Feature: Settings rows to allow opening Facebook links in this app (Android 12+), share the page you are on as a clean link, and log out of Facebook on this phone.
+* Feature: App lock (Settings, off by default): asks for your fingerprint, face or phone PIN when the app opens and after more than 15 seconds in the background.
+* Feature: A Settings gear in the reel viewer, and the gear in the Messages layer header now opens Settings.
+* Tweak: Saved downloads are named Facebook_<date>_<time>.
 * Tweak: The page can only reach the app's Settings, theme, video state, clipboard, reel audio and Messages calls from the main frame of Facebook or Messenger, not from ads or embeds.
 * Tweak: LICENSE updated from upstream.
 * Tweak: Settings dialog status bar icons follow its background.

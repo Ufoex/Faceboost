@@ -138,4 +138,10 @@
     <string name="media_permission_title">الكاميرا أو الميكروفون معطلان</string>
     <string name="media_permission_text">تحتاج المكالمات إلى الكاميرا والميكروفون. فعّلهما من أذونات التطبيق.</string>
     <string name="media_permission_open_settings">فتح الإعدادات</string>
+    <string name="app_lock_title">قفل التطبيق</string>
+    <string name="app_lock_desc">اطلب بصمتك أو وجهك أو رمز الهاتف عند فتح التطبيق أو بعد بقائه في الخلفية</string>
+    <string name="app_lock_unavailable">يحتاج هاتفك أولاً إلى قفل شاشة أو بصمة</string>
+    <string name="app_lock_prompt">فتح قفل Faceboost</string>
+    <string name="app_lock_locked">Faceboost مقفل</string>
+    <string name="app_lock_unlock">فتح القفل</string>
 </resources>

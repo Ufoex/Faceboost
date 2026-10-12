@@ -1375,6 +1375,7 @@ fun MaterialbookWebView(
                 primaryColor = primaryColor,
                 onPrimaryColor = onPrimaryColor,
                 textZoom = textZoom,
+                onOpenSettings = { settingsToggle = true },
                 pipEnabled = pipEnabled,
                 onPipTarget = { layerPipTarget = it },
                 onVideoPlayingChanged = onVideoPlayingChanged,
