@@ -1,7 +1,7 @@
 name: Build APK
 
 # Every push to main builds a signed release APK and publishes it as a
-# GitHub release (v1.1.<run number>).
+# GitHub release (v1.2.<n>, see the Version step).
 on:
   push:
     branches: [main]
@@ -28,10 +28,14 @@ jobs:
           java-version: '17'
           cache: gradle
 
+      # 1.2.<n>: n counts from the first 1.2 build (run 31 was the 1.2.0 release).
+      - name: Version
+        run: echo "VERSION=1.2.$(( ${{ github.run_number }} - 31 ))" >> "$GITHUB_ENV"
+
       - name: Build release APK
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease -PversionNameOverride=1.1.${{ github.run_number }}
+          ./gradlew assembleRelease -PversionNameOverride=$VERSION
 
       - name: Sign APK
         run: |
@@ -42,7 +46,7 @@ jobs:
             --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
             --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
             --key-pass pass:${{ secrets.KEY_PASSWORD }} \
-            --out Faceboost-1.1.${{ github.run_number }}.apk \
+            --out Faceboost-$VERSION.apk \
             app/build/outputs/apk/release/app-release.apk
           rm -f "$RUNNER_TEMP/keystore.jks"
 
@@ -50,6 +54,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create v1.1.${{ github.run_number }} Faceboost-1.1.${{ github.run_number }}.apk \
-            --title "Faceboost v1.1.${{ github.run_number }}" \
+          gh release create v$VERSION Faceboost-$VERSION.apk \
+            --title "Faceboost v$VERSION" \
             --generate-notes --target "${{ github.sha }}"

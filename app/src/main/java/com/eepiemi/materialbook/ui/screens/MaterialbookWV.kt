@@ -1342,6 +1342,15 @@ fun MaterialbookWebView(
                         pip = PipBridge(onVideoPlayingChanged, onPipPageVisible),
                         clipboard = ClipboardBridge(context),
                         bgAudio = (this as? BackgroundAudioWebView)?.Bridge(),
+                        share = { link ->
+                            // Called on the UI thread; the clean link goes to Android's share sheet.
+                            val clean = fbRedirectSanitizer(link)
+                            context.startActivity(
+                                Intent.createChooser(
+                                    Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, clean), null
+                                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                        },
                     )
                 )
                 addJavascriptInterface(

@@ -1,4 +1,4 @@
-## Faceboost (Ufoex fork, formerly Materialbook) - v1.1.0
+## Faceboost (Ufoex fork, formerly Materialbook) - v1.2.0
 
 <ins>**Changelog:**</ins>
 
@@ -41,6 +41,10 @@
 * Feature: Back on the feed sends the app to the background instead of closing it, so coming back keeps the page.
 * Feature: Settings rows to allow opening Facebook links in this app (Android 12+), share the page you are on as a clean link, and log out of Facebook on this phone.
 * Feature: App lock (Settings, off by default): asks for your fingerprint, face or phone PIN when the app opens and after more than 15 seconds in the background.
+* Feature: Turning the app lock on first asks for your fingerprint, face or PIN to confirm it is you.
+* Feature: "Share via..." row in Facebook's share sheet, under Copy link: it copies the post's link and hands it to Android's share sheet.
+* Feature: Use only built-in scripts (Settings, off by default): never downloads page scripts, only the copies inside the app run.
+* Tweak: Releases are now numbered 1.2.x.
 * Feature: A Settings gear in the reel viewer, and the gear in the Messages layer header now opens Settings.
 * Tweak: Saved downloads are named Facebook_<date>_<time>.
 * Tweak: The page can only reach the app's Settings, theme, video state, clipboard, reel audio and Messages calls from the main frame of Facebook or Messenger, not from ads or embeds.

@@ -38,4 +38,14 @@ class PageBridgeTest {
         assertFalse(dispatchPageMessage("""{"call":"copyText","text":"x"}""", bridges))
         assertFalse(dispatchPageMessage("""{"call":"leftMessages","url":"https://x"}""", bridges))
     }
+
+    @Test
+    fun shareLinkOnlyTakesFacebookPages() {
+        val shared = mutableListOf<String>()
+        val bridges = PageBridges(share = { shared += it })
+        assertTrue(dispatchPageMessage("""{"call":"shareLink","url":"https://www.facebook.com/share/r/abc/"}""", bridges))
+        assertFalse(dispatchPageMessage("""{"call":"shareLink","url":"https://evil.com/x"}""", bridges))
+        assertFalse(dispatchPageMessage("""{"call":"shareLink","url":"javascript:alert(1)"}""", bridges))
+        assertEquals(listOf("https://www.facebook.com/share/r/abc/"), shared)
+    }
 }

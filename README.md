@@ -60,6 +60,7 @@ On by default:
 *  Opens Facebook links from other apps, including `fb.me`, `fb.com` and the Facebook app's `fb://` links
 *  Checks GitHub for a new version when the app opens (Settings → *Check for updates on start*); *Check for updates now* does it on demand, and the dialog downloads the new APK
 *  Reel controls: time, seek bar, fullscreen and volume on paused reels, a button to hide the reel icons (fading out) and, optionally, resizing so the whole video shows without cropping
+*  "Share via..." in Facebook's share sheet, and an option to run only the scripts built into the app
 *  App lock (Settings, off by default): fingerprint, face or phone PIN to open the app
 *  Messenger voice and video calls in the Messages layer (asks for the camera and microphone when a call starts); log out and share-this-page rows in Settings
 *  Exports and imports your settings as a file; the Messages layer rotates to landscape; text size from 85% to 150%

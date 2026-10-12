@@ -758,3 +758,105 @@ if (!window._mbBannerObserver) {
         };
     });
 })();
+
+
+// "Share via..." in Facebook's share sheet: adds a row under Copy link that runs Copy link,
+// catches the link Facebook copies, and hands it to Android's share sheet. Only with the app's
+// message listener (FaceboostPage). The Copy link row is found by its icon glyph, so it works in
+// every language.
+(function() {
+    if (window.__mbShareVia) return;
+    window.__mbShareVia = true;
+    const ROW_ID = 'mb-share-via';
+    const ROW_HEIGHT = 56;
+    const COPY_GLYPH = '\u{F310F}';
+    const LABELS = { es: 'Compartir con\u2026', pt: 'Compartilhar com\u2026', fr: 'Partager via\u2026', de: 'Teilen \u00fcber\u2026', it: 'Condividi con\u2026', pl: 'Udost\u0119pnij przez\u2026', he: '\u05e9\u05d9\u05ea\u05d5\u05e3 \u05d1\u05d0\u05de\u05e6\u05e2\u05d5\u05ea\u2026', iw: '\u05e9\u05d9\u05ea\u05d5\u05e3 \u05d1\u05d0\u05de\u05e6\u05e2\u05d5\u05ea\u2026' };
+    const LABEL = LABELS[(navigator.language || '').slice(0, 2).toLowerCase()] || 'Share via\u2026';
+    const SHARE_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>';
+
+    // The last text the page put on the clipboard, however it did it.
+    let lastCopied = null;
+    const remember = (text) => { if (text) lastCopied = String(text); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        const writeText = navigator.clipboard.writeText.bind(navigator.clipboard);
+        navigator.clipboard.writeText = (text) => { remember(text); return writeText(text); };
+    }
+    const setData = DataTransfer.prototype.setData;
+    DataTransfer.prototype.setData = function(type, data) {
+        if (/^text(\/plain)?$/i.test(type)) remember(data);
+        return setData.call(this, type, data);
+    };
+    const execCommand = document.execCommand.bind(document);
+    document.execCommand = (command, ...args) => {
+        if (String(command).toLowerCase() === 'copy') {
+            const active = document.activeElement;
+            remember(active && 'value' in active ? active.value : String(window.getSelection() || ''));
+        }
+        return execCommand(command, ...args);
+    };
+
+    const shareCopiedLink = (copyButton) => {
+        lastCopied = null;
+        copyButton.click();
+        const started = Date.now();
+        const poll = setInterval(() => {
+            const link = lastCopied && lastCopied.trim();
+            if (link && /^https:\/\//.test(link)) {
+                clearInterval(poll);
+                window.FaceboostPage.postMessage(JSON.stringify({ call: 'shareLink', url: link }));
+            } else if (Date.now() - started > 3000) {
+                clearInterval(poll);
+            }
+        }, 100);
+    };
+
+    const addRow = () => {
+        // Checked here, not at load: the listener object can show up after this script runs.
+        if (!window.FaceboostPage || document.getElementById(ROW_ID)) return;
+        const glyph = Array.from(document.querySelectorAll('[role="presentation"] [role="button"] span'))
+            .find(span => span.textContent === COPY_GLYPH);
+        const copyButton = glyph && glyph.closest('[role="button"]');
+        const row = copyButton && copyButton.parentElement;
+        if (!row || !row.parentElement) return;
+
+        const clone = row.cloneNode(true);
+        clone.id = ROW_ID;
+        const button = clone.querySelector('[role="button"]');
+        if (!button) return;
+        const copyLabel = copyButton.getAttribute('aria-label') || '';
+        button.setAttribute('aria-label', LABEL);
+        // text: the leaf that holds the Copy link label; icon: the glyph span becomes an SVG
+        const leaves = Array.from(button.querySelectorAll('*')).filter(e => e.children.length === 0);
+        const iconSpan = leaves.find(e => e.textContent === COPY_GLYPH);
+        const textLeaf = leaves.find(e => copyLabel && e.textContent === copyLabel) || leaves.filter(e => e !== iconSpan).pop();
+        if (textLeaf) textLeaf.textContent = LABEL;
+        if (iconSpan) { iconSpan.textContent = ''; iconSpan.innerHTML = SHARE_ICON; iconSpan.style.fontSize = '0'; }
+        // The label's box is sized to "Copy link".
+        clone.querySelectorAll('[style*="width"]').forEach(el => {
+            if (el !== clone && el !== button && el.textContent === LABEL) el.style.width = 'auto';
+        });
+        // Facebook's own handlers must not see taps on the copy: they would run Copy link twice.
+        ['touchstart', 'touchend', 'pointerdown', 'pointerup', 'mousedown', 'mouseup'].forEach(type =>
+            clone.addEventListener(type, e => e.stopPropagation(), true));
+        clone.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            shareCopiedLink(copyButton);
+        }, true);
+        row.parentElement.insertBefore(clone, row.nextSibling);
+
+        // The sheet's boxes have fixed heights: make room for the new row.
+        let el = row.parentElement;
+        for (let i = 0; i < 9 && el && el !== document.body; i++, el = el.parentElement) {
+            const height = parseFloat(el.style.height);
+            if (height >= ROW_HEIGHT * 2) el.style.height = (height + ROW_HEIGHT) + 'px';
+        }
+    };
+
+    let scheduled = false;
+    new MutationObserver(() => {
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(() => { scheduled = false; addRow(); });
+    }).observe(document.documentElement, { childList: true, subtree: true });
+})();

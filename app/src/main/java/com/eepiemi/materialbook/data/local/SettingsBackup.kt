@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.AMOLED_BLACK
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.APP_LOCK
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.AUTO_SCROLL_REELS
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.BUILTIN_SCRIPTS_ONLY
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.AUTO_UPDATE_CHECK
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.BRAVE_BLOCK_LIST
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.COLLAPSING_TOOLBAR
@@ -53,7 +54,7 @@ private val BOOLEAN_KEYS = listOf(
     AUTO_UPDATE_CHECK, REEL_CONTROLS, REEL_GESTURES, REEL_FIT, COLLAPSING_TOOLBAR, PINCH_TO_ZOOM,
     MATERIAL_YOU, AMOLED_BLACK, HIDE_SUGGESTED, HIDE_REELS, HIDE_STORIES, HIDE_PEOPLE_YOU_MAY_KNOW,
     HIDE_GROUPS, BRAVE_BLOCK_LIST, MESSAGES_DESKTOP, PIP_ENABLED, PIP_LOCKSCREEN_AUDIO,
-    OPEN_LINKS_IN_TAB, APP_LOCK,
+    OPEN_LINKS_IN_TAB, APP_LOCK, BUILTIN_SCRIPTS_ONLY,
 )
 private val STRING_KEYS = listOf(PIP_PORTRAIT_RATIO, KEEP_SCREEN_ON)
 private const val FORMAT = "faceboost-settings"

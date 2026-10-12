@@ -78,7 +78,8 @@ class MainViewModel(
                     fallbackContent = { resId ->
                         resources.openRawResource(resId).bufferedReader()
                             .use { it.readText() }
-                    }
+                    },
+                    allowRemote = !settings.builtinScriptsOnly.value
                 )
         }
     }

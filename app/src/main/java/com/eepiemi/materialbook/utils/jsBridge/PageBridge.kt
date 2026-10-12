@@ -4,6 +4,7 @@ import android.webkit.WebView
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.eepiemi.materialbook.utils.BackgroundAudioWebView
+import com.eepiemi.materialbook.utils.appLinkUrl
 import org.json.JSONObject
 
 // The page object the app's scripts post their one-way calls to (settings button, theme colour,
@@ -25,6 +26,8 @@ class PageBridges(
     val layer: MessagesBridge? = null,
     val clipboard: ClipboardBridge? = null,
     val bgAudio: BackgroundAudioWebView.Bridge? = null,
+    // "Share via..." in Facebook's share sheet: a Facebook link to hand to the Android share sheet.
+    val share: ((String) -> Unit)? = null,
 )
 
 /**
@@ -76,7 +79,16 @@ fun dispatchPageMessage(data: String, bridges: PageBridges): Boolean {
             Thread { clipboard.copyImageToClipboard(image, type) }.start()
         }
         "bgAudio" -> bridges.bgAudio?.set(msg.optBoolean("on")) ?: return false
+        "shareLink" -> {
+            val share = bridges.share ?: return false
+            val url = msg.optString("url")
+            // Only a Facebook web page: whatever Copy link put on the clipboard.
+            if (url.length > MAX_SHARE_URL_LENGTH || appLinkUrl(url) == null) return false
+            share(url)
+        }
         else -> return false
     }
     return true
 }
+
+private const val MAX_SHARE_URL_LENGTH = 2048

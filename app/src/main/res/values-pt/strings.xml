@@ -144,4 +144,7 @@
     <string name="app_lock_prompt">Desbloquear o Faceboost</string>
     <string name="app_lock_locked">O Faceboost está bloqueado</string>
     <string name="app_lock_unlock">Desbloquear</string>
+    <string name="app_lock_verify">Confirme que é você para ativar o bloqueio do app</string>
+    <string name="builtin_scripts_title">Usar apenas scripts integrados</string>
+    <string name="builtin_scripts_desc">Nunca baixa scripts: só rodam as cópias do app (mais privado, mas as correções chegam com as atualizações). Requer recarregar.</string>
 </resources>

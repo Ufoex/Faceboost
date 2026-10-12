@@ -146,4 +146,7 @@
     <string name="app_lock_prompt">Unlock Faceboost</string>
     <string name="app_lock_locked">Faceboost is locked</string>
     <string name="app_lock_unlock">Unlock</string>
+    <string name="app_lock_verify">Confirm it\'s you to turn on the app lock</string>
+    <string name="builtin_scripts_title">Use only built-in scripts</string>
+    <string name="builtin_scripts_desc">Never download page scripts: only the copies inside the app run (more private, but fixes arrive with app updates). Needs a reload.</string>
 </resources>

@@ -15,8 +15,6 @@ import android.graphics.Rect
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.SystemClock
-import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricPrompt
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -24,7 +22,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import com.eepiemi.materialbook.utils.APP_LOCK_GRACE_MS
-import com.eepiemi.materialbook.utils.appLockAuthenticators
+import com.eepiemi.materialbook.utils.authenticateUser
 import com.eepiemi.materialbook.utils.canUseAppLock
 import android.view.WindowManager
 import android.os.Bundle
@@ -555,32 +553,10 @@ class MainActivity : FragmentActivity() {
     private fun promptUnlock() {
         if (!locked || unlockPrompting) return
         unlockPrompting = true
-        val prompt = BiometricPrompt(
-            this, ContextCompat.getMainExecutor(this),
-            object : BiometricPrompt.AuthenticationCallback() {
-                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                    unlockPrompting = false
-                    locked = false
-                }
-
-                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                    unlockPrompting = false // the lock screen stays; its button asks again
-                }
-            }
-        )
-        val authenticators = appLockAuthenticators()
-        prompt.authenticate(
-            BiometricPrompt.PromptInfo.Builder()
-                .setTitle(getString(R.string.app_lock_prompt))
-                .setAllowedAuthenticators(authenticators)
-                .apply {
-                    // The negative button can't be combined with the phone PIN as an authenticator.
-                    if (authenticators and BiometricManager.Authenticators.DEVICE_CREDENTIAL == 0) {
-                        setNegativeButtonText(getString(android.R.string.cancel))
-                    }
-                }
-                .build()
-        )
+        authenticateUser(this, getString(R.string.app_lock_prompt)) { ok ->
+            unlockPrompting = false
+            if (ok) locked = false // otherwise the lock screen stays; its button asks again
+        }
     }
 
     private fun updateVideoPlaybackState(

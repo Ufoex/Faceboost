@@ -74,6 +74,8 @@ import com.eepiemi.materialbook.utils.isWebViewRenderable
 import com.eepiemi.materialbook.utils.stripTrackingParams
 import androidx.compose.material.icons.outlined.Lock
 import com.eepiemi.materialbook.utils.canUseAppLock
+import androidx.fragment.app.FragmentActivity
+import com.eepiemi.materialbook.utils.authenticateUser
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -156,7 +158,10 @@ fun SettingsContent(
     val openLinksInTab = viewModel.openLinksInTab.collectAsState()
     val textZoom = viewModel.textZoom.collectAsState()
     val appLock = viewModel.appLock.collectAsState()
+    val builtinScriptsOnly = viewModel.builtinScriptsOnly.collectAsState()
     val appLockUnavailableToast = stringResource(R.string.app_lock_unavailable)
+    val appLockVerifyTitle = stringResource(R.string.app_lock_verify)
+    val activity = LocalActivity.current
     val keepScreenOn = viewModel.keepScreenOn.collectAsState()
     val settingsSavedToast = stringResource(R.string.settings_exported_toast)
     val settingsBadFileToast = stringResource(R.string.settings_import_bad_file_toast)
@@ -257,15 +262,27 @@ fun SettingsContent(
                     }
                 ),
                 SettingsItem(
+                    icon = Icons.Outlined.Shield,
+                    title = stringResource(R.string.builtin_scripts_title),
+                    supportingText = stringResource(R.string.builtin_scripts_desc),
+                    isActive = builtinScriptsOnly.value,
+                    onClick = { viewModel.setBuiltinScriptsOnly(!builtinScriptsOnly.value) }
+                ),
+                SettingsItem(
                     icon = Icons.Outlined.Lock,
                     title = stringResource(R.string.app_lock_title),
                     supportingText = stringResource(R.string.app_lock_desc),
                     isActive = appLock.value,
                     onClick = {
-                        if (!appLock.value && !canUseAppLock(context)) {
-                            Toast.makeText(context, appLockUnavailableToast, Toast.LENGTH_LONG).show()
-                        } else {
-                            viewModel.setAppLock(!appLock.value)
+                        val fragmentActivity = activity as? FragmentActivity
+                        when {
+                            appLock.value -> viewModel.setAppLock(false)
+                            !canUseAppLock(context) || fragmentActivity == null ->
+                                Toast.makeText(context, appLockUnavailableToast, Toast.LENGTH_LONG).show()
+                            // Turning it on first checks it is really the owner: fingerprint, face or PIN.
+                            else -> authenticateUser(fragmentActivity, appLockVerifyTitle) { ok ->
+                                if (ok) viewModel.setAppLock(true)
+                            }
                         }
                     }
                 ),

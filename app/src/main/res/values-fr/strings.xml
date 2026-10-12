@@ -144,4 +144,7 @@
     <string name="app_lock_prompt">Déverrouiller Faceboost</string>
     <string name="app_lock_locked">Faceboost est verrouillé</string>
     <string name="app_lock_unlock">Déverrouiller</string>
+    <string name="app_lock_verify">Confirmez que c\'est vous pour activer le verrouillage</string>
+    <string name="builtin_scripts_title">Utiliser uniquement les scripts intégrés</string>
+    <string name="builtin_scripts_desc">Ne télécharge jamais de scripts : seules les copies de l\'app s\'exécutent (plus privé, les correctifs arrivent avec les mises à jour). Rechargement requis.</string>
 </resources>

@@ -39,11 +39,13 @@ const val USE_LOCAL_SCRIPTS = false
 suspend fun fetchScripts(
     scripts: List<Script>,
     fallbackContent: (Int) -> String,
-    httpClient: HttpClient = HttpClient(OkHttp)
+    httpClient: HttpClient = HttpClient(OkHttp),
+    // false = never download scripts: only the copies bundled in the app run.
+    allowRemote: Boolean = true
 ): String = coroutineScope {
     val deferredContents = scripts.filter { it.isEnabled }.map { script ->
         async {
-            val fetched = if (USE_LOCAL_SCRIPTS) null else withTimeoutOrNull(FETCH_TIMEOUT_MS) {
+            val fetched = if (USE_LOCAL_SCRIPTS || !allowRemote) null else withTimeoutOrNull(FETCH_TIMEOUT_MS) {
                 runCatching {
                     val res = httpClient.get(SCRIPT_SRC + script.scriptTitle)
                     if (res.status == HttpStatusCode.OK) {
