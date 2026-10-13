@@ -148,4 +148,5 @@
     <string name="app_lock_verify">অ্যাপ লক চালু করতে নিশ্চিত করুন যে এটি আপনি</string>
     <string name="builtin_scripts_title">শুধু বিল্ট-ইন স্ক্রিপ্ট ব্যবহার করুন</string>
     <string name="builtin_scripts_desc">পেজ স্ক্রিপ্ট কখনও ডাউনলোড করে না: শুধু অ্যাপের ভেতরের কপি চলে (বেশি গোপনীয়, সংশোধন আসে আপডেটের সাথে)। রিলোড লাগবে।</string>
+    <string name="messages_close">মেসেজ বন্ধ করুন</string>
 </resources>

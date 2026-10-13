@@ -41,6 +41,7 @@
 * Feature: Back on the feed sends the app to the background instead of closing it, so coming back keeps the page.
 * Feature: Settings rows to allow opening Facebook links in this app (Android 12+), share the page you are on as a clean link, and log out of Facebook on this phone.
 * Feature: App lock (Settings, off by default): asks for your fingerprint, face or phone PIN when the app opens and after more than 15 seconds in the background.
+* Feature: The Messages layer has a close button where the Facebook logo was, styled like the header's other buttons (it follows the light, dark and OLED themes). Closing it, or going home from the layer, no longer reloads the feed.
 * Feature: Turning the app lock on first asks for your fingerprint, face or PIN to confirm it is you.
 * Feature: "Share via..." row in Facebook's share sheet, under Copy link: it copies the post's link and hands it to Android's share sheet.
 * Feature: Use only built-in scripts (Settings, off by default): never downloads page scripts, only the copies inside the app run.

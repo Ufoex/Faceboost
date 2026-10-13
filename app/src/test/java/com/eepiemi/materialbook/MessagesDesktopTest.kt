@@ -69,4 +69,15 @@ class MessagesDesktopTest {
         assertFalse(isDesktopMessagesUrl("https://m.facebook.com/messages/t/1"))
         assertFalse(isDesktopMessagesUrl("https://www.facebook.com/home.php"))
     }
+
+    @Test
+    fun facebookHomeIsRecognised() {
+        listOf("https://www.facebook.com/", "https://m.facebook.com", "https://web.facebook.com/home.php").forEach {
+            assertTrue(it, com.eepiemi.materialbook.utils.isFacebookHomeUrl(it))
+        }
+        listOf("https://www.facebook.com/groups/1", "https://example.com/", "https://www.facebook.com/messages/").forEach {
+            assertFalse(it, com.eepiemi.materialbook.utils.isFacebookHomeUrl(it))
+        }
+    }
 }
+

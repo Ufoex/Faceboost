@@ -89,3 +89,12 @@ fun messagesDesktopUrl(url: String): String {
         else -> THREAD_PATH.find(path)?.let { "https://www.facebook.com" + it.value } ?: inbox
     }
 }
+
+/**
+ * Facebook's home page (the logo in the Messages layer's header points there). Going "home" from
+ * the layer just closes it: the feed underneath is still there, loading it again would restart it.
+ */
+fun isFacebookHomeUrl(url: String): Boolean {
+    val (host, path) = hostAndPath(url) ?: return false
+    return isFacebookHost(host) && (path == "" || path == "/" || path == "/home.php")
+}

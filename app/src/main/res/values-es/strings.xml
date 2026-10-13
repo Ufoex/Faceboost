@@ -147,4 +147,5 @@
     <string name="app_lock_verify">Confirma que eres tú para activar el bloqueo de la app</string>
     <string name="builtin_scripts_title">Usar solo scripts integrados</string>
     <string name="builtin_scripts_desc">No descarga scripts de la página: solo corren las copias de la app (más privado, pero los arreglos llegan con las actualizaciones). Requiere recargar.</string>
+    <string name="messages_close">Cerrar mensajes</string>
 </resources>

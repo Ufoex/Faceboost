@@ -54,6 +54,7 @@ import com.eepiemi.materialbook.utils.BraveBlockList
 import com.eepiemi.materialbook.utils.ExternalRequestInterceptor
 import com.eepiemi.materialbook.utils.FullscreenController
 import com.eepiemi.materialbook.utils.hardenWebView
+import com.eepiemi.materialbook.utils.isFacebookHomeUrl
 import com.eepiemi.materialbook.ui.components.ExternalLinkDialog
 import com.eepiemi.materialbook.utils.ExternalLinkAction
 import com.eepiemi.materialbook.utils.externalLinkAction
@@ -1392,7 +1393,8 @@ fun MaterialbookWebView(
                 onClose = { messagesLayerUrl = null },
                 onOpenInMain = { pageUrl ->
                     messagesLayerUrl = null
-                    navigator.loadUrl(pageUrl)
+                    // The logo / home: the feed is still underneath, don't reload it.
+                    if (!isFacebookHomeUrl(pageUrl)) navigator.loadUrl(pageUrl)
                 },
                 onExternalUrl = { externalUrl -> openExternalLink(fbRedirectSanitizer(externalUrl)) }
             )
