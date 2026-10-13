@@ -92,4 +92,5 @@
 > Or you just have an issue? File an issue [here](https://github.com/eepiemi/Materialbook/issues/new/choose).
 > I can't guarantee I'll be able to fix it with my current Kotlin + Jetpack Compose skills though 😅
 
-I REALLY hope you enjoy what has become the biggest project of my life! 🥹
+I REALLY hope you enjoy what has become the biggest project of my life! 🥹* Fix: Holding the video no longer leaves the "2x" speed on when you swipe back with the system gesture: touches that start at a screen edge are ignored, and the speed is restored if the touch is cancelled or the reel is left.
+* Tweak: The debug build is named "Faceboost Debug" in every language and always runs the bundled scripts, so local script edits can be tested without publishing.

@@ -5,7 +5,7 @@
     if (window.__mbReelGestures) return;
     window.__mbReelGestures = true;
     const cfg = window.__mbReel || { rate: 2, skip: 10 };
-    const HOLD_MS = 350, DOUBLE_MS = 300, MOVE = 12;
+    const HOLD_MS = 350, DOUBLE_MS = 300, MOVE = 12, EDGE = 32;
 
     const inReel = () => {
         const p = location.pathname;
@@ -48,6 +48,8 @@
         const v = activeVideo();
         if (!v) { st = null; return; }
         const t = e.touches[0];
+        // Starting at a screen edge = the system back gesture: it takes the touch without sending moves.
+        if (t.clientX < EDGE || t.clientX > innerWidth - EDGE) { st = null; return; }
         st = { x: t.clientX, y: t.clientY, t0: Date.now(), v, held: false, moved: false, target: e.target, wasPaused: v.paused };
         st.timer = setTimeout(() => {
             if (!st || st.moved) return;
@@ -56,6 +58,15 @@
             v.playbackRate = cfg.rate;
             if (v.paused) v.play();
             say(cfg.rate + 'x');
+            // Back gesture while holding: no touchend/touchcancel may arrive, but the reel is gone.
+            const s = st;
+            s.dog = setInterval(() => {
+                if (inReel() && document.contains(s.v)) return;
+                clearInterval(s.dog);
+                if (st === s) st = null;
+                s.v.playbackRate = s.rate0 || 1;
+                hideBadge();
+            }, 200);
             // Cancel Facebook's own long-press (copy link): it sees the touch end here.
             ['touchcancel', 'pointercancel'].forEach(n => {
                 try { st.target.dispatchEvent(new Event(n, { bubbles: true, cancelable: true })); } catch (_) {}
@@ -72,7 +83,7 @@
     document.addEventListener('touchend', (e) => {
         const s = st; st = null;
         if (!s) return;
-        clearTimeout(s.timer);
+        clearTimeout(s.timer); clearInterval(s.dog);
         if (s.held) {
             s.v.playbackRate = s.rate0 || 1;
             hideBadge();
@@ -97,6 +108,16 @@
             lastTap = { t: now, side, wasPaused: s.wasPaused };
         }
     }, { capture: true, passive: false });
+
+    // The system back gesture steals the touch: the page gets a real touchcancel, never a touchend,
+    // so drop the hold here. Our own synthetic touchcancel (above) is not trusted and is ignored.
+    document.addEventListener('touchcancel', (e) => {
+        if (!e.isTrusted) return;
+        const s = st; st = null;
+        if (!s) return;
+        clearTimeout(s.timer); clearInterval(s.dog);
+        if (s.held) { s.v.playbackRate = s.rate0 || 1; hideBadge(); swallowUntil = Date.now() + 500; }
+    }, { capture: true, passive: true });
 
     // The click that follows a hold / double tap must not pause the video or open anything.
     ['click', 'pointerup', 'mouseup'].forEach(n => document.addEventListener(n, (e) => {
