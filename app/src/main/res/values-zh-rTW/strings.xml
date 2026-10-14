@@ -146,7 +146,5 @@
     <string name="app_lock_locked">Faceboost 已鎖定</string>
     <string name="app_lock_unlock">解鎖</string>
     <string name="app_lock_verify">請確認是你本人以開啟應用程式鎖定</string>
-    <string name="builtin_scripts_title">僅使用內建指令碼</string>
-    <string name="builtin_scripts_desc">永不下載頁面指令碼：只執行應用程式內的副本（更私密，修正隨應用程式更新提供）。需要重新載入。</string>
     <string name="messages_close">關閉訊息</string>
 </resources>

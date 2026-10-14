@@ -145,7 +145,5 @@
     <string name="app_lock_locked">Faceboost مقفل</string>
     <string name="app_lock_unlock">فتح القفل</string>
     <string name="app_lock_verify">أكّد أنك أنت لتفعيل قفل التطبيق</string>
-    <string name="builtin_scripts_title">استخدام النصوص المدمجة فقط</string>
-    <string name="builtin_scripts_desc">لا يحمّل نصوص الصفحة أبداً: تعمل النسخ داخل التطبيق فقط (أكثر خصوصية، والإصلاحات تصل مع التحديثات). يتطلب إعادة التحميل.</string>
     <string name="messages_close">إغلاق الرسائل</string>
 </resources>

@@ -146,7 +146,5 @@
     <string name="app_lock_locked">Faceboost נעול</string>
     <string name="app_lock_unlock">שחרור</string>
     <string name="app_lock_verify">אשר שזה אתה כדי להפעיל את נעילת האפליקציה</string>
-    <string name="builtin_scripts_title">שימוש בסקריפטים מובנים בלבד</string>
-    <string name="builtin_scripts_desc">לא מוריד סקריפטים לעולם: רק העותקים שבאפליקציה פועלים (פרטי יותר, תיקונים מגיעים עם עדכונים). דורש טעינה מחדש.</string>
     <string name="messages_close">סגירת ההודעות</string>
 </resources>

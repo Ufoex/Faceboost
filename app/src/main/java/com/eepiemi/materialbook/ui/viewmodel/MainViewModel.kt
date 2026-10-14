@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eepiemi.materialbook.R
 import com.eepiemi.materialbook.utils.Script
-import com.eepiemi.materialbook.utils.fetchScripts
+import com.eepiemi.materialbook.utils.bundleScripts
 import kotlinx.coroutines.launch
 
 
@@ -64,23 +64,16 @@ class MainViewModel(
             // PiP infrastructure, not a cosmetic feature, and needs to run as
             // early as possible. Bundling it with the rest means it doesn't
             // start running any sooner than the slowest script in this list,
-            // even with fetchScripts' per-script timeout+concurrency, since
-            // they're all evaluated together as one combined blob once EVERY
-            // entry has resolved. Loaded separately, directly from the bundled
+            // they're all evaluated together as one combined blob. Loaded separately, directly from the bundled
             // resource, in MaterialbookWV.kt instead.
         )
 
         viewModelScope.launch {
             val cfg = "window.__mbReel={rate:${settings.reelHoldRate.value},skip:${settings.reelSkipSeconds.value},fit:${settings.reelFit.value && settings.reelControls.value}};\n"
             _scripts.value = cfg +
-                fetchScripts(
-                    scripts = scripts,
-                    fallbackContent = { resId ->
-                        resources.openRawResource(resId).bufferedReader()
-                            .use { it.readText() }
-                    },
-                    allowRemote = !settings.builtinScriptsOnly.value
-                )
+                bundleScripts(scripts) { resId ->
+                    resources.openRawResource(resId).bufferedReader().use { it.readText() }
+                }
         }
     }
 

@@ -128,10 +128,10 @@
         'html.mb-fit-cover video{object-fit:cover !important}';
     document.head.appendChild(style);
     // Button feedback: shrink while pressed, small bounce on tap.
-    style.textContent += '#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio,#mb-reel-gear{transition:transform .12s ease-out,background .2s}' +
+    style.textContent += '#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio{transition:transform .12s ease-out,background .2s}' +
         '#mb-reel-hide:active,#mb-reel-fit:active,#mb-reel-auto:active,#mb-reel-audio:active{transform:scale(.82);background:rgba(255,255,255,.28) !important}';
     document.addEventListener('click', (e) => {
-        const b = e.target.closest && e.target.closest('#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio,#mb-reel-gear');
+        const b = e.target.closest && e.target.closest('#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio');
         if (b) b.animate([{ transform: 'scale(.8)' }, { transform: 'scale(1.18)' }, { transform: 'scale(1)' }], { duration: 260, easing: 'ease-out' });
     }, true);
 
@@ -312,25 +312,6 @@
         document.body.appendChild(audioBtn);
     };
 
-    // Settings gear in the reel viewer (Facebook's reel page has no header gear of its own).
-    const GEAR = 'M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96a7.03 7.03 0 00-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.48.48 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z';
-    let gearBtn;
-    const buildGearBtn = () => {
-        gearBtn = document.createElement('div');
-        gearBtn.id = 'mb-reel-gear';
-        gearBtn.style.cssText = 'position:fixed;z-index:2147483000;width:40px;height:40px;border-radius:50%;' +
-            'background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;';
-        gearBtn.innerHTML = svg(GEAR);
-        ['pointerdown', 'pointerup', 'touchstart', 'touchmove', 'touchend', 'mousedown', 'mouseup']
-            .forEach(t => gearBtn.addEventListener(t, e => e.stopPropagation()));
-        gearBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (window.FaceboostPage) window.FaceboostPage.postMessage(JSON.stringify({ call: 'openSettings' }));
-            else if (window.SettingsBridge && window.SettingsBridge.onSettingsToggle) window.SettingsBridge.onSettingsToggle();
-        });
-        document.body.appendChild(gearBtn);
-    };
-
     const buildHideBtn = () => {
         hideBtn = document.createElement('div');
         hideBtn.id = 'mb-reel-hide';
@@ -403,46 +384,39 @@
             const dl = document.querySelector('button[aria-label="Download content"]');
             const r = dl && dl.getBoundingClientRect();
             // A column under the download button (a row would cover Facebook's own header icons).
-            hideBtn.style.top = ((r && r.width ? r.top : 70) + 48) + 'px';
-            hideBtn.style.left = (r && r.width ? r.left : 345) + 'px';
-            hideBtn.style.display = 'flex';
-            let slot = 1; // buttons stack under the hide button, skipping the ones that are off
+            const baseTop = (r && r.width ? r.top : 70) + 48, baseLeft = (r && r.width ? r.left : 345) + 'px';
+            let slot = 0; // buttons stack under the download button, skipping the ones that are off; the hide button goes last
             if (FIT) {
                 if (!fitBtn || !fitBtn.isConnected) buildFitBtn();
-                fitBtn.style.top = (parseFloat(hideBtn.style.top) + 48 * slot++) + 'px';
-                fitBtn.style.left = hideBtn.style.left;
+                fitBtn.style.top = (baseTop + 48 * slot++) + 'px';
+                fitBtn.style.left = baseLeft;
                 fitBtn.style.display = 'flex';
                 fitBtn.style.opacity = hideOn ? '0.35' : '1';
                 if (fit === null) setFit('contain'); // default: whole video, no crop
             } else if (fitBtn) fitBtn.style.display = 'none';
             if (window.__mbAutoScroll) {
                 if (!autoBtn || !autoBtn.isConnected) buildAutoBtn();
-                autoBtn.style.top = (parseFloat(hideBtn.style.top) + 48 * slot++) + 'px';
-                autoBtn.style.left = hideBtn.style.left;
+                autoBtn.style.top = (baseTop + 48 * slot++) + 'px';
+                autoBtn.style.left = baseLeft;
                 autoBtn.style.display = 'flex';
                 autoBtn.style.opacity = hideOn ? '0.35' : (window.__mbAutoScroll.enabled ? '1' : '0.45');
             } else if (autoBtn) autoBtn.style.display = 'none';
             if (window.__mbBgAudio) {
                 if (!audioBtn || !audioBtn.isConnected) buildAudioBtn();
-                audioBtn.style.top = (parseFloat(hideBtn.style.top) + 48 * slot++) + 'px';
-                audioBtn.style.left = hideBtn.style.left;
+                audioBtn.style.top = (baseTop + 48 * slot++) + 'px';
+                audioBtn.style.left = baseLeft;
                 audioBtn.style.display = 'flex';
                 audioBtn.style.opacity = hideOn ? '0.35' : (window.__mbBgAudio.enabled ? '1' : '0.45');
             } else if (audioBtn) audioBtn.style.display = 'none';
-            if (window.FaceboostPage || window.SettingsBridge) {
-                if (!gearBtn || !gearBtn.isConnected) buildGearBtn();
-                gearBtn.style.top = (parseFloat(hideBtn.style.top) + 48 * slot++) + 'px';
-                gearBtn.style.left = hideBtn.style.left;
-                gearBtn.style.display = 'flex';
-                gearBtn.style.opacity = hideOn ? '0.35' : '1';
-            }
+            hideBtn.style.top = (baseTop + 48 * slot) + 'px';
+            hideBtn.style.left = baseLeft;
+            hideBtn.style.display = 'flex';
             markIcons(active);
         } else {
             if (hideBtn) hideBtn.style.display = 'none';
             if (fitBtn) fitBtn.style.display = 'none';
             if (autoBtn) autoBtn.style.display = 'none';
             if (audioBtn) audioBtn.style.display = 'none';
-            if (gearBtn) gearBtn.style.display = 'none';
             if (fit !== null) setFit(null);
             if (hideOn) {
                 hideOn = false;

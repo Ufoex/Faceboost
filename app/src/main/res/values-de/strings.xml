@@ -145,7 +145,5 @@
     <string name="app_lock_locked">Faceboost ist gesperrt</string>
     <string name="app_lock_unlock">Entsperren</string>
     <string name="app_lock_verify">Bestätige, dass du es bist, um die App-Sperre einzuschalten</string>
-    <string name="builtin_scripts_title">Nur integrierte Skripte nutzen</string>
-    <string name="builtin_scripts_desc">Keine Seitenskripte herunterladen: nur die Kopien in der App laufen (privater, Korrekturen kommen mit App-Updates). Neuladen nötig.</string>
     <string name="messages_close">Nachrichten schließen</string>
 </resources>

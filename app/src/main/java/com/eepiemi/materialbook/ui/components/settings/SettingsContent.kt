@@ -158,7 +158,6 @@ fun SettingsContent(
     val openLinksInTab = viewModel.openLinksInTab.collectAsState()
     val textZoom = viewModel.textZoom.collectAsState()
     val appLock = viewModel.appLock.collectAsState()
-    val builtinScriptsOnly = viewModel.builtinScriptsOnly.collectAsState()
     val appLockUnavailableToast = stringResource(R.string.app_lock_unavailable)
     val appLockVerifyTitle = stringResource(R.string.app_lock_verify)
     val activity = LocalActivity.current
@@ -260,13 +259,6 @@ fun SettingsContent(
                             if (update == null) Toast.makeText(context, upToDateToast, Toast.LENGTH_SHORT).show()
                         }
                     }
-                ),
-                SettingsItem(
-                    icon = Icons.Outlined.Shield,
-                    title = stringResource(R.string.builtin_scripts_title),
-                    supportingText = stringResource(R.string.builtin_scripts_desc),
-                    isActive = builtinScriptsOnly.value,
-                    onClick = { viewModel.setBuiltinScriptsOnly(!builtinScriptsOnly.value) }
                 ),
                 SettingsItem(
                     icon = Icons.Outlined.Lock,

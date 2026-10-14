@@ -93,4 +93,6 @@
 > I can't guarantee I'll be able to fix it with my current Kotlin + Jetpack Compose skills though 😅
 
 I REALLY hope you enjoy what has become the biggest project of my life! 🥹* Fix: Holding the video no longer leaves the "2x" speed on when you swipe back with the system gesture: touches that start at a screen edge are ignored, and the speed is restored if the touch is cancelled or the reel is left.
-* Tweak: The debug build is named "Faceboost Debug" in every language and always runs the bundled scripts, so local script edits can be tested without publishing.
+* Tweak: The debug build is named "Faceboost Debug" in every language.
+* Tweak: Page scripts are never downloaded any more: the app always runs the copies bundled inside it, so a script change reaches you with the app update. The "Use only built-in scripts" setting is gone.
+* Tweak: The settings gear is removed from the reel and video viewer (Settings stays in the top bar), and the hide-icons (eye) button is now the last one in the column of reel buttons.
