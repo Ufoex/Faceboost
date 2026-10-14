@@ -37,4 +37,33 @@ class UpdateNotesTest {
             parseNotes(releaseNotes(body))
         )
     }
+
+    private val multi = """
+        <!-- lang:en -->
+        ## Fix
+
+        - English point
+
+        Includes everything from v1.
+
+        <!-- lang:es -->
+        ## Arreglo
+
+        - Punto en español
+
+        Incluye todo lo de v1.
+
+        **Full Changelog**: https://github.com/x/y/compare/a...b
+    """.trimIndent()
+
+    @Test
+    fun picksTheBlockOfTheLanguage() {
+        assertEquals("## Arreglo\n\n- Punto en español", releaseNotes(multi, "es"))
+        assertEquals("## Fix\n\n- English point", releaseNotes(multi, "en"))
+    }
+
+    @Test
+    fun otherLanguagesGetEnglish() {
+        assertEquals("## Fix\n\n- English point", releaseNotes(multi, "de"))
+    }
 }

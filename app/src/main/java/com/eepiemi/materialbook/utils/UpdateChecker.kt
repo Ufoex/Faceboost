@@ -55,6 +55,7 @@ import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import org.json.JSONObject
+import java.util.Locale
 
 data class Release(val version: String, val pageUrl: String, val apkUrl: String, val notes: String = "")
 
@@ -66,17 +67,29 @@ suspend fun checkForUpdate(): Release? = runCatching {
         val json = JSONObject(client.get(LATEST).bodyAsText())
         val version = json.getString("tag_name").removePrefix("v")
         val apk = json.getJSONArray("assets").getJSONObject(0).getString("browser_download_url")
-        Release(version, json.getString("html_url"), apk, releaseNotes(json.optString("body"))).takeIf { isNewer(version, BuildConfig.VERSION_NAME) }
+        Release(version, json.getString("html_url"), apk, releaseNotes(json.optString("body"), Locale.getDefault().language)).takeIf { isNewer(version, BuildConfig.VERSION_NAME) }
     }
 }.getOrNull()
 
-/** Release body (markdown) without the boilerplate lines (what the build includes, the compare link). */
-fun releaseNotes(body: String): String =
-    body.lines()
-        .filterNot { it.startsWith("Includes everything") || it.contains("Full Changelog") }
+/**
+ * Release body (markdown) in the user's language, without the boilerplate lines (what the build
+ * includes, the compare link). A body may hold one block per language, each starting with a
+ * `<!-- lang:es -->` line; a language without a block gets `en`, a body without blocks is used whole.
+ */
+fun releaseNotes(body: String, lang: String = "en"): String {
+    val blocks = Regex("<!--\\s*lang:(\\w+)\\s*-->").let { marker ->
+        val found = marker.findAll(body).toList()
+        found.mapIndexed { i, m ->
+            m.groupValues[1] to body.substring(m.range.last + 1, found.getOrNull(i + 1)?.range?.first ?: body.length)
+        }.toMap()
+    }
+    val text = if (blocks.isEmpty()) body else blocks[lang] ?: blocks["en"] ?: body
+    return text.lines()
+        .filterNot { it.startsWith("Includes everything") || it.startsWith("Incluye todo") || it.contains("Full Changelog") }
         .joinToString("\n") { it.trimEnd() }
         .replace(Regex("\n{3,}"), "\n\n")
         .trim()
+}
 
 sealed interface NoteLine {
     data class Heading(val text: String) : NoteLine

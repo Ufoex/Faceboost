@@ -96,3 +96,4 @@ I REALLY hope you enjoy what has become the biggest project of my life! 🥹* Fi
 * Tweak: The debug build is named "Faceboost Debug" in every language.
 * Tweak: Page scripts are never downloaded any more: the app always runs the copies bundled inside it, so a script change reaches you with the app update. The "Use only built-in scripts" setting is gone.
 * Tweak: The settings gear is removed from the reel and video viewer (Settings stays in the top bar), and the hide-icons (eye) button is now the last one in the column of reel buttons.
+* Feature: The update dialog shows the release notes in Spanish or English (other languages get English), from the language blocks of the GitHub release.
