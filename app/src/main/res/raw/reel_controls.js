@@ -128,7 +128,7 @@
         'html.mb-fit-cover video{object-fit:cover !important}';
     document.head.appendChild(style);
     // Button feedback: shrink while pressed, small bounce on tap.
-    style.textContent += '#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio{transition:transform .12s ease-out,background .2s}' +
+    style.textContent += '#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio{transition:transform .12s ease-out,background .2s,left .2s ease,top .2s ease}' +
         '#mb-reel-hide:active,#mb-reel-fit:active,#mb-reel-auto:active,#mb-reel-audio:active{transform:scale(.82);background:rgba(255,255,255,.28) !important}';
     document.addEventListener('click', (e) => {
         const b = e.target.closest && e.target.closest('#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio');
@@ -372,6 +372,146 @@
         }, Math.max(0, 120 - (Date.now() - lastRemark)));
     }).observe(document.body, { childList: true, subtree: true });
 
+    // Move the buttons: hold one to enter edit mode (they wiggle, a grid and Save/Cancel appear), drag
+    // to another cell of the grid, Save keeps the layout. Positions are cells, not pixels.
+    // ponytail: the layout is stored in localStorage and ignored when the shown buttons change
+    // (a setting turned on or off), falling back to the default column; no per-set layouts.
+    const BTN_SEL = '#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio';
+    const STEP = 48, HOLD = 450, LKEY = 'mbReelLayout';
+    const es = (navigator.language || '').toLowerCase().indexOf('es') === 0;
+    let editing = false, draft = null, drag = null, curItems = [], suppressUntil = 0, lp = null;
+    let grid = { x0: 0, y0: 0, rmin: 0 }, base = { top: 0, left: 0 }, lastX = 0, lastY = 0;
+    let ui = null;
+
+    const savedLayout = () => { try { return JSON.parse(localStorage.getItem(LKEY)); } catch (_) { return null; } };
+    const cellOf = (el) => [Math.round((parseFloat(el.style.left) - grid.x0) / STEP), Math.round((parseFloat(el.style.top) - grid.y0) / STEP)];
+    const limits = () => ({
+        cmax: Math.max(0, Math.floor((innerWidth - 40 - grid.x0) / STEP)),
+        rmax: Math.max(grid.rmin, Math.floor((innerHeight * 0.7 - 40 - grid.y0) / STEP))
+    });
+    const snap = (x, y) => {
+        const l = limits();
+        return [Math.max(0, Math.min(l.cmax, Math.round((x - grid.x0) / STEP))), Math.max(grid.rmin, Math.min(l.rmax, Math.round((y - grid.y0) / STEP)))];
+    };
+    const place = (el, c) => { el.style.left = (grid.x0 + c[0] * STEP) + 'px'; el.style.top = (grid.y0 + c[1] * STEP) + 'px'; };
+
+    function layoutBtns(items, baseTop, baseLeft) {
+        curItems = items; base = { top: baseTop, left: baseLeft };
+        grid.x0 = baseLeft % STEP; grid.y0 = baseTop % STEP;
+        grid.rmin = Math.round((baseTop - grid.y0) / STEP);
+        const def = (b, i) => [Math.round((baseLeft - grid.x0) / STEP), grid.rmin + i];
+        const sv = savedLayout();
+        const useSaved = sv && Object.keys(sv).length === items.length && items.every(b => sv[b.id]);
+        const lay = editing ? draft : useSaved ? sv : null;
+        items.forEach((b, i) => { if (!drag || drag.el !== b) place(b, lay && lay[b.id] ? lay[b.id] : def(b, i)); });
+    }
+
+    const buildEditUI = () => {
+        const st = document.createElement('style');
+        const E = BTN_SEL.split(',').map(x => 'html.mb-edit ' + x);
+        st.textContent = '@keyframes mb-wig{from{transform:rotate(-2.5deg)}to{transform:rotate(2.5deg)}}' +
+            BTN_SEL + '{touch-action:none}' +
+            E.join(',') + '{opacity:1 !important;animation:mb-wig .3s ease-in-out infinite alternate;box-shadow:0 0 0 2px rgba(255,255,255,.7)}' +
+            E.map(x => x + '[data-mb-drag]').join(',') + '{animation:none !important;transition:none !important;transform:scale(1.15);box-shadow:0 6px 16px rgba(0,0,0,.6),0 0 0 2px #fff}';
+        document.head.appendChild(st);
+        const wrap = document.createElement('div');
+        wrap.id = 'mb-reel-edit';
+        wrap.style.cssText = 'position:fixed;inset:0;z-index:2147482990;touch-action:none;opacity:0;pointer-events:none;transition:opacity .25s ease';
+        const g = document.createElement('div'); // the grid: a line between every two cells
+        g.style.cssText = 'position:absolute;inset:0;background-color:rgba(0,0,0,.35);background-image:linear-gradient(rgba(255,255,255,.16) 1px,transparent 1px),' +
+            'linear-gradient(90deg,rgba(255,255,255,.16) 1px,transparent 1px);background-size:' + STEP + 'px ' + STEP + 'px';
+        const tgt = document.createElement('div'); // the cell the dragged button would land in
+        tgt.style.cssText = 'position:absolute;width:40px;height:40px;border-radius:50%;border:2px dashed #fff;box-sizing:border-box;' +
+            'opacity:0;transition:left .12s ease,top .12s ease,opacity .12s';
+        const bar = document.createElement('div');
+        bar.style.cssText = 'position:absolute;left:50%;bottom:28px;transform:translate(-50%,30px);display:flex;gap:10px;align-items:center;' +
+            'padding:8px 10px;border-radius:26px;background:rgba(30,30,30,.92);color:#fff;font:600 15px sans-serif;transition:transform .25s ease;pointer-events:auto;white-space:nowrap';
+        const hint = document.createElement('span');
+        hint.textContent = es ? 'Arrastra los botones' : 'Drag the buttons';
+        hint.style.cssText = 'padding:0 6px;opacity:.75;font-weight:500';
+        const mk = (txt, bg, fn) => {
+            const b = document.createElement('div');
+            b.textContent = txt;
+            b.style.cssText = 'padding:9px 16px;border-radius:20px;background:' + bg;
+            b.addEventListener('click', (e) => { e.stopPropagation(); fn(); });
+            return b;
+        };
+        bar.append(hint, mk(es ? 'Cancelar' : 'Cancel', 'rgba(255,255,255,.18)', () => endEdit(false)), mk(es ? 'Guardar' : 'Save', '#1877f2', () => endEdit(true)));
+        wrap.append(g, tgt, bar);
+        document.body.appendChild(wrap);
+        ui = { wrap, tgt, bar, g };
+    };
+
+    const enterEdit = () => {
+        if (editing) return;
+        if (!ui || !ui.wrap.isConnected) buildEditUI();
+        draft = {};
+        curItems.forEach(b => { draft[b.id] = cellOf(b); });
+        editing = true;
+        ui.g.style.backgroundPosition = (grid.x0 - 4) + 'px ' + (grid.y0 - 4) + 'px'; // lines between the cells
+        document.documentElement.classList.add('mb-edit');
+        ui.wrap.style.pointerEvents = 'auto';
+        requestAnimationFrame(() => { ui.wrap.style.opacity = '1'; ui.bar.style.transform = 'translate(-50%,0)'; });
+        try { navigator.vibrate && navigator.vibrate(15); } catch (_) {}
+    };
+    function endEdit(save) {
+        if (!editing) return;
+        if (save) { try { localStorage.setItem(LKEY, JSON.stringify(draft)); } catch (_) {} }
+        editing = false; drag = null;
+        document.documentElement.classList.remove('mb-edit');
+        curItems.forEach(b => b.removeAttribute('data-mb-drag'));
+        ui.wrap.style.opacity = '0'; ui.wrap.style.pointerEvents = 'none'; ui.bar.style.transform = 'translate(-50%,30px)';
+        layoutBtns(curItems, base.top, base.left);
+    }
+
+    const startDrag = (b, x, y) => {
+        drag = { el: b, dx: x - parseFloat(b.style.left), dy: y - parseFloat(b.style.top), from: cellOf(b) };
+        b.setAttribute('data-mb-drag', '');
+        ui.tgt.style.opacity = '1';
+        moveDrag(x, y);
+    };
+    const moveDrag = (x, y) => {
+        drag.el.style.left = (x - drag.dx) + 'px'; drag.el.style.top = (y - drag.dy) + 'px';
+        const c = snap(x - drag.dx, y - drag.dy);
+        ui.tgt.style.left = (grid.x0 + c[0] * STEP) + 'px'; ui.tgt.style.top = (grid.y0 + c[1] * STEP) + 'px';
+    };
+    const dropDrag = () => {
+        const el = drag.el, id = el.id, c = snap(parseFloat(el.style.left), parseFloat(el.style.top));
+        el.removeAttribute('data-mb-drag');
+        const other = curItems.find(o => o !== el && draft[o.id] && draft[o.id][0] === c[0] && draft[o.id][1] === c[1]);
+        if (other) draft[other.id] = drag.from; // occupied cell: the two swap
+        draft[id] = c;
+        ui.tgt.style.opacity = '0';
+        drag = null;
+        curItems.forEach(b => { if (draft[b.id]) place(b, draft[b.id]); });
+    };
+
+    document.addEventListener('touchstart', (e) => {
+        const b = e.target.closest && e.target.closest(BTN_SEL);
+        if (!b || e.touches.length !== 1) return;
+        const t = e.touches[0];
+        if (editing) { startDrag(b, t.clientX, t.clientY); e.preventDefault(); return; }
+        lp = { x: t.clientX, y: t.clientY, t: setTimeout(() => {
+            lp = null; suppressUntil = Date.now() + 800;
+            enterEdit(); startDrag(b, lastX, lastY);
+        }, HOLD) };
+        lastX = t.clientX; lastY = t.clientY;
+    }, { capture: true, passive: false });
+    document.addEventListener('touchmove', (e) => {
+        const t = e.touches[0]; if (!t) return;
+        lastX = t.clientX; lastY = t.clientY;
+        if (drag) { e.preventDefault(); moveDrag(lastX, lastY); }
+        else if (lp && (Math.abs(lastX - lp.x) > 10 || Math.abs(lastY - lp.y) > 10)) { clearTimeout(lp.t); lp = null; }
+    }, { capture: true, passive: false });
+    ['touchend', 'touchcancel'].forEach(n => document.addEventListener(n, () => {
+        if (lp) { clearTimeout(lp.t); lp = null; }
+        if (drag) { suppressUntil = Date.now() + 300; dropDrag(); }
+    }, { capture: true, passive: true }));
+    // The tap that ends a hold or a drag must not toggle the button.
+    document.addEventListener('click', (e) => {
+        if ((editing || Date.now() < suppressUntil) && e.target.closest && e.target.closest(BTN_SEL)) { e.stopPropagation(); e.preventDefault(); }
+    }, true);
+
     setInterval(() => {
         const path = location.pathname;
         const inReels = path.indexOf('/reel/') === 0 || path.indexOf('/videos/') !== -1 && !!document.querySelector('.vertically-snappable video');
@@ -384,35 +524,30 @@
             const dl = document.querySelector('button[aria-label="Download content"]');
             const r = dl && dl.getBoundingClientRect();
             // A column under the download button (a row would cover Facebook's own header icons).
-            const baseTop = (r && r.width ? r.top : 70) + 48, baseLeft = (r && r.width ? r.left : 345) + 'px';
-            let slot = 0; // buttons stack under the download button, skipping the ones that are off; the hide button goes last
+            const baseTop = (r && r.width ? r.top : 70) + 48, baseLeft = r && r.width ? r.left : 345;
+            const items = []; // the buttons shown, in default order (a column under the download button, eye last)
             if (FIT) {
                 if (!fitBtn || !fitBtn.isConnected) buildFitBtn();
-                fitBtn.style.top = (baseTop + 48 * slot++) + 'px';
-                fitBtn.style.left = baseLeft;
-                fitBtn.style.display = 'flex';
                 fitBtn.style.opacity = hideOn ? '0.35' : '1';
+                items.push(fitBtn);
                 if (fit === null) setFit('contain'); // default: whole video, no crop
             } else if (fitBtn) fitBtn.style.display = 'none';
             if (window.__mbAutoScroll) {
                 if (!autoBtn || !autoBtn.isConnected) buildAutoBtn();
-                autoBtn.style.top = (baseTop + 48 * slot++) + 'px';
-                autoBtn.style.left = baseLeft;
-                autoBtn.style.display = 'flex';
                 autoBtn.style.opacity = hideOn ? '0.35' : (window.__mbAutoScroll.enabled ? '1' : '0.45');
+                items.push(autoBtn);
             } else if (autoBtn) autoBtn.style.display = 'none';
             if (window.__mbBgAudio) {
                 if (!audioBtn || !audioBtn.isConnected) buildAudioBtn();
-                audioBtn.style.top = (baseTop + 48 * slot++) + 'px';
-                audioBtn.style.left = baseLeft;
-                audioBtn.style.display = 'flex';
                 audioBtn.style.opacity = hideOn ? '0.35' : (window.__mbBgAudio.enabled ? '1' : '0.45');
+                items.push(audioBtn);
             } else if (audioBtn) audioBtn.style.display = 'none';
-            hideBtn.style.top = (baseTop + 48 * slot) + 'px';
-            hideBtn.style.left = baseLeft;
-            hideBtn.style.display = 'flex';
+            items.push(hideBtn);
+            items.forEach(b => { b.style.display = 'flex'; });
+            layoutBtns(items, baseTop, baseLeft);
             markIcons(active);
         } else {
+            if (editing) endEdit(false);
             if (hideBtn) hideBtn.style.display = 'none';
             if (fitBtn) fitBtn.style.display = 'none';
             if (autoBtn) autoBtn.style.display = 'none';
