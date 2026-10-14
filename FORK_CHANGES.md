@@ -17,4 +17,11 @@ Messages in desktop mode was first written here and then merged into AstryxBook 
 Not taken: the other forks' rebrands, Astryx's/dh6k's overlapping orientation and auto-desktop logic, BraveBook's own fullscreen manager (Astryx's is used),
 LiteBook's `MIXED_CONTENT_ALWAYS_ALLOW` (insecure).
 
+Seen in the forks after the last merge (checked 2026-10-14, not taken yet):
+
+- AstryxBook: lock the app when the screen turns off, block screenshots, clear the cache on leaving, start on Feeds; text size as a page zoom that survives page loads, with an optional text wrap when zoomed in; Facebook notifications while the app is closed, optionally showing what they say; sharing photos and videos from other apps into Facebook's composer, with the share entries named and ordered like the Facebook app (Your story, Feed, Your groups, Reels) and Set as profile picture; the WebView is replaced when its renderer process is lost; sponsored reels labelled in non-Latin scripts are hidden (a caption that only mentions the label is not); the Open app bar under a post's photos is hidden; the story creator's preview shows the whole story on a phone; RTL settings gears; reels downloaded from the player's MP4; the fork's strings translated into every supported language; a fix for the release build crashing at launch (R8 stripped WorkManager's database constructor).
+- LiteBook: removes the stuck full-screen loading overlay that blocked the account switch screen.
+- Upstream (eepiemi/Materialbook): a LICENSE update.
+- dh6k and BraveBook: nothing new.
+
 Runtime scripts are fetched from this repo's `main` (`SCRIPT_SRC` in `fetchScripts.kt`) with the bundled copy as fallback.
