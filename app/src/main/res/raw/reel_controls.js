@@ -128,7 +128,7 @@
         'html.mb-fit-cover video{object-fit:cover !important}';
     document.head.appendChild(style);
     // Button feedback: shrink while pressed, small bounce on tap.
-    style.textContent += '#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio{transition:transform .12s ease-out,background .2s,left .2s ease,top .2s ease}' +
+    style.textContent += '#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio,#materialbook-global-downloader{transition:transform .12s ease-out,background .2s,left .2s ease,top .2s ease}' +
         '#mb-reel-hide:active,#mb-reel-fit:active,#mb-reel-auto:active,#mb-reel-audio:active{transform:scale(.82);background:rgba(255,255,255,.28) !important}';
     document.addEventListener('click', (e) => {
         const b = e.target.closest && e.target.closest('#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio');
@@ -376,8 +376,8 @@
     // to another cell of the grid, Save keeps the layout. Positions are cells, not pixels.
     // ponytail: the layout is stored in localStorage and ignored when the shown buttons change
     // (a setting turned on or off), falling back to the default column; no per-set layouts.
-    const BTN_SEL = '#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio';
-    const STEP = 48, HOLD = 450, LKEY = 'mbReelLayout';
+    const BTN_SEL = '#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio,#materialbook-global-downloader';
+    const STEP = 48, HOLD = 450, LKEY = 'mbReelLayout', DLID = 'materialbook-global-downloader'; // DLID: download_content.js's button
     const es = (navigator.language || '').toLowerCase().indexOf('es') === 0;
     let editing = false, draft = null, drag = null, curItems = [], suppressUntil = 0, lp = null;
     let grid = { x0: 0, y0: 0, rmin: 0 }, base = { top: 0, left: 0 }, lastX = 0, lastY = 0;
@@ -387,7 +387,7 @@
     const cellOf = (el) => [Math.round((parseFloat(el.style.left) - grid.x0) / STEP), Math.round((parseFloat(el.style.top) - grid.y0) / STEP)];
     const limits = () => ({
         cmax: Math.max(0, Math.floor((innerWidth - 40 - grid.x0) / STEP)),
-        rmax: Math.max(grid.rmin, Math.floor((innerHeight * 0.7 - 40 - grid.y0) / STEP))
+        rmax: Math.max(grid.rmin, Math.floor((innerHeight - 56 - grid.y0) / STEP))
     });
     const snap = (x, y) => {
         const l = limits();
@@ -398,12 +398,19 @@
     function layoutBtns(items, baseTop, baseLeft) {
         curItems = items; base = { top: baseTop, left: baseLeft };
         grid.x0 = baseLeft % STEP; grid.y0 = baseTop % STEP;
-        grid.rmin = Math.round((baseTop - grid.y0) / STEP);
-        const def = (b, i) => [Math.round((baseLeft - grid.x0) / STEP), grid.rmin + i];
+        grid.rmin = Math.round((baseTop - grid.y0) / STEP) - 1; // the row of the download button
+        const col = Math.round((baseLeft - grid.x0) / STEP);
+        let k = 0; // the download button keeps its row, the others stack under it
+        const def = (b) => b.id === DLID ? [col, grid.rmin] : [col, grid.rmin + 1 + k++];
         const sv = savedLayout();
-        const useSaved = sv && Object.keys(sv).length === items.length && items.every(b => sv[b.id]);
+        const useSaved = sv && items.every(b => sv[b.id]);
         const lay = editing ? draft : useSaved ? sv : null;
-        items.forEach((b, i) => { if (!drag || drag.el !== b) place(b, lay && lay[b.id] ? lay[b.id] : def(b, i)); });
+        items.forEach((b) => {
+            const d = def(b);
+            if (drag && drag.el === b) return;
+            place(b, lay && lay[b.id] ? lay[b.id] : d);
+            if (b.id === DLID) { b.style.right = 'auto'; b.style.zIndex = '2147483000'; }
+        });
     }
 
     const buildEditUI = () => {
@@ -468,6 +475,7 @@
         drag = { el: b, dx: x - parseFloat(b.style.left), dy: y - parseFloat(b.style.top), from: cellOf(b) };
         b.setAttribute('data-mb-drag', '');
         ui.tgt.style.opacity = '1';
+        ui.bar.style.opacity = '.2'; ui.bar.style.pointerEvents = 'none'; // keep the bottom cells reachable
         moveDrag(x, y);
     };
     const moveDrag = (x, y) => {
@@ -481,7 +489,7 @@
         const other = curItems.find(o => o !== el && draft[o.id] && draft[o.id][0] === c[0] && draft[o.id][1] === c[1]);
         if (other) draft[other.id] = drag.from; // occupied cell: the two swap
         draft[id] = c;
-        ui.tgt.style.opacity = '0';
+        ui.tgt.style.opacity = '0'; ui.bar.style.opacity = '1'; ui.bar.style.pointerEvents = 'auto';
         drag = null;
         curItems.forEach(b => { if (draft[b.id]) place(b, draft[b.id]); });
     };
@@ -521,11 +529,11 @@
         // hide-icons button: next to the download button when it exists
         if (active) {
             if (!hideBtn || !hideBtn.isConnected) buildHideBtn();
-            const dl = document.querySelector('button[aria-label="Download content"]');
-            const r = dl && dl.getBoundingClientRect();
+            const dlBtn = document.getElementById(DLID);
             // A column under the download button (a row would cover Facebook's own header icons).
-            const baseTop = (r && r.width ? r.top : 70) + 48, baseLeft = r && r.width ? r.left : 345;
+            const baseTop = 70 + 48, baseLeft = innerWidth - 55; // under download_content.js's button (top:70px; right:15px)
             const items = []; // the buttons shown, in default order (a column under the download button, eye last)
+            if (dlBtn && dlBtn.classList.contains('visible')) items.push(dlBtn);
             if (FIT) {
                 if (!fitBtn || !fitBtn.isConnected) buildFitBtn();
                 fitBtn.style.opacity = hideOn ? '0.35' : '1';
@@ -543,11 +551,13 @@
                 items.push(audioBtn);
             } else if (audioBtn) audioBtn.style.display = 'none';
             items.push(hideBtn);
-            items.forEach(b => { b.style.display = 'flex'; });
+            items.forEach(b => { if (b !== dlBtn) b.style.display = 'flex'; });
             layoutBtns(items, baseTop, baseLeft);
             markIcons(active);
         } else {
             if (editing) endEdit(false);
+            const dl0 = document.getElementById(DLID);
+            if (dl0) { dl0.style.left = dl0.style.top = dl0.style.right = dl0.style.zIndex = ''; }
             if (hideBtn) hideBtn.style.display = 'none';
             if (fitBtn) fitBtn.style.display = 'none';
             if (autoBtn) autoBtn.style.display = 'none';
