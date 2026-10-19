@@ -450,10 +450,9 @@ fun SettingsContent(
                     icon = Icons.Outlined.DesktopWindows,
                     title = stringResource(R.string.desktop_layout_title),
                     supportingText = stringResource(R.string.force_desktop_layout_may_not_be_suitable_for_smaller_display),
-                    // Large screens are always desktop: shown on and locked.
-                    // On phones this is a plain toggle.
+                    // Large screens start on desktop, but it can be turned off.
                     isActive = effectiveDesktop(desktopLayout.value, isAutoDesktop),
-                    onClick = { if (!isAutoDesktop) viewModel.setDesktopLayout(!desktopLayout.value) }
+                    onClick = { viewModel.setDesktopLayout(!effectiveDesktop(desktopLayout.value, isAutoDesktop)) }
                 ),
                 SettingsItem(
                     icon = Icons.Outlined.PanoramaWideAngle,

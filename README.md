@@ -59,7 +59,8 @@ On by default:
 *  Long-press the app icon for shortcuts to Messages, Search, Marketplace, Reels and Notifications
 *  Opens Facebook links from other apps, including `fb.me`, `fb.com` and the Facebook app's `fb://` links
 *  Checks GitHub for a new version when the app opens (Settings → *Check for updates on start*); *Check for updates now* does it on demand, and the dialog downloads the new APK
-*  Reel controls: time, seek bar, fullscreen and volume on paused reels, a button to hide the reel icons (fading out) and, optionally, resizing so the whole video shows without cropping
+*  Reel controls: time, seek bar, fullscreen and volume on paused reels (also while the icons are hidden), a button to hide the reel icons (fading out; on the desktop site the video then fills the screen) and, optionally, resizing so the whole video shows without cropping. They work on the phone and the desktop site
+*  Desktop layout can be switched off on tablets: Facebook then sends the phone site, at the full width of the screen
 *  "Share via..." in Facebook's share sheet, and an option to run only the scripts built into the app
 *  App lock (Settings, off by default): fingerprint, face or phone PIN to open the app
 *  Messenger voice and video calls in the Messages layer (asks for the camera and microphone when a call starts); log out and share-this-page rows in Settings
@@ -81,7 +82,7 @@ Off by default (opt-in):
 *  Hides the system bars (immersive mode), or only the navigation bar / gesture line (Hide navigation bar)
 *  Auto-scrolls reels: goes to the next reel when the current one ends, with a button in the reel viewer to pause it
 *  Keeps a reel's audio playing with the screen off, with a button in the reel viewer
-*  Collapsing toolbar: the top bars hide when scrolling down and return when scrolling up (needs Sticky Navbar)
+*  Collapsing toolbar: the top bars hide when scrolling down and return when scrolling up (needs Sticky Navbar) (phone and desktop site)
 *  Allows pinch-to-zoom anywhere
 *  Lets you access Messenger (Desktop layout only)
 *  Opens Messages inside the app on the desktop site, in its own layer over the feed, so Back returns you to where you were (Settings → *Messages in desktop mode*); links to a conversation keep it

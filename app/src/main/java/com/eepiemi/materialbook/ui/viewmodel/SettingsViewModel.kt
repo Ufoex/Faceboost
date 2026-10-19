@@ -78,7 +78,7 @@ class SettingsViewModel(
     )
     val desktopLayout = dataStore.desktopLayout.stateIn(
         scope = viewModelScope,
-        initialValue = initialPrefs[DESKTOP_LAYOUT] ?: false,
+        initialValue = initialPrefs[DESKTOP_LAYOUT],
         started = SharingStarted.WhileSubscribed()
     )
     val hideNavBar = dataStore.hideNavBar.stateIn(

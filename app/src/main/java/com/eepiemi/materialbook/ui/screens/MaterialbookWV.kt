@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.WindowManager
+import android.webkit.WebSettings
 import android.webkit.CookieManager
 import android.widget.FrameLayout
 import android.widget.Toast
@@ -1236,7 +1237,17 @@ fun MaterialbookWebView(
 
 
     LaunchedEffect(isEffectiveDesktop) {
-        val userAgent = if (isEffectiveDesktop) DESKTOP_USER_AGENT else ""
+        // On a tablet Facebook serves its desktop page by the device model in the user agent, even
+        // with "Mobile" in it: with the desktop layout off, present a generic phone so it sends the
+        // phone site. Phones keep their own agent.
+        val userAgent = when {
+            isEffectiveDesktop -> DESKTOP_USER_AGENT
+            isAutoDesktop -> {
+                val chrome = Regex("Chrome/(\\S+)").find(WebSettings.getDefaultUserAgent(context))?.groupValues?.get(1) ?: "124.0.0.0"
+                "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$chrome Mobile Safari/537.36"
+            }
+            else -> ""
+        }
         // The WebView is created during layout, so on a cold start this can run first:
         // the library applies webSettings when it creates it, and a live WebView is
         // updated directly.

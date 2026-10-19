@@ -2,7 +2,6 @@
 // regular video viewer also shows time, a seek bar, fullscreen and volume. Show the
 // same kind of bar on reels while the video is paused.
 (function() {
-    if (window.isDesktopMode && window.isDesktopMode()) return;
     if (window.__mbReelControls) return;
     window.__mbReelControls = true;
 
@@ -77,7 +76,8 @@
     const hasNativeSeek = () => [...document.querySelectorAll('input[type=range]')].some(i => {
         if (i.id === 'mb-reel-seek') return false;
         const r = i.getBoundingClientRect();
-        return r.width > 0 && r.height > 0 && getComputedStyle(i).opacity !== '0';
+        // (a seek bar our own hide mode made invisible does not count)
+        return r.width > 0 && r.height > 0 && getComputedStyle(i).opacity !== '0' && !i.closest('[data-mb-hid],[data-mb-fade]');
     });
 
     // ---- Hide icons button ----
@@ -122,7 +122,13 @@
         // fade / slide when hiding and showing; the marks stay ~0.45 s after showing so the way back animates too
         '[data-mb-hid],[data-mb-fade]{transition:opacity .3s ease}' +
         '[data-mb-scale]{transition:transform .3s ease}' +
-        'html.mb-hide-reel-ui [data-mb-scale]{transform:translateY(var(--mb-y,0px)) scale(var(--mb-k,1)) !important;transform-origin:50% 0 !important}' +
+        'html.mb-hide-reel-ui [data-mb-scale]{transform:translate(var(--mb-x,0px),var(--mb-y,0px)) scale(var(--mb-k,1)) !important;transform-origin:50% 0 !important}' +
+        // desktop: Facebook's fixed header would sit over the enlarged video
+        'html.mb-hide-reel-ui div[role="banner"]{opacity:0 !important;pointer-events:none !important}' +
+        'html.mb-hide-reel-ui body{background:#000 !important}' +
+        'html.mb-hide-reel-ui,html.mb-hide-reel-ui body{overflow:hidden !important}' +
+        'html.mb-hide-reel-ui [data-mb-zoom]{transform:translate(var(--mb-x,0px),var(--mb-y,0px)) scale(var(--mb-k,1)) !important;' +
+        'transform-origin:var(--mb-ox,50%) var(--mb-oy,50%) !important;transition:transform .3s ease}' +
         // fit button: show the whole video (contain) or fill the screen (cover)
         'html.mb-fit-contain video{object-fit:contain !important}' +
         'html.mb-fit-cover video{object-fit:cover !important}';
@@ -133,6 +139,46 @@
     document.addEventListener('click', (e) => {
         const b = e.target.closest && e.target.closest('#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio');
         if (b) b.animate([{ transform: 'scale(.8)' }, { transform: 'scale(1.18)' }, { transform: 'scale(1)' }], { duration: 260, easing: 'ease-out' });
+    }, true);
+
+    // Desktop: the reels sit in a column inside clipped boxes. Leave Facebook's list alone (its own
+    // scrolling, snapping and next-reel preview keep working) and scale the page's top-level container
+    // about the video's centre: the video then fills the screen (fit "contain") or covers it ("cover").
+    const desktopRoot = (v) => { let r = v; while (r.parentElement && r.parentElement !== document.body) r = r.parentElement; return r; };
+    let zoomKey = '';
+    const zoomDesktop = (v) => {
+        const root = desktopRoot(v);
+        const key = [innerWidth, innerHeight, fit].join();
+        if (root.hasAttribute('data-mb-zoom') && key === zoomKey) return;
+        root.removeAttribute('data-mb-zoom'); // measure unscaled
+        let box = v.parentElement;
+        for (let e = box; e && e !== document.body; e = e.parentElement) {
+            if (/hidden|clip/.test(getComputedStyle(e).overflow)) { box = e; break; }
+        }
+        let list = box;
+        while (list && !(/auto|scroll/.test(getComputedStyle(list).overflowY) && list.scrollHeight > list.clientHeight + 20)) list = list.parentElement;
+        const rb = box.getBoundingClientRect(), rl = (list || box).getBoundingClientRect(), rr = root.getBoundingClientRect();
+        if (!rb.width || !rb.height) return;
+        // the list is snapped: its centre is where the video sits, whichever reel is mid-scroll
+        const cx = rb.left + rb.width / 2, cy = rl.top + rl.height / 2;
+        const kw = innerWidth / rb.width, kh = innerHeight / rb.height;
+        root.style.setProperty('--mb-k', fit === 'cover' ? Math.max(kw, kh) : Math.min(kw, kh));
+        root.style.setProperty('--mb-x', (innerWidth / 2 - cx) + 'px');
+        root.style.setProperty('--mb-y', (innerHeight / 2 - cy) + 'px');
+        root.style.setProperty('--mb-ox', (cx - rr.left) + 'px');
+        root.style.setProperty('--mb-oy', (cy - rr.top) + 'px');
+        root.setAttribute('data-mb-zoom', '');
+        zoomKey = key;
+    };
+
+    // Hide mode can leave Facebook's tap-to-pause layer unable to take the tap (it is one of the hidden
+    // layers), so the tap lands straight on the video and nothing happens. Then toggle playback here.
+    // A tap Facebook handles (it changed the state itself) is left alone, so it never toggles twice.
+    document.addEventListener('click', (e) => {
+        const v = e.target;
+        if (!hideOn || !e.isTrusted || !v || v.tagName !== 'VIDEO') return;
+        const was = v.paused;
+        setTimeout(() => { if (v.paused === was) { if (was) v.play(); else v.pause(); } }, 80);
     }, true);
 
     const lca = (els) => {
@@ -166,21 +212,27 @@
         // the end: clearing first lets a style recalc (elementFromPoint) show the UI for a moment.
         const stale = hideOn ? [...document.querySelectorAll('[data-mb-hid],[data-mb-fade]')] : [];
         const cur = new Set();
+        if (!hideOn) { zoomKey = ''; document.querySelectorAll('[data-mb-zoom]').forEach(e => e.removeAttribute('data-mb-zoom')); }
         if (!hideOn) document.querySelectorAll('[data-mb-hid],[data-mb-fade],[data-mb-scale]').forEach(e => {
             e.removeAttribute('data-mb-hid');
             e.removeAttribute('data-mb-fade');
             e.removeAttribute('data-mb-scale');
             e.style.removeProperty('--mb-k');
             e.style.removeProperty('--mb-y');
+            e.style.removeProperty('--mb-x');
         });
         if (!hideOn) return;
-        const cont = v.closest('.vertically-snappable') || v.parentElement;
+        // Desktop has no snappable box and its side rail lives outside the main area: start from
+        // the page's top-level container (our own buttons hang off <body>, so they are not touched).
+        const cont = v.closest('.vertically-snappable') || (window.isDesktopMode && window.isDesktopMode() && desktopRoot(v)) || v.parentElement;
         const iw = innerWidth, ih = innerHeight;
         // Facebook's thin progress bar (track + played part + buffer) stays visible,
         // like the video itself.
         const seekbox = cont.querySelector('.seekbar-container');
         const inSeek = (e) => !!seekbox && seekbox.contains(e);
-        const keep = [v, seekbox].filter(Boolean);
+        // Desktop lists every reel as a sibling: keep all their videos visible (only the UI around them
+        // is hidden) or the neighbouring reels would be blank while they scroll in.
+        const keep = [v, seekbox, ...(window.isDesktopMode && window.isDesktopMode() ? document.querySelectorAll('video') : [])].filter(Boolean);
         const holdsKept = (e) => keep.some(k => e.contains(k));
         const hid = (e) => { if (e && !holdsKept(e) && !inSeek(e)) { e.removeAttribute('data-mb-fade'); e.setAttribute('data-mb-hid', ''); cur.add(e); } };
 
@@ -188,11 +240,21 @@
         const center = document.elementFromPoint(iw / 2, ih / 2);
 
         // everything in the reel container that is not the video itself
+        // Desktop: the tap-to-pause layer is an overlay covering the video, not necessarily the element
+        // under the centre (a layer already hidden no longer receives the touch, so the centre can't
+        // find it twice). Anything that covers the video stays tappable, just invisible.
+        const vr = v.getBoundingClientRect();
+        const coversVideo = (e) => {
+            if (!(window.isDesktopMode && window.isDesktopMode())) return false;
+            const r = e.getBoundingClientRect();
+            const w = Math.min(r.right, vr.right) - Math.max(r.left, vr.left), h = Math.min(r.bottom, vr.bottom) - Math.max(r.top, vr.top);
+            return w > 0 && h > 0 && w * h >= 0.8 * vr.width * vr.height;
+        };
         const walk = (node) => {
             for (const c of node.children) {
                 if (inSeek(c)) continue;
                 if (holdsKept(c)) walk(c);
-                else if (center && c.contains(center)) { c.removeAttribute('data-mb-hid'); c.setAttribute('data-mb-fade', ''); cur.add(c); }
+                else if ((center && c.contains(center)) || coversVideo(c)) { c.removeAttribute('data-mb-hid'); c.setAttribute('data-mb-fade', ''); cur.add(c); }
                 else hid(c);
             }
         };
@@ -243,6 +305,8 @@
                 scroller.style.setProperty('--mb-k', k);
             }
         });
+        // desktop: enlarge the page so the video fills the screen (see zoomDesktop)
+        if (window.isDesktopMode && window.isDesktopMode() && !v.closest('.vscroller')) zoomDesktop(v);
         // our own buttons
         document.querySelectorAll('button[aria-label="Download content"], button[aria-label="Copy image to clipboard"]').forEach(hid);
         stale.forEach(e => { if (!cur.has(e)) { e.removeAttribute('data-mb-hid'); e.removeAttribute('data-mb-fade'); } });
@@ -255,6 +319,8 @@
         root.toggle('mb-fit-cover', mode === 'cover');
         // icon shows what the next tap will do
         if (fitBtn) fitBtn.innerHTML = svg(mode === 'contain' ? FIT_FILL : FIT_FULL);
+        const zv = hideOn && activeVideo();
+        if (zv && window.isDesktopMode && window.isDesktopMode()) zoomDesktop(zv);
     };
 
     const buildFitBtn = () => {
@@ -574,7 +640,7 @@
 
         // seek bar for reels that don't have Facebook's own
         const v = path.indexOf('/reel/') === 0 ? active : null;
-        if (hideOn || !v || !v.paused || !isFinite(v.duration) || v.duration <= 0 || hasNativeSeek()) {
+        if (!v || !v.paused || !isFinite(v.duration) || v.duration <= 0 || hasNativeSeek()) {
             if (bar) bar.style.display = 'none';
             return;
         }

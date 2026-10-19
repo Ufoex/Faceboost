@@ -33,10 +33,10 @@ fun appOrientation(
     else -> ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
 }
 
-// The page is in desktop mode if the user turned it on, or the screen is
-// large enough. Computed at runtime; the automatic part is never persisted.
-fun effectiveDesktop(userDesktopSetting: Boolean, isAutoDesktop: Boolean): Boolean =
-    userDesktopSetting || isAutoDesktop
+// The user's choice wins; with none (null) a large screen is desktop.
+// Computed at runtime; the automatic part is never persisted.
+fun effectiveDesktop(userDesktopSetting: Boolean?, isAutoDesktop: Boolean): Boolean =
+    userDesktopSetting ?: isAutoDesktop
 
 @Composable
 fun rememberAutoDesktop(): Boolean {

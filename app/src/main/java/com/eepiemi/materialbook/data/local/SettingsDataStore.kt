@@ -95,7 +95,7 @@ class SettingsDataStore(private val context: Context) {
         context.dataStore.edit { it[ENABLE_COPY_TO_CLIPBOARD] = enableCopyToClipboard }
     }
 
-    val desktopLayout = context.dataStore.data.map { it[DESKTOP_LAYOUT] ?: false }
+    val desktopLayout = context.dataStore.data.map { it[DESKTOP_LAYOUT] }
     suspend fun setDesktopLayout(desktopLayout: Boolean) {
         context.dataStore.edit { it[DESKTOP_LAYOUT] = desktopLayout }
     }

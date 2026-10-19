@@ -29,8 +29,13 @@ class AutoDesktopTest {
     }
 
     @Test
-    fun userOff_largeScreen_isDesktop() {
-        assertTrue(effectiveDesktop(userDesktopSetting = false, isAutoDesktop = true))
+    fun noChoice_largeScreen_isDesktop() {
+        assertTrue(effectiveDesktop(userDesktopSetting = null, isAutoDesktop = true))
+    }
+
+    @Test
+    fun userOff_largeScreen_isMobile() {
+        assertFalse(effectiveDesktop(userDesktopSetting = false, isAutoDesktop = true))
     }
 
     // ── Auto-desktop is a device-class check only ────────────────────────────
