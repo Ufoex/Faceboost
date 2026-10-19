@@ -17,15 +17,13 @@ fun isAutoDesktopScreen(smallestScreenWidthDp: Int): Boolean = smallestScreenWid
  * offered Android's temporary rotate button, and the screen went back to portrait): Facebook's mobile site handles a real
  * landscape page badly (it skips the reel on rotation, and leaving fullscreen
  * in landscape leaves its viewer showing an oversized still frame instead of
- * the video, same in Chrome). Large screens (the auto-desktop ones) rotate
- * freely as before.
+ * the video, same in Chrome). Tablets follow the same rule: laid flat, the phone site is
+ * cropped (it caps its page at 800 px wide and sizes the viewer for portrait).
  */
 fun appOrientation(
-    smallestScreenWidthDp: Int,
     isFullscreen: Boolean,
     isMessagesLayerOpen: Boolean = false,
 ): Int = when {
-    isAutoDesktopScreen(smallestScreenWidthDp) -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     isFullscreen -> ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
     // The Messages layer shows the desktop site, which has room for the chat list beside the
     // conversation: it follows the system auto-rotate setting while it is open.

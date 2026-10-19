@@ -65,6 +65,7 @@ import com.eepiemi.materialbook.audio.PipHandback
 import com.eepiemi.materialbook.audio.isHandoffEligible
 import com.eepiemi.materialbook.audio.parseHandoffRead
 import com.eepiemi.materialbook.ui.screens.MaterialbookWebView
+import com.eepiemi.materialbook.utils.CacheCleaner
 import com.eepiemi.materialbook.utils.appOrientation
 import com.eepiemi.materialbook.ui.theme.MaterialbookTheme
 import com.eepiemi.materialbook.ui.viewmodel.SettingsViewModel
@@ -295,6 +296,8 @@ class MainActivity : FragmentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        // Old cache files out, off the main thread (see CacheCleaner).
+        Thread { runCatching { CacheCleaner.clean(applicationContext.cacheDir) } }.start()
         publishShortcuts(this)
         scheduleNotificationPoll(this, settingsVM.notifyPoll.value)
         askNotificationsOnce()
@@ -302,7 +305,7 @@ class MainActivity : FragmentActivity() {
         // Phones browse in portrait; only HTML5 fullscreen video rotates (see
         // appOrientation and the fullscreen host in MaterialbookWebView).
         requestedOrientation =
-            appOrientation(resources.configuration.smallestScreenWidthDp, isFullscreen = false)
+            appOrientation(isFullscreen = false)
 
         // Unconditional on purpose (not gated behind BuildConfig.DEBUG): keeps
         // chrome://inspect available on release-type builds for field

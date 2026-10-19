@@ -52,30 +52,24 @@ class AutoDesktopTest {
         assertTrue(isAutoDesktopScreen(800))
     }
 
-    // ── Orientation: phones portrait except fullscreen video ─────────────────
+    // ── Orientation: portrait except fullscreen video (phones and tablets alike) ─────────────────
 
     @Test
     fun phone_browsing_isPortrait() {
-        assertEquals(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT, appOrientation(384, isFullscreen = false))
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT, appOrientation(isFullscreen = false))
     }
 
     @Test
     fun phone_fullscreenVideo_rotatesBySensor() {
-        assertEquals(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR, appOrientation(384, isFullscreen = true))
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR, appOrientation(isFullscreen = true))
     }
 
     @Test
     fun phone_messagesLayer_followsAutoRotate() {
         assertEquals(
             ActivityInfo.SCREEN_ORIENTATION_FULL_USER,
-            appOrientation(384, isFullscreen = false, isMessagesLayerOpen = true)
+            appOrientation(isFullscreen = false, isMessagesLayerOpen = true)
         )
-    }
-
-    @Test
-    fun largeScreen_isNeverLocked() {
-        assertEquals(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED, appOrientation(600, isFullscreen = false))
-        assertEquals(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED, appOrientation(800, isFullscreen = true))
     }
 
     // ── Migration of the old persisted auto decision ─────────────────────────

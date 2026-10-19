@@ -1103,7 +1103,7 @@ fun MaterialbookWebView(
                 }
                 isFullscreen = true
                 activity.requestedOrientation =
-                    appOrientation(activity.resources.configuration.smallestScreenWidthDp, isFullscreen = true)
+                    appOrientation(isFullscreen = true)
                 Log.d("AstryxbookPiP", "HTML5 fullscreen: shown")
             }
 
@@ -1120,7 +1120,6 @@ fun MaterialbookWebView(
                 activity?.let {
                     it.requestedOrientation =
                         appOrientation(
-                            it.resources.configuration.smallestScreenWidthDp,
                             isFullscreen = false,
                             isMessagesLayerOpen = messagesLayerUrl != null
                         )
@@ -1265,7 +1264,6 @@ fun MaterialbookWebView(
         if (!isFullscreen) {
             activity?.let {
                 it.requestedOrientation = appOrientation(
-                    it.resources.configuration.smallestScreenWidthDp,
                     isFullscreen = false,
                     isMessagesLayerOpen = isMessagesLayerOpen
                 )
