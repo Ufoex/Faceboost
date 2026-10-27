@@ -44,6 +44,7 @@ class SettingsDataStore(private val context: Context) {
         val HIDE_STORIES = booleanPreferencesKey("hide_stories")
         val HIDE_PEOPLE_YOU_MAY_KNOW = booleanPreferencesKey("hide_people_you_may_know")
         val HIDE_GROUPS = booleanPreferencesKey("hide_groups")
+        val HIDE_AI_POSTS = booleanPreferencesKey("hide_ai_posts")
         val APP_LOCK = booleanPreferencesKey("app_lock")
         val TEXT_ZOOM = intPreferencesKey("text_zoom")
         val OPEN_LINKS_IN_TAB = booleanPreferencesKey("open_links_in_tab")
@@ -195,6 +196,11 @@ class SettingsDataStore(private val context: Context) {
     val amoledBlack = context.dataStore.data.map { it[AMOLED_BLACK] ?: false }
     suspend fun setAmoledBlack(amoledBlack: Boolean) {
         context.dataStore.edit { it[AMOLED_BLACK] = amoledBlack }
+    }
+
+    val hideAiPosts = context.dataStore.data.map { it[HIDE_AI_POSTS] ?: false }
+    suspend fun setHideAiPosts(hideAiPosts: Boolean) {
+        context.dataStore.edit { it[HIDE_AI_POSTS] = hideAiPosts }
     }
 
     val hideSuggested = context.dataStore.data.map { it[HIDE_SUGGESTED] ?: false }

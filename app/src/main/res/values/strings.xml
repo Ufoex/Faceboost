@@ -107,7 +107,7 @@
     <string name="use_external_messenger_desc">Off: Messages opens inside this app. On: Messages and anything shared here goes to the Messenger app you choose</string>
     <string name="messenger_none_installed">No compatible Messenger app is installed</string>
     <string name="reel_gestures_title">Reel gestures</string>
-    <string name="reel_gestures_desc">Hold the video to play faster (replaces copy link), double tap the left or right side to skip</string>
+    <string name="reel_gestures_desc">Hold the video to play faster (replaces copy link). Double tap: the left third goes back, the middle likes (again to take the like back), the right third goes forward</string>
     <string name="reel_hold_speed_title">Hold speed</string>
     <string name="reel_skip_title">Double tap skip</string>
     <string name="reel_value_tap_to_change">%1$s · tap to change</string>
@@ -148,4 +148,15 @@
     <string name="app_lock_unlock">Unlock</string>
     <string name="app_lock_verify">Confirm it\'s you to turn on the app lock</string>
     <string name="messages_close">Close Messages</string>
+    <!-- Settings categories -->
+    <string name="settings_cat_general">General</string>
+    <string name="settings_cat_appearance">Appearance</string>
+    <string name="settings_cat_feed">Feed</string>
+    <string name="settings_cat_reels">Reels and media</string>
+    <string name="settings_cat_pip">Picture-in-picture</string>
+    <string name="settings_cat_messages">Messages</string>
+    <string name="settings_cat_privacy">Privacy and security</string>
+    <string name="settings_cat_data">Backup and updates</string>
+    <string name="settings_cat_options">%1$d options</string>
+    <string name="hide_ai_posts_title">AI-generated posts</string>
 </resources>

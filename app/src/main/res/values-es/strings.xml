@@ -105,7 +105,7 @@
     <string name="use_external_messenger_desc">Desactivado: Mensajes se abre dentro de esta app. Activado: Mensajes y lo que compartas aquí van a la app de Messenger que elijas</string>
     <string name="messenger_none_installed">No hay ninguna app de Messenger compatible instalada</string>
     <string name="reel_gestures_title">Gestos en reels</string>
-    <string name="reel_gestures_desc">Mantén presionado el video para acelerarlo (reemplaza copiar enlace), toca dos veces a la izquierda o derecha para saltar</string>
+    <string name="reel_gestures_desc">Mantén presionado el video para acelerarlo (reemplaza copiar enlace). Doble toque: a la izquierda retrocede, al centro da like (otra vez lo quita), a la derecha adelanta</string>
     <string name="reel_hold_speed_title">Velocidad al mantener</string>
     <string name="reel_skip_title">Salto con doble toque</string>
     <string name="reel_value_tap_to_change">%1$s · toca para cambiar</string>
@@ -146,4 +146,15 @@
     <string name="app_lock_unlock">Desbloquear</string>
     <string name="app_lock_verify">Confirma que eres tú para activar el bloqueo de la app</string>
     <string name="messages_close">Cerrar mensajes</string>
+    <!-- Categorías de ajustes -->
+    <string name="settings_cat_general">General</string>
+    <string name="settings_cat_appearance">Apariencia</string>
+    <string name="settings_cat_feed">Feed</string>
+    <string name="settings_cat_reels">Reels y multimedia</string>
+    <string name="settings_cat_pip">Imagen en imagen</string>
+    <string name="settings_cat_messages">Mensajes</string>
+    <string name="settings_cat_privacy">Privacidad y seguridad</string>
+    <string name="settings_cat_data">Copia y actualizaciones</string>
+    <string name="settings_cat_options">%1$d opciones</string>
+    <string name="hide_ai_posts_title">Publicaciones hechas con IA</string>
 </resources>

@@ -15,6 +15,7 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.MESSAGES_
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_PEOPLE_YOU_MAY_KNOW
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_REELS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_STORIES
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_AI_POSTS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_SUGGESTED
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.IMMERSIVE_MODE
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.NOTIFY_POLL
@@ -179,6 +180,11 @@ class SettingsViewModel(
     val amoledBlack = dataStore.amoledBlack.stateIn(
         scope = viewModelScope,
         initialValue = initialPrefs[AMOLED_BLACK] ?: false,
+        started = SharingStarted.WhileSubscribed()
+    )
+    val hideAiPosts = dataStore.hideAiPosts.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[HIDE_AI_POSTS] ?: false,
         started = SharingStarted.WhileSubscribed()
     )
     val hideSuggested = dataStore.hideSuggested.stateIn(
@@ -347,6 +353,12 @@ class SettingsViewModel(
     fun setAmoledBlack(amoledBlack: Boolean) {
         viewModelScope.launch {
             dataStore.setAmoledBlack(amoledBlack)
+        }
+    }
+
+    fun setHideAiPosts(hideAiPosts: Boolean) {
+        viewModelScope.launch {
+            dataStore.setHideAiPosts(hideAiPosts)
         }
     }
 

@@ -11,6 +11,7 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.COLLAPSIN
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DESKTOP_LAYOUT
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_COPY_TO_CLIPBOARD
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_DOWNLOAD_CONTENT
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_AI_POSTS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_GROUPS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_NAV_BAR
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_PEOPLE_YOU_MAY_KNOW
@@ -52,7 +53,7 @@ private val BOOLEAN_KEYS = listOf(
     NOTIFY_POLL, IMMERSIVE_MODE, STICKY_NAVBAR, AUTO_SCROLL_REELS, REEL_BACKGROUND_AUDIO,
     AUTO_UPDATE_CHECK, REEL_CONTROLS, REEL_GESTURES, REEL_FIT, COLLAPSING_TOOLBAR, PINCH_TO_ZOOM,
     MATERIAL_YOU, AMOLED_BLACK, HIDE_SUGGESTED, HIDE_REELS, HIDE_STORIES, HIDE_PEOPLE_YOU_MAY_KNOW,
-    HIDE_GROUPS, BRAVE_BLOCK_LIST, MESSAGES_DESKTOP, PIP_ENABLED, PIP_LOCKSCREEN_AUDIO,
+    HIDE_GROUPS, HIDE_AI_POSTS, BRAVE_BLOCK_LIST, MESSAGES_DESKTOP, PIP_ENABLED, PIP_LOCKSCREEN_AUDIO,
     OPEN_LINKS_IN_TAB, APP_LOCK,
 )
 private val STRING_KEYS = listOf(PIP_PORTRAIT_RATIO, KEEP_SCREEN_ON)

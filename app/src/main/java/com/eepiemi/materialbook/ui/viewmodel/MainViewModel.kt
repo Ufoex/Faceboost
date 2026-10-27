@@ -59,7 +59,8 @@ class MainViewModel(
             Script(settings.hideReels.value, R.raw.hide_reels, "hide_reels.js"),
             Script(settings.hideStories.value, R.raw.hide_stories, "hide_stories.js"),
             Script(settings.hidePeopleYouMayKnow.value, R.raw.hide_pymk, "hide_pymk.js"),
-            Script(settings.hideGroups.value, R.raw.hide_groups, "hide_groups.js")
+            Script(settings.hideGroups.value, R.raw.hide_groups, "hide_groups.js"),
+            Script(settings.hideAiPosts.value, R.raw.hide_ai_content, "hide_ai_content.js")
             // pip_video_detector.js deliberately NOT included here - it's core
             // PiP infrastructure, not a cosmetic feature, and needs to run as
             // early as possible. Bundling it with the rest means it doesn't

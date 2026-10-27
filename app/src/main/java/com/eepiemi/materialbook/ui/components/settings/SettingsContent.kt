@@ -19,6 +19,12 @@ import androidx.compose.material.icons.filled.Diversity1
 import androidx.compose.material.icons.filled.EmojiPeople
 import androidx.compose.material.icons.filled.Padding
 import androidx.compose.material.icons.filled.Try
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.DynamicFeed
+import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material.icons.outlined.SlowMotionVideo
+import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.AspectRatio
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.ContentCopy
@@ -118,7 +124,6 @@ fun SettingsContent(
 ) {
     val context = LocalContext.current
     val messengerRedirectToast = stringResource(R.string.messenger_redirect_toast)
-    var isOpenDialog by rememberSaveable { mutableStateOf(false) }
     var isLogoutDialog by rememberSaveable { mutableStateOf(false) }
     var isPipRatioDialog by rememberSaveable { mutableStateOf(false) }
     var isMessengerDialog by rememberSaveable { mutableStateOf(false) }
@@ -200,11 +205,25 @@ fun SettingsContent(
 
     val isAutoDesktop = rememberAutoDesktop()
 
+    val deviceLabel = run {
+        val mfr = Build.MANUFACTURER.replaceFirstChar { it.uppercase() }
+        val model = Build.MODEL
+        if (model.startsWith(mfr, ignoreCase = true)) model else "$mfr $model"
+    }
+    val hideSuggested = viewModel.hideSuggested.collectAsState()
+    val hideReels = viewModel.hideReels.collectAsState()
+    val hideStories = viewModel.hideStories.collectAsState()
+    val hidePeopleYouMayKnow = viewModel.hidePeopleYouMayKnow.collectAsState()
+    val hideGroups = viewModel.hideGroups.collectAsState()
+    val hideAiPosts = viewModel.hideAiPosts.collectAsState()
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        SettingsGroup(
+        SettingsSection(
+            title = stringResource(R.string.settings_cat_general),
+            icon = Icons.Outlined.Tune,
             items = listOfNotNull(
                 SettingsItem(
                     icon = Icons.Outlined.Notifications,
@@ -242,40 +261,18 @@ fun SettingsContent(
                     }
                 ),
                 SettingsItem(
-                    icon = Icons.Outlined.SystemUpdate,
-                    title = stringResource(R.string.auto_update_check_title),
-                    supportingText = stringResource(R.string.auto_update_check_desc),
-                    isActive = autoUpdateCheck.value,
-                    onClick = { viewModel.setAutoUpdateCheck(!autoUpdateCheck.value) }
-                ),
-                SettingsItem(
-                    icon = Icons.Outlined.Refresh,
-                    title = stringResource(R.string.check_update_now_title),
-                    supportingText = stringResource(R.string.check_update_now_desc, BuildConfig.VERSION_NAME),
-                    isActive = null,
-                    onClick = {
-                        scope.launch {
-                            update = checkForUpdate()
-                            if (update == null) Toast.makeText(context, upToDateToast, Toast.LENGTH_SHORT).show()
+                    icon = Icons.Outlined.LightMode,
+                    title = stringResource(R.string.keep_screen_on_title),
+                    supportingText = stringResource(
+                        when (keepScreenOn.value) {
+                            "always" -> R.string.keep_screen_on_always
+                            "video" -> R.string.keep_screen_on_video
+                            else -> R.string.keep_screen_on_off
                         }
-                    }
-                ),
-                SettingsItem(
-                    icon = Icons.Outlined.Lock,
-                    title = stringResource(R.string.app_lock_title),
-                    supportingText = stringResource(R.string.app_lock_desc),
-                    isActive = appLock.value,
+                    ),
                     onClick = {
-                        val fragmentActivity = activity as? FragmentActivity
-                        when {
-                            appLock.value -> viewModel.setAppLock(false)
-                            !canUseAppLock(context) || fragmentActivity == null ->
-                                Toast.makeText(context, appLockUnavailableToast, Toast.LENGTH_LONG).show()
-                            // Turning it on first checks it is really the owner: fingerprint, face or PIN.
-                            else -> authenticateUser(fragmentActivity, appLockVerifyTitle) { ok ->
-                                if (ok) viewModel.setAppLock(true)
-                            }
-                        }
+                        val l = listOf("off", "video", "always")
+                        viewModel.setKeepScreenOn(l[(l.indexOf(keepScreenOn.value) + 1) % l.size])
                     }
                 ),
                 SettingsItem(
@@ -293,33 +290,6 @@ fun SettingsContent(
                     supportingText = stringResource(R.string.open_links_in_tab_desc),
                     isActive = openLinksInTab.value,
                     onClick = { viewModel.setOpenLinksInTab(!openLinksInTab.value) }
-                ),
-                SettingsItem(
-                    icon = Icons.Outlined.LightMode,
-                    title = stringResource(R.string.keep_screen_on_title),
-                    supportingText = stringResource(
-                        when (keepScreenOn.value) {
-                            "always" -> R.string.keep_screen_on_always
-                            "video" -> R.string.keep_screen_on_video
-                            else -> R.string.keep_screen_on_off
-                        }
-                    ),
-                    onClick = {
-                        val l = listOf("off", "video", "always")
-                        viewModel.setKeepScreenOn(l[(l.indexOf(keepScreenOn.value) + 1) % l.size])
-                    }
-                ),
-                SettingsItem(
-                    icon = Icons.Outlined.FileDownload,
-                    title = stringResource(R.string.export_settings_title),
-                    supportingText = stringResource(R.string.export_settings_desc),
-                    onClick = { exportLauncher.launch("faceboost-settings.json") }
-                ),
-                SettingsItem(
-                    icon = Icons.Outlined.FileUpload,
-                    title = stringResource(R.string.import_settings_title),
-                    supportingText = stringResource(R.string.import_settings_desc),
-                    onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
                 ),
                 // Android 12+ opens Facebook links in the browser until the user allows them for this app.
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) SettingsItem(
@@ -349,102 +319,26 @@ fun SettingsContent(
                         )
                     }
                 ) else null,
-                SettingsItem(
-                    icon = Icons.AutoMirrored.Outlined.Logout,
-                    title = stringResource(R.string.log_out_title),
-                    supportingText = stringResource(R.string.log_out_desc),
-                    onClick = { isLogoutDialog = true }
-                )
             )
         )
 
-        SettingsGroup(
-            items = listOf(
-                SettingsItem(
-                    icon = Icons.AutoMirrored.Outlined.Message,
-                    title = stringResource(R.string.open_messenger_title),
-                    supportingText = stringResource(R.string.open_messenger_desc),
-                    isActive = null,
-                    onClick = {
-                        val ok = openMessenger(context, "https://m.me/", messengerPackage.value)
-                        if (!ok) {
-                            Toast.makeText(
-                                context,
-                                messengerRedirectToast,
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    },
-                ),
-                // Default: Messages opens inside the app (desktop site). Turn this on to hand
-                // Messages, and what is shared to the app, to an external Messenger app instead.
-                SettingsItem(
-                    icon = Icons.AutoMirrored.Outlined.Message,
-                    title = stringResource(R.string.use_external_messenger_title),
-                    supportingText = stringResource(R.string.use_external_messenger_desc),
-                    isActive = !messagesDesktop.value,
-                    onClick = { viewModel.setMessagesDesktop(!messagesDesktop.value) },
-                ),
-            ) + if (!messagesDesktop.value) listOf(
-                SettingsItem(
-                    icon = Icons.AutoMirrored.Outlined.Message,
-                    title = stringResource(R.string.messenger_title),
-                    supportingText = messengerApps.firstOrNull { it.packageName == messengerPackage.value }?.label
-                        ?: messengerPackage.value,
-                    isActive = null,
-                    onClick = { isMessengerDialog = true },
-                )
-            ) else emptyList()
-        )
-
-        SettingsGroup(
-            items = listOf(
-                SettingsItem(
-                    icon = Icons.Outlined.Shield,
-                    title = stringResource(R.string.remove_ads_title),
-                    supportingText = stringResource(R.string.hide_sponsored_ads_from_your_feed),
-                    isActive = removeAds.value,
-                    onClick = { viewModel.setRemoveAds(!removeAds.value) },
-                ),
-                SettingsItem(
-                    icon = Icons.Outlined.Block,
-                    title = stringResource(R.string.brave_blocklist_title),
-                    supportingText = stringResource(R.string.brave_blocklist_supporting),
-                    isActive = braveBlockList.value,
-                    onClick = { viewModel.setBraveBlockList(!braveBlockList.value) },
-                ),
-                SettingsItem(
-                    icon = Icons.Outlined.FileDownload,
-                    title = stringResource(R.string.download_content_title),
-                    supportingText = stringResource(R.string.enable_download_button_on_media_view),
-                    isActive = enableDownloadContent.value,
-                    onClick = { viewModel.setEnableDownloadContent(!enableDownloadContent.value) },
-                ),
-                SettingsItem(
-                    icon = Icons.Outlined.ContentCopy,
-                    title = stringResource(R.string.copy_to_clipboard_title),
-                    supportingText = stringResource(R.string.enable_copy_to_clipboard_button_on_media_view),
-                    isActive = enableCopyToClipboard.value,
-                    onClick = { viewModel.setEnableCopyToClipboard(!enableCopyToClipboard.value) },
-                ),
-                SettingsItem(
-                    icon = Icons.Outlined.GridView,
-                    title = stringResource(R.string.customize_feed_title),
-                    supportingText = stringResource(R.string.customize_feed),
-                    isActive = null,
-                    onClick = { isOpenDialog = true },
-                ),
-            )
-        )
-
-        SettingsGroup(
+        SettingsSection(
+            title = stringResource(R.string.settings_cat_appearance),
+            icon = Icons.Outlined.Palette,
             items = listOfNotNull(
                 SettingsItem(
-                    icon = Icons.Outlined.Pinch,
-                    title = stringResource(R.string.pinch_to_zoom_title),
-                    supportingText = stringResource(R.string.use_two_fingers_to_zoom_in_or_out),
-                    isActive = pinchToZoom.value,
-                    onClick = { viewModel.setPinchToZoom(!pinchToZoom.value) }
+                    icon = Icons.Outlined.Palette,
+                    title = stringResource(R.string.material_you_title),
+                    supportingText = stringResource(R.string.enable_material_you_theming_for_facebook),
+                    isActive = materialYou.value,
+                    onClick = { viewModel.setMaterialYou(!materialYou.value) }
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.Circle,
+                    title = stringResource(R.string.amoled_black_title),
+                    supportingText = stringResource(R.string.enable_pure_black_theme_for_amoled_displays),
+                    isActive = amoledBlack.value,
+                    onClick = { viewModel.setAmoledBlack(!amoledBlack.value) }
                 ),
                 SettingsItem(
                     icon = Icons.Outlined.DesktopWindows,
@@ -475,6 +369,71 @@ fun SettingsContent(
                     isActive = stickyNavbar.value,
                     onClick = { viewModel.setStickyNavbar(!stickyNavbar.value) }
                 ),
+                SettingsItem(
+                    icon = Icons.Outlined.SwipeVertical,
+                    title = stringResource(R.string.collapsing_toolbar_title),
+                    supportingText = stringResource(R.string.collapsing_toolbar_desc),
+                    isActive = collapsingToolbar.value,
+                    onClick = { viewModel.setCollapsingToolbar(!collapsingToolbar.value) }
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.Pinch,
+                    title = stringResource(R.string.pinch_to_zoom_title),
+                    supportingText = stringResource(R.string.use_two_fingers_to_zoom_in_or_out),
+                    isActive = pinchToZoom.value,
+                    onClick = { viewModel.setPinchToZoom(!pinchToZoom.value) }
+                ),
+            )
+        )
+
+        SettingsSection(
+            title = stringResource(R.string.settings_cat_feed),
+            icon = Icons.Outlined.DynamicFeed,
+            items = listOfNotNull(
+                SettingsItem(
+                    icon = Icons.Filled.Try,
+                    title = stringResource(R.string.suggested_posts),
+                    isActive = hideSuggested.value,
+                    onClick = { viewModel.setHideSuggested(!hideSuggested.value) }
+                ),
+                SettingsItem(
+                    icon = Icons.Filled.Camera,
+                    title = stringResource(R.string.reels),
+                    isActive = hideReels.value,
+                    onClick = { viewModel.setHideReels(!hideReels.value) }
+                ),
+                SettingsItem(
+                    icon = Icons.Filled.BurstMode,
+                    title = stringResource(R.string.stories),
+                    isActive = hideStories.value,
+                    onClick = { viewModel.setHideStories(!hideStories.value) }
+                ),
+                // These two only exist on the mobile site.
+                if (!effectiveDesktop(desktopLayout.value, isAutoDesktop)) SettingsItem(
+                    icon = Icons.Filled.EmojiPeople,
+                    title = stringResource(R.string.people_you_may_know),
+                    isActive = hidePeopleYouMayKnow.value,
+                    onClick = { viewModel.setHidePeopleYouMayKnow(!hidePeopleYouMayKnow.value) }
+                ) else null,
+                if (!effectiveDesktop(desktopLayout.value, isAutoDesktop)) SettingsItem(
+                    icon = Icons.Filled.Diversity1,
+                    title = stringResource(R.string.groups),
+                    isActive = hideGroups.value,
+                    onClick = { viewModel.setHideGroups(!hideGroups.value) }
+                ) else null,
+                if (!effectiveDesktop(desktopLayout.value, isAutoDesktop)) SettingsItem(
+                    icon = Icons.Outlined.AutoAwesome,
+                    title = stringResource(R.string.hide_ai_posts_title),
+                    isActive = hideAiPosts.value,
+                    onClick = { viewModel.setHideAiPosts(!hideAiPosts.value) }
+                ) else null,
+            )
+        )
+
+        SettingsSection(
+            title = stringResource(R.string.settings_cat_reels),
+            icon = Icons.Outlined.SlowMotionVideo,
+            items = listOfNotNull(
                 SettingsItem(
                     icon = Icons.Outlined.SkipNext,
                     title = stringResource(R.string.auto_scroll_reels_title),
@@ -529,67 +488,177 @@ fun SettingsContent(
                     }
                 ) else null,
                 SettingsItem(
-                    icon = Icons.Outlined.SwipeVertical,
-                    title = stringResource(R.string.collapsing_toolbar_title),
-                    supportingText = stringResource(R.string.collapsing_toolbar_desc),
-                    isActive = collapsingToolbar.value,
-                    onClick = { viewModel.setCollapsingToolbar(!collapsingToolbar.value) }
+                    icon = Icons.Outlined.FileDownload,
+                    title = stringResource(R.string.download_content_title),
+                    supportingText = stringResource(R.string.enable_download_button_on_media_view),
+                    isActive = enableDownloadContent.value,
+                    onClick = { viewModel.setEnableDownloadContent(!enableDownloadContent.value) },
                 ),
                 SettingsItem(
-                    icon = Icons.Outlined.Palette,
-                    title = stringResource(R.string.material_you_title),
-                    supportingText = stringResource(R.string.enable_material_you_theming_for_facebook),
-                    isActive = materialYou.value,
-                    onClick = { viewModel.setMaterialYou(!materialYou.value) }
+                    icon = Icons.Outlined.ContentCopy,
+                    title = stringResource(R.string.copy_to_clipboard_title),
+                    supportingText = stringResource(R.string.enable_copy_to_clipboard_button_on_media_view),
+                    isActive = enableCopyToClipboard.value,
+                    onClick = { viewModel.setEnableCopyToClipboard(!enableCopyToClipboard.value) },
                 ),
-                SettingsItem(
-                    icon = Icons.Outlined.Circle,
-                    title = stringResource(R.string.amoled_black_title),
-                    supportingText = stringResource(R.string.enable_pure_black_theme_for_amoled_displays),
-                    isActive = amoledBlack.value,
-                    onClick = { viewModel.setAmoledBlack(!amoledBlack.value) }
-                ),
+            )
+        )
+
+        SettingsSection(
+            title = stringResource(R.string.settings_cat_pip),
+            icon = Icons.Outlined.PictureInPictureAlt,
+            items = listOfNotNull(
                 SettingsItem(
                     icon = Icons.Outlined.PictureInPictureAlt,
                     title = stringResource(R.string.pip_title),
                     supportingText = stringResource(R.string.shrink_into_a_floating_window_when_leaving_while_a_video_plays),
                     isActive = pipEnabled.value,
                     onClick = { viewModel.setPipEnabled(!pipEnabled.value) }
-                )
+                ),
+                if (pipEnabled.value) SettingsItem(
+                    icon = Icons.Outlined.AspectRatio,
+                    title = stringResource(R.string.pip_ratio_title),
+                    supportingText = "$deviceLabel · ${pipPortraitRatio.value}",
+                    isActive = null,
+                    onClick = { isPipRatioDialog = true }
+                ) else null,
+                // No POST_NOTIFICATIONS prompt here: notifications for a
+                // media session are exempt from that permission on API 33+
+                // (Android notification-permission docs), so the media
+                // notification and lock-screen controls show without it.
+                if (pipEnabled.value) SettingsItem(
+                    icon = Icons.Outlined.Headphones,
+                    title = stringResource(R.string.pip_lockscreen_audio_title),
+                    supportingText = stringResource(R.string.pip_lockscreen_audio_summary),
+                    isActive = pipLockscreenAudio.value,
+                    onClick = { viewModel.setPipLockscreenAudio(!pipLockscreenAudio.value) }
+                ) else null,
             )
         )
 
-        // PiP ratio row — only shown while PiP is enabled so it doesn't clutter
-        // the settings for users who never use PiP.
-        if (pipEnabled.value) {
-            val deviceLabel = run {
-                val mfr = Build.MANUFACTURER.replaceFirstChar { it.uppercase() }
-                val model = Build.MODEL
-                if (model.startsWith(mfr, ignoreCase = true)) model else "$mfr $model"
-            }
-            SettingsGroup(
-                items = listOf(
-                    SettingsItem(
-                        icon = Icons.Outlined.AspectRatio,
-                        title = stringResource(R.string.pip_ratio_title),
-                        supportingText = "$deviceLabel · ${pipPortraitRatio.value}",
-                        isActive = null,
-                        onClick = { isPipRatioDialog = true }
-                    ),
-                    // No POST_NOTIFICATIONS prompt here: notifications for a
-                    // media session are exempt from that permission on API 33+
-                    // (Android notification-permission docs), so the media
-                    // notification and lock-screen controls show without it.
-                    SettingsItem(
-                        icon = Icons.Outlined.Headphones,
-                        title = stringResource(R.string.pip_lockscreen_audio_title),
-                        supportingText = stringResource(R.string.pip_lockscreen_audio_summary),
-                        isActive = pipLockscreenAudio.value,
-                        onClick = { viewModel.setPipLockscreenAudio(!pipLockscreenAudio.value) }
-                    )
+        SettingsSection(
+            title = stringResource(R.string.settings_cat_messages),
+            icon = Icons.AutoMirrored.Outlined.Message,
+            items = listOf(
+                SettingsItem(
+                    icon = Icons.AutoMirrored.Outlined.Message,
+                    title = stringResource(R.string.open_messenger_title),
+                    supportingText = stringResource(R.string.open_messenger_desc),
+                    isActive = null,
+                    onClick = {
+                        val ok = openMessenger(context, "https://m.me/", messengerPackage.value)
+                        if (!ok) {
+                            Toast.makeText(
+                                context,
+                                messengerRedirectToast,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    },
+                ),
+                // Default: Messages opens inside the app (desktop site). Turn this on to hand
+                // Messages, and what is shared to the app, to an external Messenger app instead.
+                SettingsItem(
+                    icon = Icons.AutoMirrored.Outlined.Message,
+                    title = stringResource(R.string.use_external_messenger_title),
+                    supportingText = stringResource(R.string.use_external_messenger_desc),
+                    isActive = !messagesDesktop.value,
+                    onClick = { viewModel.setMessagesDesktop(!messagesDesktop.value) },
+                ),
+            ) + if (!messagesDesktop.value) listOf(
+                SettingsItem(
+                    icon = Icons.AutoMirrored.Outlined.Message,
+                    title = stringResource(R.string.messenger_title),
+                    supportingText = messengerApps.firstOrNull { it.packageName == messengerPackage.value }?.label
+                        ?: messengerPackage.value,
+                    isActive = null,
+                    onClick = { isMessengerDialog = true },
                 )
+            ) else emptyList()
+        )
+
+        SettingsSection(
+            title = stringResource(R.string.settings_cat_privacy),
+            icon = Icons.Outlined.Security,
+            items = listOfNotNull(
+                SettingsItem(
+                    icon = Icons.Outlined.Shield,
+                    title = stringResource(R.string.remove_ads_title),
+                    supportingText = stringResource(R.string.hide_sponsored_ads_from_your_feed),
+                    isActive = removeAds.value,
+                    onClick = { viewModel.setRemoveAds(!removeAds.value) },
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.Block,
+                    title = stringResource(R.string.brave_blocklist_title),
+                    supportingText = stringResource(R.string.brave_blocklist_supporting),
+                    isActive = braveBlockList.value,
+                    onClick = { viewModel.setBraveBlockList(!braveBlockList.value) },
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.Lock,
+                    title = stringResource(R.string.app_lock_title),
+                    supportingText = stringResource(R.string.app_lock_desc),
+                    isActive = appLock.value,
+                    onClick = {
+                        val fragmentActivity = activity as? FragmentActivity
+                        when {
+                            appLock.value -> viewModel.setAppLock(false)
+                            !canUseAppLock(context) || fragmentActivity == null ->
+                                Toast.makeText(context, appLockUnavailableToast, Toast.LENGTH_LONG).show()
+                            // Turning it on first checks it is really the owner: fingerprint, face or PIN.
+                            else -> authenticateUser(fragmentActivity, appLockVerifyTitle) { ok ->
+                                if (ok) viewModel.setAppLock(true)
+                            }
+                        }
+                    }
+                ),
+                SettingsItem(
+                    icon = Icons.AutoMirrored.Outlined.Logout,
+                    title = stringResource(R.string.log_out_title),
+                    supportingText = stringResource(R.string.log_out_desc),
+                    onClick = { isLogoutDialog = true }
+                ),
             )
-        }
+        )
+
+        SettingsSection(
+            title = stringResource(R.string.settings_cat_data),
+            icon = Icons.Outlined.Storage,
+            items = listOfNotNull(
+                SettingsItem(
+                    icon = Icons.Outlined.SystemUpdate,
+                    title = stringResource(R.string.auto_update_check_title),
+                    supportingText = stringResource(R.string.auto_update_check_desc),
+                    isActive = autoUpdateCheck.value,
+                    onClick = { viewModel.setAutoUpdateCheck(!autoUpdateCheck.value) }
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.Refresh,
+                    title = stringResource(R.string.check_update_now_title),
+                    supportingText = stringResource(R.string.check_update_now_desc, BuildConfig.VERSION_NAME),
+                    isActive = null,
+                    onClick = {
+                        scope.launch {
+                            update = checkForUpdate()
+                            if (update == null) Toast.makeText(context, upToDateToast, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.FileDownload,
+                    title = stringResource(R.string.export_settings_title),
+                    supportingText = stringResource(R.string.export_settings_desc),
+                    onClick = { exportLauncher.launch("faceboost-settings.json") }
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.FileUpload,
+                    title = stringResource(R.string.import_settings_title),
+                    supportingText = stringResource(R.string.import_settings_desc),
+                    onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
+                ),
+            )
+        )
 
     }
 
@@ -611,16 +680,6 @@ fun SettingsContent(
         )
     }
     update?.let { UpdateDialog(it) { update = null } }
-
-    if (isOpenDialog) {
-        HideOptionsDialog(
-            viewModel = viewModel,
-            onDismiss = {
-                @Suppress("AssignedValueIsNeverRead")
-                isOpenDialog = false
-            }
-        )
-    }
 
     if (isPipRatioDialog) {
         PipRatioDialog(
@@ -693,118 +752,6 @@ private fun MessengerAppDialog(
         confirmButton = {},
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.share_cancel)) } },
     )
-}
-
-@Composable
-private fun HideOptionsDialog(
-    viewModel: SettingsViewModel,
-    onDismiss: () -> Unit
-) {
-
-    val hideSuggested = viewModel.hideSuggested.collectAsState()
-    val hideReels = viewModel.hideReels.collectAsState()
-    val hideStories = viewModel.hideStories.collectAsState()
-    val hidePeopleYouMayKnow = viewModel.hidePeopleYouMayKnow.collectAsState()
-    val hideGroups = viewModel.hideGroups.collectAsState()
-
-    Dialog(
-        onDismissRequest = { onDismiss() }
-    ) {
-
-        Column(
-            modifier = Modifier
-                .clip(RoundedCornerShape(24.dp))
-                .background(color = MaterialTheme.colorScheme.surfaceContainer)
-                .padding(vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-
-            HideDialogItem(
-                SettingsItem(
-                    icon = Icons.Filled.Try,
-                    title = stringResource(R.string.suggested_posts),
-                    isActive = hideSuggested.value,
-                    onClick = { viewModel.setHideSuggested(!hideSuggested.value) }
-                )
-            )
-
-            HideDialogItem(
-                SettingsItem(
-                    icon = Icons.Filled.Camera,
-                    title = stringResource(R.string.reels),
-                    isActive = hideReels.value,
-                    onClick = { viewModel.setHideReels(!hideReels.value) }
-                )
-            )
-
-            HideDialogItem(
-                SettingsItem(
-                    icon = Icons.Filled.BurstMode,
-                    title = stringResource(R.string.stories),
-                    isActive = hideStories.value,
-                    onClick = { viewModel.setHideStories(!hideStories.value) }
-                )
-            )
-
-            if (!effectiveDesktop(viewModel.desktopLayout.collectAsState().value, rememberAutoDesktop())) {
-                HideDialogItem(
-                    SettingsItem(
-                        icon = Icons.Filled.EmojiPeople,
-                        title = stringResource(R.string.people_you_may_know),
-                        isActive = hidePeopleYouMayKnow.value,
-                        onClick = { viewModel.setHidePeopleYouMayKnow(!hidePeopleYouMayKnow.value) }
-                    )
-                )
-
-                HideDialogItem(
-                    SettingsItem(
-                        icon = Icons.Filled.Diversity1,
-                        title = stringResource(R.string.groups),
-                        isActive = hideGroups.value,
-                        onClick = { viewModel.setHideGroups(!hideGroups.value) }
-                    )
-                )
-            }
-        }
-    }
-
-}
-
-@Composable
-private fun HideDialogItem(item: SettingsItem) {
-    Row(
-        modifier = Modifier
-            .clip(MaterialTheme.shapes.large)
-            .clickable { item.onClick() }
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Icon(
-            item.icon,
-            contentDescription = null,
-            modifier = Modifier.size(28.dp),
-            tint = MaterialTheme.colorScheme.onBackground.copy(0.6F)
-        )
-
-        Text(
-            text = item.title,
-            color = MaterialTheme.colorScheme.onBackground.copy(0.6F),
-            fontSize = 18.sp,
-            modifier = Modifier
-                .padding(start = 16.dp)
-                .weight(1F)
-        )
-
-        item.isActive?.let {
-            Switch(
-                checked = item.isActive,
-                onCheckedChange = { item.onClick() },
-                modifier = Modifier
-            )
-        }
-    }
 }
 
 private val PIP_RATIO_PRESETS = listOf(
