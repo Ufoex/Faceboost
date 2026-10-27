@@ -483,6 +483,8 @@
         const st = document.createElement('style');
         const E = BTN_SEL.split(',').map(x => 'html.mb-edit ' + x);
         st.textContent = '@keyframes mb-wig{from{transform:rotate(-2.5deg)}to{transform:rotate(2.5deg)}}' +
+            // The playback bar would sit over the Save/Cancel bar (it is above the editor layer): nothing to do with it while editing.
+            'html.mb-edit #mb-reel-controls{display:none !important}' +
             BTN_SEL + '{touch-action:none}' +
             E.join(',') + '{opacity:1 !important;animation:mb-wig .3s ease-in-out infinite alternate;box-shadow:0 0 0 2px rgba(255,255,255,.7)}' +
             E.map(x => x + '[data-mb-drag]').join(',') + '{animation:none !important;transition:none !important;transform:scale(1.15);box-shadow:0 6px 16px rgba(0,0,0,.6),0 0 0 2px #fff}';
