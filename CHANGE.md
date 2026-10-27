@@ -105,3 +105,12 @@ I REALLY hope you enjoy what has become the biggest project of my life! 🥹* Fi
 * Fix: With the icons hidden, tapping the video pauses and resumes it (desktop and phone), and the extra bar with time, seek, fullscreen and volume shows while it is paused (it was switched off in hide mode).
 * Feature: Old cache is deleted every time the app starts: its own temporary files (update APK, clipboard images, download leftovers) after a day, and the WebView's cache only when a file is two weeks old (Facebook's scripts are reused for weeks).
 * Tweak: Tablets stay in portrait while browsing, like phones (only fullscreen video rotates, and the Messages layer follows auto-rotate). Laid flat, Facebook's phone site is cropped and capped at 800 px wide.
+* Feature: Settings are grouped into 8 collapsible categories (General, Appearance, Feed, Reels and media, Picture-in-picture, Messages, Privacy and security, Backup and updates), each with an icon and its number of options. The Customize feed dialog is gone: its switches are now inside Feed.
+* Feature: Hide AI-generated posts (setting under Feed, off by default): hides the posts Facebook labels as AI content, in English, Spanish and Vietnamese (mobile site only). The idea and the label list come from the tachiyuu/Materialbook fork.
+* Tweak: Reel gestures work by thirds of the screen: double tap on the left third goes back, the middle gives a like (a second double tap takes the like back) and the right third goes forward. A thumb up or down, or a rewind or fast-forward icon with the seconds, pops up where your finger was, also with the reel icons hidden. The hold-to-speed indicator shows above your finger.
+* Fix: The playback bar of a paused reel no longer covers the Save and Cancel bar while you move the reel buttons.
+* Feature: Facebook's own Google Ads pixel (www.fbsbx.com/paid_ads_pixel) is blocked: its hidden frames stay empty and Google's scripts never load.
+* Fix: Sponsored reels labelled in non-Latin scripts (Hebrew, Russian, Japanese, Hindi...) are hidden: the label match no longer relies on word boundaries, which only know ASCII letters. Adds the Hebrew label.
+* Feature: Facebook's "better on the app" sheet is pressed away by itself, only when it comes up on its own and never right after a tap.
+* Fix: Picture-in-Picture stays on the video after a long screen lock (from AstryxBook).
+* Fix: Added the ProGuard rule that keeps WorkManager's database constructor, which R8 stripped in release builds (from AstryxBook).
