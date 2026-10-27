@@ -21,3 +21,10 @@
 #-renamesourcefileattribute SourceFile
 
 -dontwarn org.slf4j.impl.StaticLoggerBinder
+# WorkManager ("Facebook notifications") opens its Room database by reflection, through the
+# generated WorkDatabase_Impl's no-argument constructor. R8's full mode keeps a class named by
+# a bare -keep rule but not its constructors, so without this the release build crashed at
+# launch (androidx.startup initializes WorkManager): NoSuchMethodException WorkDatabase_Impl.<init>.
+-keep class * extends androidx.room.RoomDatabase {
+    <init>();
+}

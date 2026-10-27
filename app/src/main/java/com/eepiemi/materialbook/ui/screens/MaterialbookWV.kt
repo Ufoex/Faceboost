@@ -673,7 +673,8 @@ internal const val PIP_HANDOFF_READ_JS = """
 
 /**
  * Hands playback back to the video PIP_HANDOFF_READ_JS muted: seeks to
- * [positionMs] (skipped when null, e.g. an aborted handoff), restores its
+ * [positionMs] (skipped when null, e.g. an aborted handoff; the start instead when it's at the
+ * video's very end, which Facebook takes for a finished video and closes its viewer), restores its
  * muted state, removes the marker, calls play() only if [play], then clears
  * the handoff listener and snapshot, re-installing them if [rearm].
  */
@@ -681,7 +682,7 @@ internal fun pipHandbackJs(positionMs: Long?, play: Boolean, rearm: Boolean): St
 (function() {
   var v = document.querySelector('[data-astryx-handoff-muted]');
   if (!v) return 'none';
-  ${if (positionMs != null) "v.currentTime = ${positionMs / 1000.0};" else ""}
+  ${if (positionMs != null) "var t = ${positionMs / 1000.0}; if (isFinite(v.duration) && v.duration > 0 && t >= v.duration - 0.5) t = 0; v.currentTime = t;" else ""}
   v.muted = v.getAttribute('data-astryx-handoff-muted') === 'true';
   v.removeAttribute('data-astryx-handoff-muted');
   ${if (play) "var p = v.play(); if (p && p.catch) p.catch(function() {});" else ""}

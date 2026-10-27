@@ -53,6 +53,10 @@ class LockScreenAudioService : MediaSessionService() {
             // Streams over the network with the screen off.
             .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
+        // Loops the video, as Facebook's players do: stopping at its end left the lock screen
+        // silent, and handing back at the very end made Facebook close the video viewer (the PiP
+        // window went black and came back on the feed).
+        player.repeatMode = Player.REPEAT_MODE_ONE
         // Audio only: nothing is on screen while locked.
         player.trackSelectionParameters = player.trackSelectionParameters
             .buildUpon()

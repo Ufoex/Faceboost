@@ -226,6 +226,36 @@ class PipHandoffJsTest {
     }
 
     @Test
+    fun handback_atTheVideosEnd_startsItOver() {
+        // The lock-screen player reached the end of a 260 s video; seeking the page's video
+        // there made Facebook close the viewer (back to the feed, a black PiP window).
+        val h = Harness()
+        h.loadFixture(pipPlaying = true)
+        h.eval("Object.defineProperty(document.getElementById('pip'), 'duration', { get: function () { return 260; } });")
+        h.eval(PIP_HANDOFF_ARM_JS)
+        h.setVisibility("hidden")
+        h.read()
+
+        h.eval(pipHandbackJs(positionMs = 259_766, play = true, rearm = false))
+
+        assertEquals(0.0, h.eval("document.getElementById('pip').currentTime").toDouble(), 0.001)
+    }
+
+    @Test
+    fun handback_beforeTheEnd_keepsThePosition() {
+        val h = Harness()
+        h.loadFixture(pipPlaying = true)
+        h.eval("Object.defineProperty(document.getElementById('pip'), 'duration', { get: function () { return 260; } });")
+        h.eval(PIP_HANDOFF_ARM_JS)
+        h.setVisibility("hidden")
+        h.read()
+
+        h.eval(pipHandbackJs(positionMs = 200_000, play = true, rearm = false))
+
+        assertEquals(200.0, h.eval("document.getElementById('pip').currentTime").toDouble(), 0.001)
+    }
+
+    @Test
     fun handback_doesNotPlay_whenNativePlayerWasPaused() {
         val h = Harness()
         h.loadFixture(pipPlaying = true)

@@ -6,6 +6,14 @@ import android.webkit.WebView
 import com.multiplatform.webview.web.AccompanistWebViewClient
 import java.io.ByteArrayInputStream
 
+// Facebook's own Google Ads remarketing tag: every full m.facebook.com page load adds hidden
+// www.fbsbx.com/paid_ads_pixel/ frames that load Google's gtag.js and report the visit to
+// doubleclick.net and google.com. Nothing on Facebook's pages depends on it.
+private val ADS_PIXEL_URL =
+    Regex("""^https?://(?:[a-z0-9-]+\.)*fbsbx\.com(?::\d+)?/paid_ads_pixel(?:[/?#]|$)""", RegexOption.IGNORE_CASE)
+
+fun isAdsPixelUrl(url: String): Boolean = ADS_PIXEL_URL.containsMatchIn(url)
+
 /**
  * Enforces [BraveBlockList] at the actual network-request layer.
  *
@@ -26,7 +34,7 @@ class BlockingWebViewClient : AccompanistWebViewClient() {
         request: WebResourceRequest?
     ): WebResourceResponse? {
         val url = request?.url?.toString()
-        if (url != null && BraveBlockList.shouldBlock(url, request.isForMainFrame)) {
+        if (url != null && (isAdsPixelUrl(url) || BraveBlockList.shouldBlock(url, request.isForMainFrame))) {
             // Returning null here means "don't intercept, load normally" — an
             // actual (empty) response is required to block.
             return WebResourceResponse("text/plain", "utf-8", ByteArrayInputStream(ByteArray(0)))
@@ -36,7 +44,7 @@ class BlockingWebViewClient : AccompanistWebViewClient() {
 
     @Suppress("OVERRIDE_DEPRECATION", "DEPRECATION")
     override fun shouldInterceptRequest(view: WebView?, url: String?): WebResourceResponse? {
-        if (url != null && BraveBlockList.shouldBlock(url, isMainFrame = false)) {
+        if (url != null && (isAdsPixelUrl(url) || BraveBlockList.shouldBlock(url, isMainFrame = false))) {
             return WebResourceResponse("text/plain", "utf-8", ByteArrayInputStream(ByteArray(0)))
         }
         return super.shouldInterceptRequest(view, url)

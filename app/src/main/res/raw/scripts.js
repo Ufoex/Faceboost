@@ -860,3 +860,33 @@ if (!window._mbBannerObserver) {
         requestAnimationFrame(() => { scheduled = false; addRow(); });
     }).observe(document.documentElement, { childList: true, subtree: true });
 })();
+
+// Facebook's "Facebook is better on the app" sheet (Get app / Not now), put over the feed when the
+// app opens: pressed away with its second button, as the user would. Recognized by its shape, in
+// any language: a dialog screen whose bottom sheet holds a picture, one title and exactly two
+// buttons, and nothing to type in. Only a sheet that came up by itself, not just after a tap: one
+// the user opened (a confirmation) is left to them.
+// Guarded: the bundle is re-evaluated on every SPA navigation in the same context.
+if (!window._mbAppPromptObserver) {
+    const APP_PROMPT_TAP_MS = 2000;
+    let lastTapAt = 0;
+    document.addEventListener('pointerdown', () => { lastTapAt = Date.now(); }, true);
+    const seenSheets = new WeakSet();
+    const dismissAppPrompt = () => {
+        const sheet = document.querySelector('.dialog-screen .bottom.fixed-container');
+        if (!sheet || seenSheets.has(sheet)) return;
+        const buttons = sheet.querySelectorAll('[role="button"]');
+        if (buttons.length !== 2 || sheet.querySelectorAll('h1').length !== 1 || !sheet.querySelector('img')
+            || sheet.querySelector('input, textarea, [contenteditable]')) return;
+        seenSheets.add(sheet);
+        if (Date.now() - lastTapAt < APP_PROMPT_TAP_MS) return;
+        buttons[1].click();
+    };
+    let promptScheduled = false;
+    window._mbAppPromptObserver = new MutationObserver(() => {
+        if (promptScheduled) return;
+        promptScheduled = true;
+        requestAnimationFrame(() => { promptScheduled = false; dismissAppPrompt(); });
+    });
+    window._mbAppPromptObserver.observe(document.documentElement, { childList: true, subtree: true });
+}
