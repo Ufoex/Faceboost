@@ -69,6 +69,7 @@
     const ICON = {
         up: ['M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z', '#1877f2'],
         down: ['M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z', '#cfd2d6'],
+        pause: ['M6 19h4V5H6v14zm8-14v14h4V5h-4z', '#ffffff'],
         play: ['M8 5v14l11-7z', '#ffffff'],
         fwd: ['M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z', '#ffffff'],
         back: ['M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z', '#ffffff']
@@ -91,8 +92,8 @@
             { transform: 'translateX(' + dx + 'px) scale(1.1)', opacity: 0 }
         ], { duration: 800, easing: 'ease-out' }).onfinish = () => el.remove();
     };
-    // Resuming: a dark circle with a play triangle, like Facebook's own one while paused, where it sits.
-    const popPlay = (v) => {
+    // After a single tap: a dark circle with a pause or play icon where Facebook puts its own play circle.
+    const popState = (v) => {
         const r = v.getBoundingClientRect();
         const x = Math.max(0, Math.min(innerWidth, (r.left + r.right) / 2));
         const y = Math.max(0, Math.min(innerHeight, r.top + r.height * 0.555));
@@ -100,7 +101,7 @@
         el.id = 'mb-reel-anim';
         el.style.cssText = 'position:fixed;left:' + x + 'px;top:' + y + 'px;width:68px;height:68px;margin:-34px 0 0 -34px;border-radius:50%;' +
             'background:rgba(0,0,0,.55);z-index:2147483000;pointer-events:none;display:flex;align-items:center;justify-content:center';
-        el.innerHTML = '<svg viewBox="0 0 24 24" width="40" height="40" fill="#fff"><path d="' + ICON.play[0] + '"/></svg>';
+        el.innerHTML = '<svg viewBox="0 0 24 24" width="40" height="40" fill="#fff"><path d="' + ICON[v.paused ? 'pause' : 'play'][0] + '"/></svg>';
         document.body.appendChild(el);
         el.animate([
             { transform: 'scale(.6)', opacity: 0 },
@@ -129,9 +130,8 @@
         replaying = window.__mbReplaying = true; // reel_controls.js's hide-mode tap fix takes this one
         try { tap.target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window })); }
         finally { replaying = window.__mbReplaying = false; }
-        // Resuming shows a play icon once Facebook (or reel_controls.js's fallback, 80 ms) has toggled it;
-        // pausing needs none, Facebook shows its own play circle.
-        setTimeout(() => { if (!tap.v.paused) popPlay(tap.v); }, 120);
+        // Show what the tap did once Facebook (or reel_controls.js's fallback, 80 ms) has toggled it.
+        setTimeout(() => popState(tap.v), 120);
     };
 
     const onUI = (t) => !!(t.closest && t.closest('button,a,input,[role=button],[role=link],[role=slider],#mb-reel-controls,[id^=mb-reel-]'));
