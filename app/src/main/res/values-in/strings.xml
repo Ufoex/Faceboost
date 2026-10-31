@@ -22,7 +22,6 @@
     <string name="copy_failed_invalid_data">Penyalinan gagal: Data tidak valid</string>
     <string name="copy_failed_invalid_image">Penyalinan gagal: Gambar tidak valid</string>
     <string name="failed_to_copy_image">Gagal menyalin gambar</string>
-    <string name="clipboard_not_supported">Papan klip tidak didukung pada versi ini</string>
     <string name="suggested_posts">Postingan yang disarankan</string>
     <string name="reels">Reels</string>
     <string name="stories">Cerita</string>
