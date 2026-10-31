@@ -91,6 +91,24 @@
             { transform: 'translateX(' + dx + 'px) scale(1.1)', opacity: 0 }
         ], { duration: 800, easing: 'ease-out' }).onfinish = () => el.remove();
     };
+    // Resuming: a dark circle with a play triangle, like Facebook's own one while paused, where it sits.
+    const popPlay = (v) => {
+        const r = v.getBoundingClientRect();
+        const x = Math.max(0, Math.min(innerWidth, (r.left + r.right) / 2));
+        const y = Math.max(0, Math.min(innerHeight, r.top + r.height * 0.555));
+        const el = document.createElement('div');
+        el.id = 'mb-reel-anim';
+        el.style.cssText = 'position:fixed;left:' + x + 'px;top:' + y + 'px;width:68px;height:68px;margin:-34px 0 0 -34px;border-radius:50%;' +
+            'background:rgba(0,0,0,.55);z-index:2147483000;pointer-events:none;display:flex;align-items:center;justify-content:center';
+        el.innerHTML = '<svg viewBox="0 0 24 24" width="40" height="40" fill="#fff"><path d="' + ICON.play[0] + '"/></svg>';
+        document.body.appendChild(el);
+        el.animate([
+            { transform: 'scale(.6)', opacity: 0 },
+            { transform: 'scale(1.08)', opacity: 1, offset: .25 },
+            { transform: 'scale(1)', opacity: 1, offset: .6 },
+            { transform: 'scale(1.2)', opacity: 0 }
+        ], { duration: 700, easing: 'ease-out' }).onfinish = () => el.remove();
+    };
     // Double tap in the middle: like, or take the like back when the reel already has one.
     const likeReel = (x, y) => {
         const b = likeButton();
@@ -113,7 +131,7 @@
         finally { replaying = window.__mbReplaying = false; }
         // Resuming shows a play icon once Facebook (or reel_controls.js's fallback, 80 ms) has toggled it;
         // pausing needs none, Facebook shows its own play circle.
-        setTimeout(() => { if (!tap.v.paused) pop(tap.x, tap.y, 'play', '', 0); }, 120);
+        setTimeout(() => { if (!tap.v.paused) popPlay(tap.v); }, 120);
     };
 
     const onUI = (t) => !!(t.closest && t.closest('button,a,input,[role=button],[role=link],[role=slider],#mb-reel-controls,[id^=mb-reel-]'));

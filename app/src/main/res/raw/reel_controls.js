@@ -58,9 +58,16 @@
         return { rail, info, time };
     };
     // Lifts them by h px (the playback bar's height) so the bar does not cover them; 0 puts them back.
-    let lifted = [], timeRows = [];
+    let lifted = [], timeRows = [], seekRows = [];
     const lift = (h) => {
         const o = h ? overlay() : null;
+        // hide mode: Facebook's own seek bar goes while ours shows (a second line at the bottom otherwise)
+        const seeks = h && hideOn ? [...document.querySelectorAll('.seekbar-container')].filter(e => {
+            const r = e.getBoundingClientRect(); return r.height > 0 && r.bottom > 0 && r.top < innerHeight;
+        }) : [];
+        seekRows.forEach(e => { if (seeks.indexOf(e) === -1) e.style.opacity = ''; });
+        seeks.forEach(e => { e.style.opacity = '0'; });
+        seekRows = seeks;
         const rows = o ? o.time : [];
         timeRows.forEach(e => { if (rows.indexOf(e) === -1) e.style.opacity = ''; });
         rows.forEach(e => { e.style.opacity = '0'; });
@@ -727,7 +734,7 @@
 
         // seek bar for reels that don't have Facebook's own
         const v = path.indexOf('/reel/') === 0 ? active : null;
-        if (!v || !v.paused || !isFinite(v.duration) || v.duration <= 0 || hasNativeSeek()) {
+        if (!v || !v.paused || !isFinite(v.duration) || v.duration <= 0 || (!hideOn && hasNativeSeek())) { // hide mode hides Facebook's time and volume row: our bar replaces its seek bar
             showBar(false); lift(0);
             return;
         }

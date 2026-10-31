@@ -121,3 +121,4 @@ I REALLY hope you enjoy what has become the biggest project of my life! 🥹* Fi
 * Fix: With the reel icons hidden, a single tap paused the video at once and played it again 0.3 s later; it now pauses (or resumes) once, after the wait for a possible double tap.
 * Fix: The app's playback bar is no longer drawn over Facebook's own seek bar: the detection looked at an invisible accessibility input instead of the bar Facebook draws (.seekbar-active), so both showed. Now it only appears when Facebook shows none.
 * Tweak: Pausing a reel by tapping no longer pops a pause icon over Facebook's own play circle; resuming still shows the play icon.
+* Fix: With the reel icons hidden, a paused reel shows the playback bar again (time, full screen, volume) and Facebook's own seek bar is hidden, so there is only one line; resuming a reel shows a dark play circle like Facebook's own one while paused.
