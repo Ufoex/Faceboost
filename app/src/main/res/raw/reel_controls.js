@@ -138,15 +138,17 @@
         return best;
     };
 
-    // Facebook's regular video viewer already has its own range input while paused.
-    const hasNativeSeek = () => [...document.querySelectorAll('input[type=range]')].some(i => {
-        if (i.id === 'mb-reel-seek') return false;
-        const r = i.getBoundingClientRect();
-        // (a seek bar our own hide mode made invisible does not count)
-        // (one of the stacked reels above or below the one on screen does not count either)
-        const onScreen = r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth;
-        return onScreen && r.width > 0 && r.height > 0 && getComputedStyle(i).opacity !== '0' && !i.closest('[data-mb-hid],[data-mb-fade]');
-    });
+    // Facebook's own seek bar. The reel viewer draws it with .seekbar-active (+ a .seekbar-thumb dot) while
+    // paused; its <input type=range> is only an invisible accessibility layer (opacity 0). The regular
+    // video viewer has a visible range input instead. Only one on screen counts: the reels are stacked.
+    const shown = (e) => {
+        const r = e.getBoundingClientRect();
+        return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth &&
+            getComputedStyle(e).opacity !== '0' && !e.closest('[data-mb-hid],[data-mb-fade]');
+    };
+    const hasNativeSeek = () =>
+        [...document.querySelectorAll('.seekbar-active,.seekbar-thumb')].some(shown) ||
+        [...document.querySelectorAll('input[type=range]')].some(i => i.id !== 'mb-reel-seek' && shown(i));
 
     // ---- Hide icons button ----
     const EYE = 'M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z';
