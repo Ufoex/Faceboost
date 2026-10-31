@@ -18,10 +18,26 @@
 
     let bar, seek, time, fsBtn, muteBtn, vid = null, dragging = false;
 
+    // Slides up and fades in when shown, back down when hidden (display goes off once it has left).
+    const showBar = (on) => {
+        if (!bar || bar._on === on) return;
+        bar._on = on;
+        clearTimeout(bar._t);
+        if (on) {
+            bar.style.display = 'block';
+            void bar.offsetWidth; // so the transition starts from the hidden state
+            bar.style.transform = 'none'; bar.style.opacity = '1';
+        } else {
+            bar.style.transform = 'translateY(100%)'; bar.style.opacity = '0';
+            bar._t = setTimeout(() => { bar.style.display = 'none'; }, 260);
+        }
+    };
+
     const build = () => {
         bar = document.createElement('div');
         bar.id = 'mb-reel-controls';
         bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:2147483000;display:none;' +
+            'transform:translateY(100%);opacity:0;transition:transform .25s ease,opacity .25s ease;' +
             'padding:10px 16px 12px;box-sizing:border-box;color:#fff;font:600 15px sans-serif;' +
             'background:rgba(0,0,0,.88);';
         bar.innerHTML =
@@ -643,12 +659,12 @@
         // seek bar for reels that don't have Facebook's own
         const v = path.indexOf('/reel/') === 0 ? active : null;
         if (!v || !v.paused || !isFinite(v.duration) || v.duration <= 0 || hasNativeSeek()) {
-            if (bar) bar.style.display = 'none';
+            showBar(false);
             return;
         }
         if (!bar || !bar.isConnected) build();
         vid = v;
-        bar.style.display = 'block';
+        showBar(true);
         time.textContent = fmt(v.currentTime) + ' / ' + fmt(v.duration);
         if (!dragging) seek.value = Math.round(v.currentTime / v.duration * 1000);
         muteBtn.innerHTML = svg(v.muted ? ICON.mute : ICON.vol);

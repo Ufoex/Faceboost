@@ -15,8 +15,12 @@
 
     document.querySelectorAll(CONTAINER).forEach(handle);
 
+    let queued = [], scheduled = false;
     new MutationObserver(muts => {
-      muts.forEach(m => m.addedNodes.forEach(handle));
+      muts.forEach(m => queued.push(...m.addedNodes));
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(() => { scheduled = false; const nodes = queued; queued = []; nodes.forEach(handle); });
     }).observe(document.body, { childList: true, subtree: true });
 
   } else {
@@ -39,8 +43,12 @@
 
     document.querySelectorAll('.fl.ac .native-text').forEach(handle);
 
+    let queued = [], scheduled = false;
     new MutationObserver(muts => {
-      muts.forEach(m => m.addedNodes.forEach(handle));
+      muts.forEach(m => queued.push(...m.addedNodes));
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(() => { scheduled = false; const nodes = queued; queued = []; nodes.forEach(handle); });
     }).observe(document.body, { childList: true, subtree: true });
   }
 })();

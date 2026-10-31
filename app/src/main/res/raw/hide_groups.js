@@ -58,8 +58,12 @@
 
   hideGroupPosts([document.body]);
 
-  new MutationObserver(muts =>
-    muts.forEach(m => hideGroupPosts([...m.addedNodes]))
-  ).observe(document.body, { childList: true, subtree: true });
+  let queued = [], scheduled = false;
+  new MutationObserver(muts => {
+    muts.forEach(m => queued.push(...m.addedNodes));
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => { scheduled = false; const nodes = queued; queued = []; hideGroupPosts(nodes); });
+  }).observe(document.body, { childList: true, subtree: true });
 })();
 

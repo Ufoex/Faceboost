@@ -103,9 +103,16 @@
   scanForVideos();
   reportState();
 
+  // One scan per frame however many mutations Facebook's feed fires.
+  var scanScheduled = false;
   var observer = new MutationObserver(function () {
-    scanForVideos();
-    reportState();
+    if (scanScheduled) return;
+    scanScheduled = true;
+    requestAnimationFrame(function () {
+      scanScheduled = false;
+      scanForVideos();
+      reportState();
+    });
   });
   observer.observe(document.body, {
     childList: true,

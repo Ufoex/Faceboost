@@ -114,3 +114,5 @@ I REALLY hope you enjoy what has become the biggest project of my life! 🥹* Fi
 * Feature: Facebook's "better on the app" sheet is pressed away by itself, only when it comes up on its own and never right after a tap.
 * Fix: Picture-in-Picture stays on the video after a long screen lock (from AstryxBook).
 * Fix: Added the ProGuard rule that keeps WorkManager's database constructor, which R8 stripped in release builds (from AstryxBook).
+* Feature: A single tap on a reel waits a moment before pausing so a double tap (back, like, forward) never pauses the video first; pausing and resuming show an icon where you tapped, and the playback bar slides in and out.
+* Tweak: Lighter page scripts: the feed filters and the PiP detector batch their DOM checks once per frame, which helps slower devices.

@@ -9,8 +9,11 @@
 
   hideTargetElement();
 
+  let scheduled = false;
   const observer = new MutationObserver(() => {
-    hideTargetElement();
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => { scheduled = false; hideTargetElement(); });
   });
 
   observer.observe(document.body, {
