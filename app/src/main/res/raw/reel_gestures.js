@@ -92,11 +92,10 @@
             { transform: 'translateX(' + dx + 'px) scale(1.1)', opacity: 0 }
         ], { duration: 800, easing: 'ease-out' }).onfinish = () => el.remove();
     };
-    // After a single tap: a dark circle with a pause or play icon where Facebook puts its own play circle.
-    const popState = (v) => {
-        const r = v.getBoundingClientRect();
-        const x = Math.max(0, Math.min(innerWidth, (r.left + r.right) / 2));
-        const y = Math.max(0, Math.min(innerHeight, r.top + r.height * 0.555));
+    // After a single tap: a dark circle with a pause or play icon, where the finger was.
+    const popState = (v, tx, ty) => {
+        const x = Math.max(34, Math.min(innerWidth - 34, tx));
+        const y = Math.max(34, Math.min(innerHeight - 34, ty));
         const el = document.createElement('div');
         el.id = 'mb-reel-anim';
         el.style.cssText = 'position:fixed;left:' + x + 'px;top:' + y + 'px;width:68px;height:68px;margin:-34px 0 0 -34px;border-radius:50%;' +
@@ -131,7 +130,7 @@
         try { tap.target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window })); }
         finally { replaying = window.__mbReplaying = false; }
         // Show what the tap did once Facebook (or reel_controls.js's fallback, 80 ms) has toggled it.
-        setTimeout(() => popState(tap.v), 120);
+        setTimeout(() => popState(tap.v, tap.x, tap.y), 120);
     };
 
     const onUI = (t) => !!(t.closest && t.closest('button,a,input,[role=button],[role=link],[role=slider],#mb-reel-controls,[id^=mb-reel-]'));
