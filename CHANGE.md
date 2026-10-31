@@ -117,3 +117,4 @@ I REALLY hope you enjoy what has become the biggest project of my life! 🥹* Fi
 * Feature: A single tap on a reel waits a moment before pausing so a double tap (back, like, forward) never pauses the video first; pausing and resuming show an icon where you tapped, and the playback bar slides in and out.
 * Tweak: Lighter page scripts: the feed filters and the PiP detector batch their DOM checks once per frame, which helps slower devices.
 * Feature: With the playback bar of a paused reel showing, Facebook's like, comment and share buttons and the author and caption move up above it; the app's own reel buttons (download, hide icons...) no longer sit over Facebook's buttons.
+* Tweak: The playback bar of a paused reel is transparent with a thin white line like Facebook's own bar, and it now also shows when a neighbouring reel (off screen) has its own bar; the app's reel buttons move up together as a column when Facebook's buttons rise.

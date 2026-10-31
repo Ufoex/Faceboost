@@ -45,20 +45,26 @@
         });
         const layer = like && like.parentElement;
         if (!layer) return null;
-        const rail = [], info = [];
+        const rail = [], info = [], time = [];
         for (const c of layer.children) {
             const r = c.getBoundingClientRect();
             if (!r.width || !r.height) continue;
             if (r.width < 100 && r.left > innerWidth * 0.7) rail.push(c);
-            else if (r.width > innerWidth * 0.8 && r.height < innerHeight * 0.3 && r.top > innerHeight * 0.6 &&
-                !/\d+:\d\d/.test(c.innerText)) info.push(c); // not Facebook's own time and volume row: our bar replaces it
+            else if (r.width > innerWidth * 0.8 && r.height < innerHeight * 0.3 && r.top > innerHeight * 0.6) {
+                // Facebook's own time and volume row (digits like 0:05) is not lifted: our bar replaces it
+                (/\d+:\d\d/.test(c.innerText) ? time : info).push(c);
+            }
         }
-        return { rail, info };
+        return { rail, info, time };
     };
     // Lifts them by h px (the playback bar's height) so the bar does not cover them; 0 puts them back.
-    let lifted = [];
+    let lifted = [], timeRows = [];
     const lift = (h) => {
         const o = h ? overlay() : null;
+        const rows = o ? o.time : [];
+        timeRows.forEach(e => { if (rows.indexOf(e) === -1) e.style.opacity = ''; });
+        rows.forEach(e => { e.style.opacity = '0'; });
+        timeRows = rows;
         const want = o ? o.rail.concat(o.info) : [];
         lifted.forEach(e => { if (want.indexOf(e) === -1) { e.style.transform = ''; delete e.dataset.mbLift; } });
         want.forEach(e => {
@@ -76,13 +82,19 @@
         bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:2147483000;display:none;' +
             'transform:translateY(100%);opacity:0;transition:transform .25s ease,opacity .25s ease;' +
             'padding:10px 16px 12px;box-sizing:border-box;color:#fff;font:600 15px sans-serif;' +
-            'background:rgba(0,0,0,.88);';
+            'background:transparent;text-shadow:0 1px 3px rgba(0,0,0,.75);';
         bar.innerHTML =
             '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">' +
             '<span id="mb-reel-time">0:00 / 0:00</span>' +
             '<span style="display:flex;gap:18px"><span id="mb-reel-fs">' + svg(ICON.full) + '</span>' +
             '<span id="mb-reel-mute">' + svg(ICON.vol) + '</span></span></div>' +
             '<input id="mb-reel-seek" type="range" min="0" max="1000" value="0" style="width:100%;display:block">';
+        const st = document.createElement('style');
+        st.textContent = '#mb-reel-seek{-webkit-appearance:none;appearance:none;height:3px;border-radius:2px;margin:12px 0 6px;outline:none;' +
+            'background:linear-gradient(to right,#fff var(--mb-p,0%),rgba(255,255,255,.35) var(--mb-p,0%))}' +
+            '#mb-reel-seek::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 0 3px rgba(0,0,0,.6)}' +
+            '#mb-reel-fs,#mb-reel-mute{filter:drop-shadow(0 1px 2px rgba(0,0,0,.75))}';
+        document.head.appendChild(st);
         document.body.appendChild(bar);
         time = bar.querySelector('#mb-reel-time');
         seek = bar.querySelector('#mb-reel-seek');
@@ -95,6 +107,7 @@
 
         seek.addEventListener('input', () => {
             dragging = true;
+            seek.style.setProperty('--mb-p', seek.value / 10 + '%');
             if (vid && isFinite(vid.duration)) vid.currentTime = vid.duration * seek.value / 1000;
         });
         seek.addEventListener('change', () => { dragging = false; });
@@ -130,7 +143,9 @@
         if (i.id === 'mb-reel-seek') return false;
         const r = i.getBoundingClientRect();
         // (a seek bar our own hide mode made invisible does not count)
-        return r.width > 0 && r.height > 0 && getComputedStyle(i).opacity !== '0' && !i.closest('[data-mb-hid],[data-mb-fade]');
+        // (one of the stacked reels above or below the one on screen does not count either)
+        const onScreen = r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth;
+        return onScreen && r.width > 0 && r.height > 0 && getComputedStyle(i).opacity !== '0' && !i.closest('[data-mb-hid],[data-mb-fade]');
     });
 
     // ---- Hide icons button ----
@@ -514,17 +529,17 @@
     };
     const place = (el, c) => { el.style.left = (grid.x0 + c[0] * STEP) + 'px'; el.style.top = (grid.y0 + c[1] * STEP) + 'px'; };
 
-    // A button that would sit over Facebook's own rail moves up above it (the saved cells stay as they are).
+    // Buttons that would sit over Facebook's own rail move up above it, as a column (the saved cells stay as they are).
     function avoidRail(items) {
         const o = overlay();
         if (!o || !o.rail.length) return;
         let l = 1e9, t = 1e9, r = -1e9, bt = -1e9;
         o.rail.forEach(e => { const b = e.getBoundingClientRect(); l = Math.min(l, b.left); t = Math.min(t, b.top); r = Math.max(r, b.right); bt = Math.max(bt, b.bottom); });
-        const hit = items.filter(b => {
-            const x = parseFloat(b.style.left), y = parseFloat(b.style.top);
-            return x + 40 > l - 6 && x < r + 6 && y + 40 > t - 6 && y < bt + 6;
-        }).sort((a, b) => parseFloat(b.style.top) - parseFloat(a.style.top));
-        hit.forEach((b, i) => { b.style.top = Math.max(0, t - 6 - 40 - i * 48) + 'px'; });
+        // the buttons in the rail's column move up together by what the lowest one overlaps
+        const col = items.filter(b => { const x = parseFloat(b.style.left); return x + 40 > l - 6 && x < r + 6; });
+        let up = 0;
+        col.forEach(b => { const y = parseFloat(b.style.top); if (y + 40 > t - 6 && y < bt + 6) up = Math.max(up, y + 40 - (t - 6)); });
+        if (up) col.forEach(b => { b.style.top = Math.max(0, parseFloat(b.style.top) - up) + 'px'; });
     }
 
     function layoutBtns(items, baseTop, baseLeft) {
@@ -717,7 +732,7 @@
         vid = v;
         showBar(true); lift(bar.offsetHeight);
         time.textContent = fmt(v.currentTime) + ' / ' + fmt(v.duration);
-        if (!dragging) seek.value = Math.round(v.currentTime / v.duration * 1000);
+        if (!dragging) { seek.value = Math.round(v.currentTime / v.duration * 1000); seek.style.setProperty('--mb-p', seek.value / 10 + '%'); }
         muteBtn.innerHTML = svg(v.muted ? ICON.mute : ICON.vol);
     }, 250);
 })();
