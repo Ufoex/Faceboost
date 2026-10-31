@@ -109,9 +109,9 @@
     const replayTap = (tap) => {
         clearTimeout(tap.timer);
         if (!inReel() || !document.contains(tap.target)) return;
-        replaying = true;
+        replaying = window.__mbReplaying = true; // reel_controls.js's hide-mode tap fix takes this one
         try { tap.target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window })); }
-        finally { replaying = false; }
+        finally { replaying = window.__mbReplaying = false; }
         // Show what the tap did once Facebook (or reel_controls.js's fallback, 80 ms) has toggled it.
         setTimeout(() => pop(tap.x, tap.y, tap.v.paused ? 'pause' : 'play', '', 0), 120);
     };
@@ -199,8 +199,10 @@
     }, { capture: true, passive: true });
 
     // The click that follows a hold / double tap must not pause the video or open anything.
-    ['click', 'pointerup', 'mouseup'].forEach(n => document.addEventListener(n, (e) => {
-        if (!replaying && Date.now() < swallowUntil) { e.preventDefault(); e.stopPropagation(); }
+    // On window, before every listener of the page and of the other scripts (hide mode's tap fix in
+    // reel_controls.js would toggle the video at once): stopImmediatePropagation, not stopPropagation.
+    ['click', 'pointerup', 'mouseup'].forEach(n => window.addEventListener(n, (e) => {
+        if (!replaying && Date.now() < swallowUntil) { e.preventDefault(); e.stopImmediatePropagation(); }
     }, true));
     document.addEventListener('contextmenu', (e) => { if (inReel() && !onUI(e.target)) e.preventDefault(); }, true);
 })();

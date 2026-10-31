@@ -244,7 +244,8 @@
     // A tap Facebook handles (it changed the state itself) is left alone, so it never toggles twice.
     document.addEventListener('click', (e) => {
         const v = e.target;
-        if (!hideOn || !e.isTrusted || !v || v.tagName !== 'VIDEO') return;
+        // (the click reel_gestures.js sends after holding a single tap back is not trusted either)
+        if (!hideOn || (!e.isTrusted && !window.__mbReplaying) || !v || v.tagName !== 'VIDEO') return;
         const was = v.paused;
         setTimeout(() => { if (v.paused === was) { if (was) v.play(); else v.pause(); } }, 80);
     }, true);
