@@ -116,3 +116,4 @@ I REALLY hope you enjoy what has become the biggest project of my life! 🥹* Fi
 * Fix: Added the ProGuard rule that keeps WorkManager's database constructor, which R8 stripped in release builds (from AstryxBook).
 * Feature: A single tap on a reel waits a moment before pausing so a double tap (back, like, forward) never pauses the video first; pausing and resuming show an icon where you tapped, and the playback bar slides in and out.
 * Tweak: Lighter page scripts: the feed filters and the PiP detector batch their DOM checks once per frame, which helps slower devices.
+* Feature: With the playback bar of a paused reel showing, Facebook's like, comment and share buttons and the author and caption move up above it; the app's own reel buttons (download, hide icons...) no longer sit over Facebook's buttons.

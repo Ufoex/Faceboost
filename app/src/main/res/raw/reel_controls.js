@@ -33,6 +33,43 @@
         }
     };
 
+    // The reel on screen's own layers (mobile site): the action rail on the right (like, comment, share...)
+    // and the author/caption block along the bottom. Facebook places each one on its own, so they can be
+    // moved one by one. likeButton's trick: the like button is the only rail button with a long-press action.
+    const overlay = () => {
+        let like = null, best = Infinity;
+        document.querySelectorAll('[role="button"][data-long-click-action-id]').forEach(b => {
+            const r = b.getBoundingClientRect();
+            const d = Math.abs((r.top + r.bottom) / 2 - innerHeight / 2);
+            if (r.width && r.bottom > 0 && r.top < innerHeight && d < best) { best = d; like = b; }
+        });
+        const layer = like && like.parentElement;
+        if (!layer) return null;
+        const rail = [], info = [];
+        for (const c of layer.children) {
+            const r = c.getBoundingClientRect();
+            if (!r.width || !r.height) continue;
+            if (r.width < 100 && r.left > innerWidth * 0.7) rail.push(c);
+            else if (r.width > innerWidth * 0.8 && r.height < innerHeight * 0.3 && r.top > innerHeight * 0.6 &&
+                !/\d+:\d\d/.test(c.innerText)) info.push(c); // not Facebook's own time and volume row: our bar replaces it
+        }
+        return { rail, info };
+    };
+    // Lifts them by h px (the playback bar's height) so the bar does not cover them; 0 puts them back.
+    let lifted = [];
+    const lift = (h) => {
+        const o = h ? overlay() : null;
+        const want = o ? o.rail.concat(o.info) : [];
+        lifted.forEach(e => { if (want.indexOf(e) === -1) { e.style.transform = ''; delete e.dataset.mbLift; } });
+        want.forEach(e => {
+            if (e.dataset.mbLift === String(h)) return;
+            e.dataset.mbLift = h;
+            e.style.transition = 'transform .25s ease';
+            e.style.transform = 'translateY(-' + h + 'px)';
+        });
+        lifted = want;
+    };
+
     const build = () => {
         bar = document.createElement('div');
         bar.id = 'mb-reel-controls';
@@ -477,6 +514,19 @@
     };
     const place = (el, c) => { el.style.left = (grid.x0 + c[0] * STEP) + 'px'; el.style.top = (grid.y0 + c[1] * STEP) + 'px'; };
 
+    // A button that would sit over Facebook's own rail moves up above it (the saved cells stay as they are).
+    function avoidRail(items) {
+        const o = overlay();
+        if (!o || !o.rail.length) return;
+        let l = 1e9, t = 1e9, r = -1e9, bt = -1e9;
+        o.rail.forEach(e => { const b = e.getBoundingClientRect(); l = Math.min(l, b.left); t = Math.min(t, b.top); r = Math.max(r, b.right); bt = Math.max(bt, b.bottom); });
+        const hit = items.filter(b => {
+            const x = parseFloat(b.style.left), y = parseFloat(b.style.top);
+            return x + 40 > l - 6 && x < r + 6 && y + 40 > t - 6 && y < bt + 6;
+        }).sort((a, b) => parseFloat(b.style.top) - parseFloat(a.style.top));
+        hit.forEach((b, i) => { b.style.top = Math.max(0, t - 6 - 40 - i * 48) + 'px'; });
+    }
+
     function layoutBtns(items, baseTop, baseLeft) {
         curItems = items; base = { top: baseTop, left: baseLeft };
         grid.x0 = baseLeft % STEP; grid.y0 = baseTop % STEP;
@@ -493,6 +543,7 @@
             place(b, lay && lay[b.id] ? lay[b.id] : d);
             if (b.id === DLID) { b.style.right = 'auto'; b.style.zIndex = '2147483000'; }
         });
+        if (!editing && !drag && !hideOn) avoidRail(items);
     }
 
     const buildEditUI = () => {
@@ -659,12 +710,12 @@
         // seek bar for reels that don't have Facebook's own
         const v = path.indexOf('/reel/') === 0 ? active : null;
         if (!v || !v.paused || !isFinite(v.duration) || v.duration <= 0 || hasNativeSeek()) {
-            showBar(false);
+            showBar(false); lift(0);
             return;
         }
         if (!bar || !bar.isConnected) build();
         vid = v;
-        showBar(true);
+        showBar(true); lift(bar.offsetHeight);
         time.textContent = fmt(v.currentTime) + ' / ' + fmt(v.duration);
         if (!dragging) seek.value = Math.round(v.currentTime / v.duration * 1000);
         muteBtn.innerHTML = svg(v.muted ? ICON.mute : ICON.vol);
