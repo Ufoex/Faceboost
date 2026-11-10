@@ -50,6 +50,7 @@ import com.eepiemi.materialbook.ui.components.NetworkErrorDialog
 import com.eepiemi.materialbook.ui.components.settings.SettingsDialog
 import com.eepiemi.materialbook.ui.viewmodel.MainViewModel
 import com.eepiemi.materialbook.ui.viewmodel.SettingsViewModel
+import com.eepiemi.materialbook.utils.isConnectionError
 import com.eepiemi.materialbook.utils.DESKTOP_USER_AGENT
 import com.eepiemi.materialbook.utils.BraveBlockList
 import com.eepiemi.materialbook.utils.ExternalRequestInterceptor
@@ -1033,7 +1034,9 @@ fun MaterialbookWebView(
     }
 
     var isLoading by rememberSaveable { mutableStateOf(true) }
-    val isError = state.errorsForCurrentRequest.lastOrNull()?.isFromMainFrame == true
+    // Only a page Facebook can't be reached for (isConnectionError): the error dialog takes the
+    // page's place, WebView and all.
+    val isError = state.errorsForCurrentRequest.lastOrNull()?.let { it.isFromMainFrame && isConnectionError(it.code) } == true
 
     val viewModel: MainViewModel = viewModel {
         MainViewModel(
