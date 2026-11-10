@@ -50,7 +50,7 @@
         // group link aren't hidden along with actual group-origin posts.
         const header = container.querySelector('h3[data-tti-phase="-1"]');
         if (header?.querySelector('a[href*="/groups/"]')) {
-          container.style.display = 'none';
+          if (!window.hideFeedPost(container)) container.style.display = 'none';
         }
       });
     });

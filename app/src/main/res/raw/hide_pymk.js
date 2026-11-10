@@ -29,7 +29,7 @@
     nodes.forEach(node => {
       if (!(node instanceof HTMLElement)) return;
       const targets = node.matches('.hscroller') ? [node] : node.querySelectorAll?.('.hscroller') || [];
-      targets.forEach(el => el.closest('[data-tracking-duration-id]')?.style.setProperty('display', 'none'));
+      targets.forEach(el => window.hideFeedPost(el));
     });
   };
 

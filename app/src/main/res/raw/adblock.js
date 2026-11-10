@@ -72,14 +72,8 @@
                 continue;
             }
 
-            const container = parent.closest('div[data-dcm-id="1"][data-mcomponent="MContainer"]');
-            container.style.display = 'none'
-
-            const postSeparator = container.previousElementSibling;
-
-            if (postSeparator && postSeparator.offsetHeight === 1 && postSeparator.querySelector('[data-fd-action]') ) {
-              postSeparator.style.display = 'none';
-            }
+            // (a label outside a feed post, a photo opened directly, has no post to hide)
+            window.hideFeedPost(parent);
         }
     }
 

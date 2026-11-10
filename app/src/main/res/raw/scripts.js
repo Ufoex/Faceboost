@@ -891,6 +891,47 @@ if (!window._mbAppPromptObserver) {
     window._mbAppPromptObserver.observe(document.documentElement, { childList: true, subtree: true });
 }
 
+// Feed posts (mobile site). A post is a run of rows of the feed's list (data-type="vscroller")
+// sharing a data-tracking-duration-id: one card (data-dcm-id="1") on a post opened from a link,
+// its header, text and action rows apart on Home (since 2026-10-30), each row tracked. The
+// hide_* scripts and adblock.js hide a whole post through hideFeedPost, from any element in it.
+(() => {
+    const TRACKED = '[data-tracking-duration-id]';
+
+    // The rows of the post holding el, top to bottom; none outside a feed post.
+    window.feedPostRows = el => {
+        let row = el?.closest?.(TRACKED);
+        while (row && row.parentElement?.getAttribute('data-type') !== 'vscroller') {
+            row = row.parentElement?.closest(TRACKED);
+        }
+        if (!row) return [];
+        const id = row.getAttribute('data-tracking-duration-id');
+        const same = r => r?.getAttribute('data-tracking-duration-id') === id;
+        const rows = [row];
+        for (let r = row.previousElementSibling; same(r); r = r.previousElementSibling) rows.unshift(r);
+        for (let r = row.nextElementSibling; same(r); r = r.nextElementSibling) rows.push(r);
+        return rows;
+    };
+
+    // Hides the post holding el and the thin gap row above it; false outside a feed post.
+    window.hideFeedPost = el => {
+        const rows = window.feedPostRows(el);
+        if (!rows.length) return false;
+        const gap = rows[0].previousElementSibling;
+        if (gap && !gap.matches(TRACKED) && gap.offsetHeight <= 1) gap.style.display = 'none';
+        rows.forEach(r => { r.style.display = 'none'; });
+        return true;
+    };
+})();
+
+// The elements matching selector in root: the document, or an element and what's in it. For MutationObservers that
+// look again only at what changed (material_you.js, amoled_black.js), not at the whole page on every change.
+window.mbWithin = (root, selector) => {
+    const found = Array.from(root.querySelectorAll(selector));
+    if (root.matches && root.matches(selector)) found.unshift(root);
+    return found;
+};
+
 // Finger state shared by the reel scripts: window.__mbTouch = { down, endAt }.
 (() => {
     if (window.__mbTouch) return;
