@@ -2,6 +2,18 @@
     <img src='./fastlane/metadata/android/en-US/images/featureGraphic.png' alt="Faceboost banner" width="100%">
 </p>
 
+<h2 align="middle">
+    🙋 Have a problem or a suggestion?
+</h2>
+
+<p align="middle">
+    Tell us about it: open an issue and describe what happened or what you would like.
+</p>
+
+<p align="middle">
+    <a href='https://github.com/Ufoex/Faceboost/issues/new/choose'><img alt='Open an issue' height='40' src='./assets/open_issue.svg'/></a>
+</p>
+
 <h1 align="middle">
     📱 Download
 </h1>
@@ -12,14 +24,6 @@
 
 <p align="middle">
     <a href='https://grev.shehryar.ae/?owner=Ufoex&repo=Faceboost'><img alt='Downloads count' height='40' src='https://img.shields.io/github/downloads/Ufoex/Faceboost/total?style=for-the-badge&logo=github&label=Downloads&color=1877F2&labelColor=24292F'/></a>
-</p>
-
-<h2 align="middle">
-    🙋 Have issues?
-</h2>
-
-<p align="middle">
-    <a href='https://github.com/Ufoex/Faceboost/issues/new/choose'><img alt='Open issue' height='40' src='./assets/open_issue.svg'/></a>
 </p>
 
 <h2 align="middle">
