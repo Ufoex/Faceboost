@@ -367,22 +367,8 @@
             const b = e.getBoundingClientRect();
             if (b.width > 0 && b.top < 0.2 * ih) hid(e);
         });
-        // top tab bar: hidden like the rest, and the reel list slides up over its strip and is
-        // scaled to fill the screen. Only a transform: the tab bar keeps its layout, because
-        // Facebook re-snaps the reels when a container resizes and never restores them properly.
-        document.querySelectorAll('[role="tablist"]').forEach(t => {
-            hid(t);
-            const wrap = t.parentElement;
-            const scroller = v.closest('.vscroller');
-            if (!wrap || holdsKept(wrap) || !scroller || scroller.hasAttribute('data-mb-scale') || scroller.offsetHeight <= 0) return;
-            const top = scroller.getBoundingClientRect().top;
-            const k = ih / scroller.offsetHeight;
-            if (top > 0 && k > 1.01 && k < 1.3) {
-                scroller.setAttribute('data-mb-scale', '');
-                scroller.style.setProperty('--mb-y', -top + 'px');
-                scroller.style.setProperty('--mb-k', k);
-            }
-        });
+        // top tab bar: hidden like the rest. The video is NOT enlarged to fill its strip (no zoom).
+        document.querySelectorAll('[role="tablist"]').forEach(hid);
         // desktop: enlarge the page so the video fills the screen (see zoomDesktop)
         if (window.isDesktopMode && window.isDesktopMode() && !v.closest('.vscroller')) zoomDesktop(v);
         // our own buttons

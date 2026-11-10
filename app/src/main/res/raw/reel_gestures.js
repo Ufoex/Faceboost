@@ -126,11 +126,13 @@
     const replayTap = (tap) => {
         clearTimeout(tap.timer);
         if (!inReel() || !document.contains(tap.target)) return;
+        const was = tap.v.paused;
         replaying = window.__mbReplaying = true; // reel_controls.js's hide-mode tap fix takes this one
         try { tap.target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window })); }
         finally { replaying = window.__mbReplaying = false; }
         // Show what the tap did once Facebook (or reel_controls.js's fallback, 80 ms) has toggled it.
-        setTimeout(() => popState(tap.v, tap.x, tap.y), 120);
+        // Only when it did toggle: a tap on the caption or any other control leaves playback alone, no icon.
+        setTimeout(() => { if (tap.v.paused !== was) popState(tap.v, tap.x, tap.y); }, 120);
     };
 
     const onUI = (t) => !!(t.closest && t.closest('button,a,input,[role=button],[role=link],[role=slider],#mb-reel-controls,[id^=mb-reel-]'));
