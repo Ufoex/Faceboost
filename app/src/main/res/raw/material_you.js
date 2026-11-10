@@ -26,8 +26,10 @@
   // Mechanism to prevent some parts of the code infinitely triggering the MO, causing the function to loop
   const processedStyles = new WeakSet();
 
-  function processMaterialYouStyles() {
-    document.querySelectorAll('style')?.forEach(style => {
+  const within = window.mbWithin; // scripts.js
+
+  function processMaterialYouStyles(root) {
+    within(root, 'style').forEach(style => {
       if (processedStyles.has(style)) return;
       processedStyles.add(style);
 
@@ -53,7 +55,7 @@
       }
     });
 
-    document.querySelectorAll('[style*="color"]')?.forEach(el => {
+    within(root, '[style*="color"]').forEach(el => {
       const style = el.getAttribute('style')?.replace(colorRegex, (m, gr, Ar, Ag, Ab, Aa, r, g, b, hex) => {
         if ((r && g && b && isFacebookBlue(+r, +g, +b)) ||
         (hex && isFacebookBlue(...[0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16)))) || hex === 'e8eaee') return `color:${MATERIALYOU_PRIMARY};`;
@@ -64,7 +66,7 @@
       if (style !== el.getAttribute('style')) el.setAttribute('style', style);
     });
 
-    document.querySelectorAll('[style*="background-color"]')?.forEach(el => {
+    within(root, '[style*="background-color"]').forEach(el => {
       const style = el.getAttribute('style')?.replace(backgroundColorRegex, (m, gr, Ar, Ag, Ab, Aa, r, g, b, hex) => {
         if ((r && g && b && isFacebookBlue(+r, +g, +b)) ||
         (hex && isFacebookBlue(...[0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16))))) return `background-color:${MATERIALYOU_PRIMARY};`;
@@ -76,7 +78,7 @@
       if (style !== el.getAttribute('style')) el.setAttribute('style', style);
     });
 
-    document.querySelectorAll('[style*="background"]')?.forEach(el => {
+    within(root, '[style*="background"]').forEach(el => {
       const style = el.getAttribute('style')?.replace(backgroundRegex, (m, gr, Ar, Ag, Ab, Aa, r, g, b, hex) => {
         if ((r && g && b && isFacebookBlue(+r, +g, +b)) ||
         (hex && isFacebookBlue(...[0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16))))) return `background:${MATERIALYOU_PRIMARY};`;
@@ -86,7 +88,7 @@
       if (style !== el.getAttribute('style')) el.setAttribute('style', style);
     });
 
-    document.querySelectorAll('[style*="border:"]')?.forEach(el => {
+    within(root, '[style*="border:"]').forEach(el => {
       const style = el.getAttribute('style')?.replace(borderRegex, (m, px, gr, Ar, Ag, Ab, Aa, r, g, b, hex) => {
         if ((r && g && b && isFacebookBlue(+r, +g, +b)) ||
         (hex && isFacebookBlue(...[0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16))))) return `border: ${px} solid ${MATERIALYOU_PRIMARY};`;
@@ -97,12 +99,12 @@
       if (style !== el.getAttribute('style')) el.setAttribute('style', style);
     });
 
-    document.querySelectorAll('[style*="--nbc"]')?.forEach(el => {
+    within(root, '[style*="--nbc"]').forEach(el => {
       if (isFacebookBlue(...[1, 3, 5].map(i => parseInt(el.style.getPropertyValue('--nbc').slice(i, i + 2), 16)))) el.style.setProperty('--nbc', MATERIALYOU_PRIMARY);
     });
 
     // Recolor story ring on the profile page + feed FB logo in light mode
-    document.querySelectorAll('img[src*="vTzapVsBgS_.webp"], img[src*="NtDLSQuICbO.webp"]')?.forEach(img => {
+    within(root, 'img[src*="vTzapVsBgS_.webp"], img[src*="NtDLSQuICbO.webp"]').forEach(img => {
       if (processedStyles.has(img)) return;
       processedStyles.add(img);
       img.style.cssText += `
@@ -113,7 +115,7 @@
     });
 
     // Swap FB logo on the login screen
-    document.querySelectorAll('img[src*="DUiOg0mJTjz.webp"]')?.forEach(img => {
+    within(root, 'img[src*="DUiOg0mJTjz.webp"]').forEach(img => {
       size = img.style.maxHeight;
       svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="${parseInt(size) * 1.5}px" height="${parseInt(size) * 1.5}px">
                     <circle cx="54" cy="54" r="54" fill="${MATERIALYOU_PRIMARY}" />
@@ -124,7 +126,7 @@
     });
   }
 
-  processMaterialYouStyles();
+  processMaterialYouStyles(document);
 
   function materialYouCSS() {
     const style = document.createElement('style');
@@ -156,15 +158,26 @@
 
   materialYouCSS();
 
+  // Only what changed is recoloured: the elements added (with what's in them) and those whose style or picture
+  // changed, once per frame. Going over the whole page on every change of it cost far more CPU on a feed that kept changing.
+  const pending = new Set();
   let moScheduled = false;
-  new MutationObserver(() => {
-    if (moScheduled) return;
+  new MutationObserver(mutations => {
+    for (const m of mutations) {
+      if (m.type === 'attributes') pending.add(m.target);
+      else m.addedNodes.forEach(node => { if (node.nodeType === Node.ELEMENT_NODE) pending.add(node); });
+    }
+    if (moScheduled || !pending.size) return;
     moScheduled = true;
-    requestAnimationFrame(() => { moScheduled = false; processMaterialYouStyles(); });
+    requestAnimationFrame(() => {
+      moScheduled = false;
+      const roots = [...pending]; pending.clear();
+      roots.forEach(root => { if (root.isConnected) processMaterialYouStyles(root); });
+    });
   }).observe(document.documentElement, {
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ['style']
+    attributeFilter: ['style', 'src']
   });
 })();
