@@ -27,6 +27,10 @@
     let lastAdvance = 0;
     const advance = (v) => {
         if (Date.now() - lastAdvance < 1500) return;
+        // Not while a finger is on the screen, or just was: moving the list under it made the reel jump to the next
+        // one halfway through a swipe.
+        const T = window.__mbTouch;
+        if (T && (T.down || Date.now() - T.endAt < 1000)) return;
         const cont = v.closest('.vertically-snappable');
         if (!cont) return;
         // skip reels that were removed from the list (ads) or are not laid out

@@ -890,3 +890,14 @@ if (!window._mbAppPromptObserver) {
     });
     window._mbAppPromptObserver.observe(document.documentElement, { childList: true, subtree: true });
 }
+
+// Finger state shared by the reel scripts: window.__mbTouch = { down, endAt }.
+(() => {
+    if (window.__mbTouch) return;
+    const T = window.__mbTouch = { down: false, endAt: 0 };
+    const opts = { capture: true, passive: true };
+    document.addEventListener('touchstart', (e) => { T.down = e.touches.length > 0; }, opts);
+    const up = (e) => { T.down = e.touches.length > 0; T.endAt = Date.now(); };
+    document.addEventListener('touchend', up, opts);
+    document.addEventListener('touchcancel', up, opts);
+})();

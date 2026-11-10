@@ -48,6 +48,7 @@ class MainViewModel(
             Script(settings.stickyNavbar.value, R.raw.sticky_navbar, "sticky_navbar.js"),
             Script(settings.reelControls.value, R.raw.reel_controls, "reel_controls.js"),
             Script(settings.reelControls.value && settings.reelGestures.value, R.raw.reel_gestures, "reel_gestures.js"),
+            Script(settings.reelControls.value, R.raw.reel_transition, "reel_transition.js"),
             Script(settings.reelBackgroundAudio.value, R.raw.reel_bg_audio, "reel_bg_audio.js"),
             Script(settings.autoScrollReels.value, R.raw.autoscroll_reels, "autoscroll_reels.js"),
             // Needs the bars pinned by the sticky navbar script.

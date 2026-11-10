@@ -698,7 +698,12 @@
             } else if (audioBtn) audioBtn.style.display = 'none';
             items.push(hideBtn);
             items.forEach(b => { if (b !== dlBtn) b.style.display = 'flex'; });
-            layoutBtns(items, baseTop, baseLeft);
+            // While the reels are being swiped (a finger on the screen, just lifted, or the reel not yet at rest) Facebook's
+            // own icons travel with the reel and pass behind our column: it stays where it is instead of stepping aside and back.
+            const it0 = active.closest('.vertically-snappable');
+            const T = window.__mbTouch;
+            const swiping = (T && (T.down || Date.now() - T.endAt < 700)) || (it0 && it0.parentElement && Math.abs(it0.getBoundingClientRect().top - it0.parentElement.getBoundingClientRect().top) > 3);
+            if (!(swiping && items.every(b => b.style.left))) layoutBtns(items, baseTop, baseLeft);
             markIcons(active);
         } else {
             if (editing) endEdit(false);
