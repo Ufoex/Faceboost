@@ -16,6 +16,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -106,14 +110,16 @@ fun parseNotes(notes: String): List<NoteLine> = notes.lines().filter { it.isNotB
     }
 }
 
-/** `**bold**` and `code` spans of one notes line. */
+/** `**bold**`, `code` and `[text](https://link)` spans of one notes line. */
 private fun inline(text: String): AnnotatedString = buildAnnotatedString {
-    Regex("\\*\\*(.+?)\\*\\*|`(.+?)`").let { re ->
+    Regex("\\*\\*(.+?)\\*\\*|`(.+?)`|\\[(.+?)]\\((https://[^)\\s]+)\\)").let { re ->
         var last = 0
         for (m in re.findAll(text)) {
             append(text.substring(last, m.range.first))
             val bold = m.groups[1]?.value
+            val label = m.groups[3]?.value
             if (bold != null) withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(bold) }
+            else if (label != null) withLink(LinkAnnotation.Url(m.groups[4]!!.value, TextLinkStyles(SpanStyle(fontWeight = FontWeight.SemiBold, textDecoration = TextDecoration.Underline)))) { append(label) }
             else withStyle(SpanStyle(fontFamily = FontFamily.Monospace)) { append(m.groups[2]!!.value) }
             last = m.range.last + 1
         }
