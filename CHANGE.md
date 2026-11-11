@@ -121,3 +121,8 @@ I REALLY hope you enjoy what has become the biggest project of my life! 🥹* Fi
 * Fix: With the reel icons hidden, a single tap paused the video at once and played it again 0.3 s later; it now pauses (or resumes) once, after the wait for a possible double tap.
 * Fix: The app's playback bar is no longer drawn over Facebook's own seek bar: the detection looked at an invisible accessibility input instead of the bar Facebook draws (.seekbar-active), so both showed. Now it only appears when Facebook shows none.
 * Fix: With the reel icons hidden, a paused reel shows the playback bar again (time, full screen, volume) and Facebook's own seek bar is hidden, so there is only one line; a tap on a reel shows a dark circle with a pause or play icon where you tapped.
+* Fix: Reels no longer stay on a black screen with a spinner after a sponsored reel is hidden: an ad is not hidden while it is the last reel loaded, the hidden ad no longer pauses the reels that follow it, and an ad hidden while on screen moves to the neighbouring reel.
+* Fix: The reel cross-fade also works in reel viewers opened from a /videos/ link, not only /reel/ ones.
+* Fix: Hiding ads, suggested posts, people you may know, reels and groups works again now that Home draws each post as separate rows.
+* Fix: Only a real connection error replaces the page with the network error dialog.
+* Tweak: Material You and AMOLED Black restyle only what changed instead of the whole page on every change.
