@@ -126,3 +126,9 @@ I REALLY hope you enjoy what has become the biggest project of my life! 🥹* Fi
 * Fix: Hiding ads, suggested posts, people you may know, reels and groups works again now that Home draws each post as separate rows.
 * Fix: Only a real connection error replaces the page with the network error dialog.
 * Tweak: Material You and AMOLED Black restyle only what changed instead of the whole page on every change.
+* Feature: Reels fade by position while you swipe: the reel that leaves goes dark as it moves away and the one that comes in is revealed from dark, with one curve for both so the tone does not jump where they cross.
+* Feature: A reel you leave keeps its last video frame, paused and in place (behind its name and caption), until its video plays again, so swiping back never shows it empty. The frame is kept while the list moves and put in the reel when Facebook moves the video to another one.
+* Feature: When a reel's video starts from the beginning, its cover fades out over it, placed in the reel so it moves with it and drawn where the video's picture is.
+* Feature: With the reel icons hidden the video is centred on the whole screen, not under the hidden header strip.
+* Fix: With the icons hidden, the description and icons of the reel that was leaving came back for a moment when you swiped slowly, and the ones of the reel coming in showed up: the neighbouring reels are hidden too and what Facebook adds to a reel is hidden before it is painted.
+* Fix: The cover of a reel is no longer shown on top of the video, which made the reel's text show twice, offset, while it slid into place.

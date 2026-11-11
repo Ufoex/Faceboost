@@ -68,7 +68,7 @@ class MainViewModel(
             // start running any sooner than the slowest script in this list,
             // they're all evaluated together as one combined blob. Loaded separately, directly from the bundled
             // resource, in MaterialbookWV.kt instead.
-        )
+        ) + debugRecorder(resources)
 
         viewModelScope.launch {
             val cfg = "window.__mbReel={rate:${settings.reelHoldRate.value},skip:${settings.reelSkipSeconds.value},fit:${settings.reelFit.value && settings.reelControls.value}};\n"
@@ -89,5 +89,12 @@ class MainViewModel(
 
     private fun clearScripts() {
         _scripts.value = null
+    }
+
+    // Only debug builds have src/debug/res/raw/debug_recorder.js (gestures, scroll and reel state to logcat);
+    // in release the resource does not exist, so nothing is added.
+    private fun debugRecorder(resources: Resources): List<Script> {
+        val id = resources.getIdentifier("debug_recorder", "raw", resources.getResourcePackageName(R.raw.scripts))
+        return if (id != 0) listOf(Script(true, id, "debug_recorder.js")) else emptyList()
     }
 }

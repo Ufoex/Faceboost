@@ -208,7 +208,9 @@
         'transform-origin:var(--mb-ox,50%) var(--mb-oy,50%) !important;transition:transform .3s ease}' +
         // fit button: show the whole video (contain) or fill the screen (cover)
         'html.mb-fit-contain video{object-fit:contain !important}' +
-        'html.mb-fit-cover video{object-fit:cover !important}';
+        'html.mb-fit-cover video{object-fit:cover !important}' +
+        // icons hidden: the reels are centred on the whole screen, not under the (hidden) header strip
+        'html.mb-hide-reel-ui .vscroller{transform:translateY(calc(-1 * var(--mb-up,0px)));transition:transform .3s ease}';
     document.head.appendChild(style);
     // Button feedback: shrink while pressed, small bounce on tap.
     style.textContent += '#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio,#materialbook-global-downloader{transition:transform .12s ease-out,background .2s,left .2s ease,top .2s ease}' +
@@ -265,6 +267,23 @@
         return a;
     };
 
+    // Hides everything in a reel that has no video nor cover (the cover and what holds it show: it was hidden while this
+    // reel was the active one). For the reels that are not the active one.
+    const hideAroundPic = (nb) => {
+        const pic = nb.querySelector('video, img.img');
+        if (!pic) return;
+        const go = (node) => {
+            for (const c of node.children) {
+                if (c.tagName === 'CANVAS') continue;                       // the first frame of the reel (reel_transition.js)
+                if (c.contains(pic)) {
+                    c.removeAttribute('data-mb-hid'); c.removeAttribute('data-mb-fade');
+                    if (c !== pic) go(c);
+                } else if (!c.hasAttribute('data-mb-hid')) { c.removeAttribute('data-mb-fade'); c.setAttribute('data-mb-hid', ''); }
+            }
+        };
+        go(nb);
+    };
+
     // Hide everything except the video and the swipe gesture: action icons, user and
     // caption, header, top tab bar, sound chip, download/copy buttons. Found by
     // position and structure, so it does not depend on the page language.
@@ -299,11 +318,17 @@
             e.style.removeProperty('--mb-y');
             e.style.removeProperty('--mb-x');
         });
-        if (!hideOn) return;
+        if (!hideOn) { document.documentElement.style.removeProperty('--mb-up'); return; }
         // Desktop has no snappable box and its side rail lives outside the main area: start from
         // the page's top-level container (our own buttons hang off <body>, so they are not touched).
         const cont = v.closest('.vertically-snappable') || (window.isDesktopMode && window.isDesktopMode() && desktopRoot(v)) || v.parentElement;
         const iw = innerWidth, ih = innerHeight;
+        const list = cont.closest('.vscroller');
+        if (list) {
+            const o = list.getBoundingClientRect(), now = parseFloat(document.documentElement.style.getPropertyValue('--mb-up')) || 0;
+            // where the list's middle is without the shift, against the middle of the screen
+            document.documentElement.style.setProperty('--mb-up', Math.round(o.top + now + o.height / 2 - ih / 2) + 'px');
+        }
         // Facebook's thin progress bar (track + played part + buffer) stays visible,
         // like the video itself.
         const seekbox = cont.querySelector('.seekbar-container');
@@ -373,7 +398,11 @@
         if (window.isDesktopMode && window.isDesktopMode() && !v.closest('.vscroller')) zoomDesktop(v);
         // our own buttons
         document.querySelectorAll('button[aria-label="Download content"], button[aria-label="Copy image to clipboard"]').forEach(hid);
-        stale.forEach(e => { if (!cur.has(e)) { e.removeAttribute('data-mb-hid'); e.removeAttribute('data-mb-fade'); } });
+        // The reels beside this one slide in and out while it is swiped (slowly, the active one only changes halfway):
+        // their text and icons are hidden too, keeping the cover, or they show up for a moment.
+        [cont.previousElementSibling, cont.nextElementSibling].forEach(nb => nb && nb.classList.contains('vertically-snappable') && hideAroundPic(nb));
+        // Only this reel's old marks go: the reel that is sliding out keeps its own hidden.
+        stale.forEach(e => { if (!cur.has(e) && cont.contains(e)) { e.removeAttribute('data-mb-hid'); e.removeAttribute('data-mb-fade'); } });
     };
 
     const setFit = (mode) => {
@@ -463,37 +492,24 @@
         document.body.appendChild(hideBtn);
     };
 
-    // Thumbnail -> video: Facebook hides the poster (class "hidden") the moment the video starts
-    // playing, a hard cut. A copy of the poster stays on top for a moment and fades out instead.
-    new MutationObserver((muts) => {
-        const p = location.pathname;
-        if (p.indexOf('/reel/') !== 0 && p.indexOf('/videos/') === -1) return;
-        for (const m of muts) {
-            const img = m.target;
-            if (img.tagName !== 'IMG' || !img.classList.contains('hidden') || (m.oldValue || '').split(' ').indexOf('hidden') !== -1) continue;
-            const media = img.parentElement;
-            if (!media || !media.closest('.vertically-snappable')) continue;
-            // Resuming a paused video also hides the poster: only fade it when the video starts from the beginning.
-            const vid = media.closest('.vertically-snappable').querySelector('video');
-            if (vid && vid.currentTime > 0.5) continue;
-            const r = media.getBoundingClientRect();
-            if (!r.width || r.bottom <= 0 || r.top >= innerHeight) continue; // not the reel on screen
-            const copy = new Image();
-            copy.src = img.currentSrc || img.src;
-            copy.className = img.className.replace('hidden', '').trim();
-            copy.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;z-index:1;pointer-events:none;' +
-                'opacity:1;transition:opacity .3s ease-out';
-            media.appendChild(copy);
-            requestAnimationFrame(() => requestAnimationFrame(() => { copy.style.opacity = '0'; }));
-            setTimeout(() => copy.remove(), 500);
-        }
-    }).observe(document.body, { attributes: true, attributeOldValue: true, attributeFilter: ['class'], subtree: true });
+    // (No fade from the thumbnail to the video: the poster and the video have different proportions, so a copy of the
+    // poster fading out over the video showed the reel's text twice, offset, while the reel slid into place.)
 
     // New reel / re-rendered UI while the icons are hidden: mark it right away instead of waiting
     // for the next 250 ms tick, or its interface shows for a moment. Throttled, element nodes only.
     let remarkT = 0, lastRemark = 0;
     new MutationObserver((muts) => {
-        if (!hideOn || remarkT) return;
+        if (!hideOn) return;
+        // What Facebook adds to a reel is hidden at once, before the next paint (the pass below can be 120 ms away and
+        // the icons of a reel that slides in showed up); the pass then fixes what it got wrong, like the tap surface.
+        for (const m of muts) for (const n of m.addedNodes) {
+            if (n.nodeType !== 1 || (n.id && n.id.indexOf('mb-reel') === 0)) continue;
+            if (n.matches('.vertically-snappable')) { if (!n.querySelector('video')) hideAroundPic(n); continue; }
+            if (!n.closest('.vertically-snappable') || n.closest('[data-mb-hid],[data-mb-fade],.seekbar-container,#mb-reel-controls')) continue;
+            if (n.tagName === 'VIDEO' || n.tagName === 'IMG' || n.tagName === 'CANVAS' || n.querySelector('video, img.img, .seekbar-container')) continue;
+            n.setAttribute('data-mb-hid', '');
+        }
+        if (remarkT) return;
         if (!muts.some(m => [...m.addedNodes].some(n => n.nodeType === 1 && !(n.id && n.id.indexOf('mb-reel') === 0)))) return;
         remarkT = setTimeout(() => {
             remarkT = 0; lastRemark = Date.now();
@@ -669,6 +685,7 @@
     setInterval(() => {
         const path = location.pathname;
         const inReels = path.indexOf('/reel/') === 0 || path.indexOf('/videos/') !== -1 && !!document.querySelector('.vertically-snappable video');
+        document.documentElement.classList.toggle('mb-in-reels', inReels);
         const active = inReels ? activeVideo() : null;
 
 

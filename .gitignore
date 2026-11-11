@@ -25,3 +25,6 @@ jacoco-debug.log
 # Signing keys
 *.jks
 *.keystore
+
+# debug recorder dumps (scripts/debug-log.sh)
+/debug-logs/
