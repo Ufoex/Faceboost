@@ -270,10 +270,19 @@
         container.querySelectorAll('video').forEach(v => {
             v.muted = true;
             try { v.pause(); } catch (e) {}
-            v.addEventListener('play', () => { v.muted = true; v.pause(); });
+            // Facebook reuses this <video> for the next reels: only keep it quiet while it is still in the ad.
+            v.addEventListener('play', () => { if (container.contains(v)) { v.muted = true; v.pause(); } });
         });
+        const r = container.getBoundingClientRect();
+        const onScreen = r.top < window.innerHeight / 2 && r.bottom > window.innerHeight / 2;
+        // sibling reels around it that really hold a reel (the list ends with an empty loading row)
+        const real = (e) => e && e.style.display !== 'none' && e.innerText.trim();
+        const around = [container.nextElementSibling, container.previousElementSibling].find(real);
         container.style.setProperty('display', 'none', 'important');
         restoreAnchor();
+        // Hidden while it is the reel on screen: the list shrinks under the scroll position and it lands on
+        // that empty row (black screen and spinner for good). Go to the neighbouring reel instead.
+        if (onScreen && around) around.scrollIntoView({ behavior: 'instant', block: 'start' });
     }
 
     function scanReelAds() {
@@ -284,7 +293,11 @@
             for (const span of container.querySelectorAll('span')) {
                 const text = span.textContent;
                 if (text && text.length <= 48 && containsSponsoredText(text)) {
-                    hideReelAd(container);
+                    // Not while it is the last reel loaded: with nothing real after it Facebook stops loading more
+                    // and playing (black screen and spinner). It is hidden once the next reel is there.
+                    let next = container.nextElementSibling;
+                    while (next && !(next.matches('.vertically-snappable') && next.innerText.trim())) next = next.nextElementSibling;
+                    if (next) hideReelAd(container);
                     break;
                 }
             }

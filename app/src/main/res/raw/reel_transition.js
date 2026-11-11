@@ -6,7 +6,11 @@
     if (window.__mbReelTransition) return;
     window.__mbReelTransition = true;
 
-    const inReel = () => location.pathname.indexOf('/reel/') === 0;
+    // (same test as reel_gestures.js: a reel viewer opened from a /videos/ link is a reel list too)
+    const inReel = () => {
+        const p = location.pathname;
+        return p.indexOf('/reel/') === 0 || (p.indexOf('/videos/') !== -1 && !!document.querySelector('.vertically-snappable video'));
+    };
     // the reels of the list (the same class also marks the tab bar and the pull-to-refresh spinner)
     const items = () => [...document.querySelectorAll('.vscroller > .vertically-snappable')].filter(e => e.offsetHeight > innerHeight * 0.5);
     const fadeIn = (visible) => Math.max(0, Math.min(1, visible * 1.18));
