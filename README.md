@@ -26,6 +26,10 @@
     <a href='https://grev.shehryar.ae/?owner=Ufoex&repo=Faceboost'><img alt='Downloads count' height='40' src='https://img.shields.io/github/downloads/Ufoex/Faceboost/total?style=for-the-badge&logo=github&label=Downloads&color=1877F2&labelColor=24292F'/></a>
 </p>
 
+<p align="middle">
+    📸 Also available: <a href='https://github.com/Ufoex/Instaboost'><b>Instaboost</b></a>, the same idea for Instagram.
+</p>
+
 <h2 align="middle">
     ✏️ About this repo
 </h2>
