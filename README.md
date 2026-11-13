@@ -27,7 +27,8 @@
 </p>
 
 <p align="middle">
-    📸 Also available: <a href='https://github.com/Ufoex/Instaboost'><b>Instaboost</b></a>, the same idea for Instagram.
+    📸 Also available: <a href='https://github.com/Ufoex/Instaboost'><b>Instaboost</b></a>, the same idea for Instagram.<br>
+    🎵 And <a href='https://github.com/Ufoex/Spotiboost'><b>Spotiboost</b></a>, for Spotify.
 </p>
 
 <h2 align="middle">
