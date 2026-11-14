@@ -6,32 +6,14 @@
     <a href="README.md">English</a> · <b>Español</b>
 </p>
 
-<h3 align="center">📥 Descargar</h3>
-
 <p align="center">
-    Baja el último APK desde la página de versiones e instálalo.<br><br>
     <a href='https://github.com/Ufoex/Faceboost/releases/latest'><img alt='Descargar' height='40' src='https://img.shields.io/github/v/release/Ufoex/Faceboost?style=for-the-badge&logo=github&label=Descargar&color=1877F2&labelColor=24292F'/></a>
-</p>
-
-<h3 align="center">📊 Descargas</h3>
-
-<p align="center">
-    Número total de veces que se ha descargado la app hasta ahora.<br><br>
     <a href='https://grev.shehryar.ae/?owner=Ufoex&repo=Faceboost'><img alt='Downloads' height='40' src='https://img.shields.io/github/downloads/Ufoex/Faceboost/total?style=for-the-badge&logo=github&label=Downloads&color=1877F2&labelColor=24292F'/></a>
-</p>
-
-<h3 align="center">🙋 ¿Problema o sugerencia?</h3>
-
-<p align="center">
-    ¿Algo falla o tienes una idea? Abre un issue en GitHub y cuéntame qué pasó o qué te gustaría.<br><br>
-    <a href='https://github.com/Ufoex/Faceboost/issues/new/choose'><img alt='Abrir un issue' height='40' src='https://img.shields.io/badge/Abrir%20un%20issue-D73A4A?style=for-the-badge&logo=github&logoColor=white'/></a>
-</p>
-
-<h3 align="center">☕ ¿Te gusta mi trabajo?</h3>
-
-<p align="center">
-    La app es gratis y no tiene anuncios. Si te gusta, puedes apoyarme con un café.<br><br>
     <a href='https://buymeacoffee.com/masterllamk'><img alt='Invítame un café' height='40' src='https://img.shields.io/badge/Inv%C3%ADtame%20un%20caf%C3%A9-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black'/></a>
+</p>
+
+<p align="center">
+    🙋 ¿Problema o sugerencia? <a href='https://github.com/Ufoex/Faceboost/issues/new/choose'>Abre un issue</a> &nbsp;·&nbsp; ☕ ¿Te gusta la app? <a href='https://buymeacoffee.com/masterllamk'>Invítame un café</a>
 </p>
 
 <p align="middle">
@@ -191,14 +173,6 @@ Cubren el cambio de marca y de comportamiento por defecto de este fork: valores 
 *  **Pruebas instrumentadas** (necesitan un dispositivo conectado o un emulador): `./gradlew connectedAndroidTest`
 
 GitHub Actions ejecuta las tres comprobaciones. Los informes de lint se suben como artefacto en cada ejecución. El filtro de lint trata los avisos de actualización de dependencias como informativos, pero sigue fallando ante problemas accionables de Android.
-
-<h2 align="middle">
-    ☕ Apoyo
-</h2>
-
-<p align="middle">
-    La app es gratis y no tiene anuncios. Si te sirve y quieres dar las gracias, puedes <a href='https://buymeacoffee.com/masterllamk'>invitarme un café</a>.
-</p>
 
 <h2 align="middle">
     💗 Agradecimientos:
