@@ -9,6 +9,7 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.AUTO_UPDA
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.BRAVE_BLOCK_LIST
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.COLLAPSING_TOOLBAR
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DESKTOP_LAYOUT
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DESKTOP_ORIENTATION
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_COPY_TO_CLIPBOARD
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_DOWNLOAD_CONTENT
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_AI_POSTS
@@ -56,7 +57,7 @@ private val BOOLEAN_KEYS = listOf(
     HIDE_GROUPS, HIDE_AI_POSTS, BRAVE_BLOCK_LIST, MESSAGES_DESKTOP, PIP_ENABLED, PIP_LOCKSCREEN_AUDIO,
     OPEN_LINKS_IN_TAB, APP_LOCK,
 )
-private val STRING_KEYS = listOf(PIP_PORTRAIT_RATIO, KEEP_SCREEN_ON)
+private val STRING_KEYS = listOf(PIP_PORTRAIT_RATIO, KEEP_SCREEN_ON, DESKTOP_ORIENTATION)
 private const val FORMAT = "faceboost-settings"
 private const val VERSION = 1
 private const val MAX_STRING_LENGTH = 32

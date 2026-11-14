@@ -22,6 +22,7 @@ class SettingsDataStore(private val context: Context) {
         val ENABLE_DOWNLOAD_CONTENT = booleanPreferencesKey("enable_download_content")
         val ENABLE_COPY_TO_CLIPBOARD = booleanPreferencesKey("enable_copy_to_clipboard")
         val DESKTOP_LAYOUT = booleanPreferencesKey("desktop_layout")
+        val DESKTOP_ORIENTATION = stringPreferencesKey("desktop_orientation") // portrait | landscape | auto
         val HIDE_NAV_BAR = booleanPreferencesKey("hide_nav_bar")
         val NOTIFY_POLL = booleanPreferencesKey("notify_poll")
         val IMMERSIVE_MODE = booleanPreferencesKey("immersive_mode")
@@ -100,6 +101,9 @@ class SettingsDataStore(private val context: Context) {
     suspend fun setDesktopLayout(desktopLayout: Boolean) {
         context.dataStore.edit { it[DESKTOP_LAYOUT] = desktopLayout }
     }
+
+    val desktopOrientation = context.dataStore.data.map { it[DESKTOP_ORIENTATION] ?: "portrait" }
+    suspend fun setDesktopOrientation(v: String) { context.dataStore.edit { it[DESKTOP_ORIENTATION] = v } }
 
     val hideNavBar = context.dataStore.data.map { it[HIDE_NAV_BAR] ?: false }
     suspend fun setHideNavBar(hideNavBar: Boolean) {

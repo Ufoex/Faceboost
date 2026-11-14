@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.eepiemi.materialbook.data.local.SettingsDataStore
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.AMOLED_BLACK
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DESKTOP_LAYOUT
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DESKTOP_ORIENTATION
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_COPY_TO_CLIPBOARD
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_DOWNLOAD_CONTENT
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.BRAVE_BLOCK_LIST
@@ -80,6 +81,11 @@ class SettingsViewModel(
     val desktopLayout = dataStore.desktopLayout.stateIn(
         scope = viewModelScope,
         initialValue = initialPrefs[DESKTOP_LAYOUT],
+        started = SharingStarted.WhileSubscribed()
+    )
+    val desktopOrientation = dataStore.desktopOrientation.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[DESKTOP_ORIENTATION] ?: "portrait",
         started = SharingStarted.WhileSubscribed()
     )
     val hideNavBar = dataStore.hideNavBar.stateIn(
@@ -266,6 +272,8 @@ class SettingsViewModel(
             dataStore.setDesktopLayout(desktopLayout)
         }
     }
+
+    fun setDesktopOrientation(v: String) { viewModelScope.launch { dataStore.setDesktopOrientation(v) } }
 
     fun setHideNavBar(hideNavBar: Boolean) {
         viewModelScope.launch {

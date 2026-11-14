@@ -72,6 +72,14 @@ class AutoDesktopTest {
         )
     }
 
+    @Test
+    fun browsing_followsDesktopOrientation() {
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT, appOrientation(isFullscreen = false, browsingOrientation = "portrait"))
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE, appOrientation(isFullscreen = false, browsingOrientation = "landscape"))
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_FULL_USER, appOrientation(isFullscreen = false, browsingOrientation = "auto"))
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR, appOrientation(isFullscreen = true, browsingOrientation = "landscape"))
+    }
+
     // ── Migration of the old persisted auto decision ─────────────────────────
 
     @Test

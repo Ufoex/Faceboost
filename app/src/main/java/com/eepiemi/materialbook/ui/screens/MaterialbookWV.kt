@@ -717,6 +717,8 @@ fun MaterialbookWebView(
     val isDesktop by settingsVM.desktopLayout.collectAsState()
     val isAutoDesktop = rememberAutoDesktop()
     val isEffectiveDesktop = effectiveDesktop(isDesktop, isAutoDesktop)
+    val desktopOrientation by settingsVM.desktopOrientation.collectAsState()
+    val browsingOrientation = if (isEffectiveDesktop) desktopOrientation else "portrait"
 
     // A link into another app (not web, email or phone) waits here for the user's OK.
     var pendingExternalLink by remember { mutableStateOf<String?>(null) }
@@ -1125,7 +1127,10 @@ fun MaterialbookWebView(
                     it.requestedOrientation =
                         appOrientation(
                             isFullscreen = false,
-                            isMessagesLayerOpen = messagesLayerUrl != null
+                            isMessagesLayerOpen = messagesLayerUrl != null,
+                            browsingOrientation =
+                                if (effectiveDesktop(settingsVM.desktopLayout.value, isAutoDesktop))
+                                    settingsVM.desktopOrientation.value else "portrait"
                         )
                 }
                 Log.d("AstryxbookPiP", "HTML5 fullscreen: hidden")
@@ -1263,13 +1268,14 @@ fun MaterialbookWebView(
     // While it is open the phone may rotate (see appOrientation) and the feed underneath reflows,
     // so its scroll position is noted on open and put back after the rotation back.
     val isMessagesLayerOpen = messagesLayerUrl != null
-    LaunchedEffect(isMessagesLayerOpen) {
+    LaunchedEffect(isMessagesLayerOpen, browsingOrientation) {
         // While fullscreen, the fullscreen host owns the orientation (and resets it on exit).
         if (!isFullscreen) {
             activity?.let {
                 it.requestedOrientation = appOrientation(
                     isFullscreen = false,
-                    isMessagesLayerOpen = isMessagesLayerOpen
+                    isMessagesLayerOpen = isMessagesLayerOpen,
+                    browsingOrientation = browsingOrientation
                 )
             }
         }

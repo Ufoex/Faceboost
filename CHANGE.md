@@ -3,6 +3,8 @@
 <ins>**Changelog:**</ins>
 
 * Feature: Merged the improvements of the AstryxBook, dh6k, BraveBook and LiteBook forks (see FORK_CHANGES.md).
+* Feature: "Desktop orientation" setting (shown with the Desktop layout on): choose portrait (default), landscape or automatic (follows the device rotation), so a tablet can be used lying down. Experimental, it may cause errors.
+* Feature: The reel icon layout is saved separately for portrait and landscape, so each orientation keeps its own grid (your current layout stays as the portrait one).
 * Feature: Auto-scroll reels (setting): goes to the next reel when the current one ends; a button in the reel viewer pauses it.
 * Feature: Reel audio with the screen off (setting, off by default): adds an audio button to the reel viewer that keeps the reel playing when the screen turns off.
 * Feature: Check for updates on start (setting, on by default) and a Check now button in Settings; the dialog downloads the new APK and opens the system installer (Android asks once to allow installing from Faceboost).

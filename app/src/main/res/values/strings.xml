@@ -6,6 +6,11 @@
     <string name="download_content_title">Download contents</string>
     <string name="copy_to_clipboard_title">Copy to clipboard</string>
     <string name="desktop_layout_title">Desktop layout</string>
+    <string name="desktop_orientation_title">Desktop orientation</string>
+    <string name="desktop_orientation_portrait">Portrait</string>
+    <string name="desktop_orientation_landscape">Landscape (experimental)</string>
+    <string name="desktop_orientation_auto">Automatic, follows the device rotation (experimental)</string>
+    <string name="desktop_orientation_note">Landscape and automatic are experimental and may cause errors.</string>
     <string name="immersive_mode_title">Immersive mode</string>
     <string name="auto_scroll_reels_title">Auto-scroll reels</string>
     <string name="auto_scroll_reels_desc">Go to the next reel when the current one ends (a button in the reel viewer pauses it)</string>

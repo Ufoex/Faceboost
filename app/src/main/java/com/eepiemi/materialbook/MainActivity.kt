@@ -67,6 +67,8 @@ import com.eepiemi.materialbook.audio.parseHandoffRead
 import com.eepiemi.materialbook.ui.screens.MaterialbookWebView
 import com.eepiemi.materialbook.utils.CacheCleaner
 import com.eepiemi.materialbook.utils.appOrientation
+import com.eepiemi.materialbook.utils.effectiveDesktop
+import com.eepiemi.materialbook.utils.isAutoDesktopScreen
 import com.eepiemi.materialbook.ui.theme.MaterialbookTheme
 import com.eepiemi.materialbook.ui.viewmodel.SettingsViewModel
 import com.google.common.util.concurrent.ListenableFuture
@@ -304,8 +306,14 @@ class MainActivity : FragmentActivity() {
 
         // Phones browse in portrait; only HTML5 fullscreen video rotates (see
         // appOrientation and the fullscreen host in MaterialbookWebView).
-        requestedOrientation =
-            appOrientation(isFullscreen = false)
+        requestedOrientation = appOrientation(
+            isFullscreen = false,
+            browsingOrientation = if (effectiveDesktop(
+                    settingsVM.desktopLayout.value,
+                    isAutoDesktopScreen(resources.configuration.smallestScreenWidthDp)
+                )
+            ) settingsVM.desktopOrientation.value else "portrait",
+        )
 
         // Unconditional on purpose (not gated behind BuildConfig.DEBUG): keeps
         // chrome://inspect available on release-type builds for field

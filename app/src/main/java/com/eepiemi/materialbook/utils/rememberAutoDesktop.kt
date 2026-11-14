@@ -19,15 +19,21 @@ fun isAutoDesktopScreen(smallestScreenWidthDp: Int): Boolean = smallestScreenWid
  * in landscape leaves its viewer showing an oversized still frame instead of
  * the video, same in Chrome). Tablets follow the same rule: laid flat, the phone site is
  * cropped (it caps its page at 800 px wide and sizes the viewer for portrait).
+ * The exception is the Desktop layout, which has its own setting: the desktop site is built for
+ * wide screens, so browsing can be "landscape" or "auto" (follows the system auto-rotate).
+ * [browsingOrientation] is that setting, or "portrait" when the desktop layout is off.
  */
 fun appOrientation(
     isFullscreen: Boolean,
     isMessagesLayerOpen: Boolean = false,
+    browsingOrientation: String = "portrait",
 ): Int = when {
     isFullscreen -> ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
     // The Messages layer shows the desktop site, which has room for the chat list beside the
     // conversation: it follows the system auto-rotate setting while it is open.
     isMessagesLayerOpen -> ActivityInfo.SCREEN_ORIENTATION_FULL_USER
+    browsingOrientation == "auto" -> ActivityInfo.SCREEN_ORIENTATION_FULL_USER
+    browsingOrientation == "landscape" -> ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
     else -> ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
 }
 

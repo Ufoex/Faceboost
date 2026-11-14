@@ -41,6 +41,7 @@ import androidx.compose.material.icons.outlined.Headset
 import androidx.compose.material.icons.outlined.SwipeVertical
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PanoramaWideAngle
+import androidx.compose.material.icons.outlined.ScreenRotation
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
 import androidx.compose.material.icons.outlined.Pinch
 import androidx.compose.material.icons.outlined.ScreenLockRotation
@@ -125,6 +126,7 @@ fun SettingsContent(
     val context = LocalContext.current
     val messengerRedirectToast = stringResource(R.string.messenger_redirect_toast)
     var isLogoutDialog by rememberSaveable { mutableStateOf(false) }
+    var isOrientationDialog by rememberSaveable { mutableStateOf(false) }
     var isPipRatioDialog by rememberSaveable { mutableStateOf(false) }
     var isMessengerDialog by rememberSaveable { mutableStateOf(false) }
     val messengerApps = remember { installedMessengerApps(context) }
@@ -134,6 +136,7 @@ fun SettingsContent(
     val enableDownloadContent = viewModel.enableDownloadContent.collectAsState()
     val enableCopyToClipboard = viewModel.enableCopyToClipboard.collectAsState()
     val desktopLayout = viewModel.desktopLayout.collectAsState()
+    val desktopOrientation = viewModel.desktopOrientation.collectAsState()
     val immersiveMode = viewModel.immersiveMode.collectAsState()
     val notifyPoll = viewModel.notifyPoll.collectAsState()
     val hideNavBar = viewModel.hideNavBar.collectAsState()
@@ -348,6 +351,13 @@ fun SettingsContent(
                     isActive = effectiveDesktop(desktopLayout.value, isAutoDesktop),
                     onClick = { viewModel.setDesktopLayout(!effectiveDesktop(desktopLayout.value, isAutoDesktop)) }
                 ),
+                // Only offered with the desktop site, which copes with a wide screen.
+                if (effectiveDesktop(desktopLayout.value, isAutoDesktop)) SettingsItem(
+                    icon = Icons.Outlined.ScreenRotation,
+                    title = stringResource(R.string.desktop_orientation_title),
+                    supportingText = stringResource(orientationLabel(desktopOrientation.value)),
+                    onClick = { isOrientationDialog = true }
+                ) else null,
                 SettingsItem(
                     icon = Icons.Outlined.PanoramaWideAngle,
                     title = stringResource(R.string.immersive_mode_title),
@@ -662,6 +672,40 @@ fun SettingsContent(
 
     }
 
+    if (isOrientationDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { isOrientationDialog = false },
+            title = { Text(stringResource(R.string.desktop_orientation_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("portrait", "landscape", "auto").forEach { value ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { viewModel.setDesktopOrientation(value); isOrientationDialog = false }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            RadioButton(
+                                selected = value == desktopOrientation.value,
+                                onClick = { viewModel.setDesktopOrientation(value); isOrientationDialog = false }
+                            )
+                            Text(stringResource(orientationLabel(value)), style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                    Text(
+                        stringResource(R.string.desktop_orientation_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            },
+            confirmButton = {},
+            dismissButton = { TextButton(onClick = { isOrientationDialog = false }) { Text(stringResource(android.R.string.cancel)) } },
+        )
+    }
     if (isLogoutDialog) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { isLogoutDialog = false },
@@ -706,6 +750,12 @@ fun SettingsContent(
             },
         )
     }
+}
+
+private fun orientationLabel(value: String) = when (value) {
+    "auto" -> R.string.desktop_orientation_auto
+    "landscape" -> R.string.desktop_orientation_landscape
+    else -> R.string.desktop_orientation_portrait
 }
 
 /** A select list of the installed Messenger apps compatible with Facebook's links. */

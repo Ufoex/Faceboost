@@ -520,8 +520,9 @@
 
     // Move the buttons: hold one to enter edit mode (they wiggle, a grid and Save/Cancel appear), drag
     // to another cell of the grid, Save keeps the layout. Positions are cells, not pixels.
-    // ponytail: the layout is stored in localStorage and ignored when the shown buttons change
-    // (a setting turned on or off), falling back to the default column; no per-set layouts.
+    // ponytail: the layout is stored in localStorage, one per orientation (portrait keeps the original key),
+    // and ignored when the shown buttons change (a setting turned on or off), falling back to the default
+    // column; no per-set layouts.
     const BTN_SEL = '#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio,#materialbook-global-downloader';
     const STEP = 48, HOLD = 450, LKEY = 'mbReelLayout', DLID = 'materialbook-global-downloader'; // DLID: download_content.js's button
     const es = (navigator.language || '').toLowerCase().indexOf('es') === 0;
@@ -529,7 +530,9 @@
     let grid = { x0: 0, y0: 0, rmin: 0 }, base = { top: 0, left: 0 }, lastX = 0, lastY = 0;
     let ui = null;
 
-    const savedLayout = () => { try { return JSON.parse(localStorage.getItem(LKEY)); } catch (_) { return null; } };
+    const lkey = () => innerWidth > innerHeight ? LKEY + 'Land' : LKEY;
+    let editKey = LKEY; // the orientation the edit started in, in case the phone rotates meanwhile
+    const savedLayout = () => { try { return JSON.parse(localStorage.getItem(lkey())); } catch (_) { return null; } };
     const cellOf = (el) => [Math.round((parseFloat(el.style.left) - grid.x0) / STEP), Math.round((parseFloat(el.style.top) - grid.y0) / STEP)];
     const limits = () => ({
         cmax: Math.max(0, Math.floor((innerWidth - 40 - grid.x0) / STEP)),
@@ -614,7 +617,7 @@
     const enterEdit = () => {
         if (editing) return;
         if (!ui || !ui.wrap.isConnected) buildEditUI();
-        draft = {};
+        draft = {}; editKey = lkey();
         curItems.forEach(b => { draft[b.id] = cellOf(b); });
         editing = true;
         ui.g.style.backgroundPosition = (grid.x0 - 4) + 'px ' + (grid.y0 - 4) + 'px'; // lines between the cells
@@ -625,7 +628,7 @@
     };
     function endEdit(save) {
         if (!editing) return;
-        if (save) { try { localStorage.setItem(LKEY, JSON.stringify(draft)); } catch (_) {} }
+        if (save) { try { localStorage.setItem(editKey, JSON.stringify(draft)); } catch (_) {} }
         editing = false; drag = null;
         document.documentElement.classList.remove('mb-edit');
         curItems.forEach(b => b.removeAttribute('data-mb-drag'));

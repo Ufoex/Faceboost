@@ -5,6 +5,11 @@
     <string name="copy_to_clipboard_title">Copiar al portapapeles</string>
     <string name="desktop_layout_title">Diseño de escritorio</string>
     <string name="immersive_mode_title">Modo inmersivo</string>
+    <string name="desktop_orientation_title">Orientación del escritorio</string>
+    <string name="desktop_orientation_portrait">Parado (vertical)</string>
+    <string name="desktop_orientation_landscape">Acostado (horizontal, experimental)</string>
+    <string name="desktop_orientation_auto">Automático, sigue la rotación del dispositivo (experimental)</string>
+    <string name="desktop_orientation_note">Acostado y automático son experimentales y pueden generar errores.</string>
     <string name="sticky_navbar_title">Barra de navegación fija</string>
     <string name="pinch_to_zoom_title"> pellizcar para hacer zoom</string>
     <string name="amoled_black_title">Negro AMOLED</string>
