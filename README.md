@@ -2,6 +2,10 @@
     <img src='./fastlane/metadata/android/en-US/images/featureGraphic.png' alt="Faceboost banner" width="100%">
 </p>
 
+<p align="middle">
+    <b>English</b> · <a href="README.es.md">Español</a>
+</p>
+
 <h2 align="middle">
     🙋 Have a problem or a suggestion?
 </h2>
@@ -24,6 +28,10 @@
 
 <p align="middle">
     <a href='https://grev.shehryar.ae/?owner=Ufoex&repo=Faceboost'><img alt='Downloads count' height='40' src='https://img.shields.io/github/downloads/Ufoex/Faceboost/total?style=for-the-badge&logo=github&label=Downloads&color=1877F2&labelColor=24292F'/></a>
+</p>
+
+<p align="middle">
+    <a href='https://buymeacoffee.com/masterllamk'><img alt='Buy me a coffee' height='40' src='https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black'/></a>
 </p>
 
 <p align="middle">
@@ -187,8 +195,18 @@ Covers the rebrand and default-behavior changes in this fork — defaults (Mater
 GitHub Actions runs all three checks. Android lint reports are uploaded as a workflow artifact for every run. The lint gate treats dependency-update notices as advisory while still failing on actionable Android findings.
 
 <h2 align="middle">
+    ☕ Support
+</h2>
+
+<p align="middle">
+    The app is free and has no ads. If it is useful to you and you want to say thanks, you can <a href='https://buymeacoffee.com/masterllamk'>buy me a coffee</a>.
+</p>
+
+<h2 align="middle">
     💗 Acknowledgement:
 </h2>
 
 *  This is a fork of [Materialbook](https://github.com/eepiemi/Materialbook) by eepiemi, itself a fork of [Nobook](https://github.com/ycngmn/Nobook) by ycngmn
 *  [@KevinnZou/compose-webview-multiplatform](https://github.com/KevinnZou/compose-webview-multiplatform)
+
+Faceboost is not affiliated with or endorsed by Facebook or Meta. Facebook is a trademark of Meta Platforms, Inc.
