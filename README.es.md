@@ -6,31 +6,31 @@
     <a href="README.md">English</a> · <b>Español</b>
 </p>
 
-<h2 align="middle">
-    🙋 ¿Tienes un problema o una sugerencia?
-</h2>
+<h3 align="center">📥 Descargar</h3>
 
-<p align="middle">
-    Cuéntanos: abre un issue y describe qué pasó o qué te gustaría.
+<p align="center">
+    Baja el último APK desde la página de versiones e instálalo.<br><br>
+    <a href='https://github.com/Ufoex/Faceboost/releases/latest'><img alt='Descargar' height='40' src='https://img.shields.io/github/v/release/Ufoex/Faceboost?style=for-the-badge&logo=github&label=Descargar&color=1877F2&labelColor=24292F'/></a>
 </p>
 
-<p align="middle">
-    <a href='https://github.com/Ufoex/Faceboost/issues/new/choose'><img alt='Abrir un issue' height='40' src='./assets/open_issue.svg'/></a>
+<h3 align="center">📊 Descargas</h3>
+
+<p align="center">
+    Número total de veces que se ha descargado la app hasta ahora.<br><br>
+    <a href='https://grev.shehryar.ae/?owner=Ufoex&repo=Faceboost'><img alt='Downloads' height='40' src='https://img.shields.io/github/downloads/Ufoex/Faceboost/total?style=for-the-badge&logo=github&label=Downloads&color=1877F2&labelColor=24292F'/></a>
 </p>
 
-<h1 align="middle">
-    📱 Descargar
-</h1>
+<h3 align="center">🙋 ¿Problema o sugerencia?</h3>
 
-<p align="middle">
-    <a href='https://github.com/Ufoex/Faceboost/releases/latest'><img alt='Descargar' height='40' src='./assets/download.svg'/></a>
+<p align="center">
+    ¿Algo falla o tienes una idea? Abre un issue en GitHub y cuéntame qué pasó o qué te gustaría.<br><br>
+    <a href='https://github.com/Ufoex/Faceboost/issues/new/choose'><img alt='Abrir un issue' height='40' src='https://img.shields.io/badge/Abrir%20un%20issue-D73A4A?style=for-the-badge&logo=github&logoColor=white'/></a>
 </p>
 
-<p align="middle">
-    <a href='https://grev.shehryar.ae/?owner=Ufoex&repo=Faceboost'><img alt='Conteo de descargas' height='40' src='https://img.shields.io/github/downloads/Ufoex/Faceboost/total?style=for-the-badge&logo=github&label=Downloads&color=1877F2&labelColor=24292F'/></a>
-</p>
+<h3 align="center">☕ ¿Te gusta mi trabajo?</h3>
 
-<p align="middle">
+<p align="center">
+    La app es gratis y no tiene anuncios. Si te gusta, puedes apoyarme con un café.<br><br>
     <a href='https://buymeacoffee.com/masterllamk'><img alt='Invítame un café' height='40' src='https://img.shields.io/badge/Inv%C3%ADtame%20un%20caf%C3%A9-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black'/></a>
 </p>
 
