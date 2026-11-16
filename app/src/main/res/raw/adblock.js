@@ -237,6 +237,10 @@
     function pickAnchor() {
         let best = null, area = 0;
         reelList().forEach(c => {
+            // Not the empty loading row at the end of the list: when Facebook adds reels before it the row moves down, and
+            // keeping it where it was on screen carried the viewer to the new end (spinner for good, nothing loaded) instead of
+            // leaving it on the first new reel, where Facebook puts it.
+            if (!c.querySelector('video, img, [data-video-id]') && !c.innerText.trim()) return;
             const r = c.getBoundingClientRect();
             const h = Math.max(0, Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0));
             if (h > area) { area = h; best = c; }

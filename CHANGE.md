@@ -70,6 +70,11 @@
 * Fix: No crash when the PiP window closes while the page reports the video state.
 * Tweak: The notification check follows redirects by hand and sends the Facebook login's cookies only to https pages of facebook.com.
 * Tweak: tools/canary.mjs: a live check of the app on the phone against today's Facebook (feed, group and suggested posts, reel viewer), run by hand before a release.
+* Feature: The last feed is shown while the real one loads at the next start (a picture kept in the app's private cache, with a loading bar and spinner): Facebook draws the first posts ~4 s after the page opens, and the picture fills that wait. Not with App lock on, the desktop layout or a link start; deleted on logging out.
+* Feature: The video you were watching in the feed goes on in the viewer from the same point, and its frame flies from the feed into the viewer instead of the screen going blank.
+* Fix: A reels card opens the reel you tapped, not the last one you had watched on a previous visit (Facebook keeps the list and its position).
+* Fix: Swiping down while the reel list was still short no longer carries the viewer to the end of the list (a spinner that never loaded more): the empty loading row at the end is no longer kept in place.
+* Fix: The closing animation also runs when Facebook has already removed the viewer by the time Back is noticed.
 
 ---
 

@@ -90,6 +90,17 @@ import com.eepiemi.materialbook.utils.rememberAutoDesktop
 import com.eepiemi.materialbook.utils.rememberImeHeight
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.delay
+import android.content.res.Configuration
+import android.os.SystemClock
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.withTimeoutOrNull
+import androidx.compose.ui.zIndex
+import com.eepiemi.materialbook.utils.FeedSnapshot
+import com.eepiemi.materialbook.utils.FEED_READY_JS
+import com.eepiemi.materialbook.utils.FEED_TOP_JS
+import com.eepiemi.materialbook.utils.evalString
 import kotlinx.coroutines.launch
 
 internal const val PIP_TOGGLE_JS = """
@@ -1212,6 +1223,7 @@ fun MaterialbookWebView(
             onLogout = {
                 // Forget the Facebook session: cookies and the page's stored data, then start over.
                 CookieManager.getInstance().removeAllCookies(null)
+                FeedSnapshot.clear(context)
                 CookieManager.getInstance().flush()
                 android.webkit.WebStorage.getInstance().deleteAllData()
                 settingsToggle = false
@@ -1251,7 +1263,53 @@ fun MaterialbookWebView(
         }
     }
 
-    if (isLoading) {
+    // ---- The last feed, while the real one loads. Facebook draws the first posts ~4 s after the page opens (see FeedSnapshot): a
+    // picture of the feed as it was last time fills that wait. Only for a cold start on the home page, signed in, in portrait,
+    // and never with App lock on. It goes, fading, once the page has its posts (or shows a login, or after 14 s).
+    val portrait = LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
+    val snapshot = remember {
+        // (No check of the login's cookie here: the cookie store may not be loaded yet at a cold start. A picture exists only if
+        // a feed with posts was seen, and one is deleted when a login page shows up.)
+        if (settingsVM.appLock.value || isEffectiveDesktop || !portrait || !isFacebookHomeUrl(url)) null
+        else FeedSnapshot.load(context)
+    }
+    var feedReady by rememberSaveable { mutableStateOf(false) }
+    val snapshotVisible = snapshot != null && !feedReady
+    // Not before the page has started loading: a script sent before the WebView exists takes the place of the pending load
+    // in the navigator (it keeps only the last event), and the page never opened.
+    val navStarted = loadingState !is LoadingState.Initializing
+    LaunchedEffect(snapshot != null, navStarted) {
+        if (snapshot == null || feedReady || !navStarted) return@LaunchedEffect
+        val t0 = SystemClock.elapsedRealtime()
+        while (!feedReady && SystemClock.elapsedRealtime() - t0 < 14_000) {
+            val r = withTimeoutOrNull(1500) { navigator.evalString(FEED_READY_JS) }
+            if (r == "login") FeedSnapshot.clear(context)
+            if (r == "ok" || r == "login") feedReady = true else delay(150)
+        }
+        feedReady = true
+    }
+    // Once the feed is up (and the picture gone), the next picture is taken: at the top, with the pictures in view loaded,
+    // once per run. A change of App lock deletes the old one.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(feedReady, isLoading) {
+        if (settingsToggle.not() && settingsVM.appLock.value) { FeedSnapshot.clear(context); return@LaunchedEffect }
+        if (snapshotVisible || isLoading || isEffectiveDesktop || !portrait || FeedSnapshot.savedThisRun) return@LaunchedEffect
+        val t0 = SystemClock.elapsedRealtime()
+        while (SystemClock.elapsedRealtime() - t0 < 25_000 && !FeedSnapshot.savedThisRun) {
+            if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) && !settingsToggle && !isInPipMode && messagesLayerUrl == null) {
+                if (withTimeoutOrNull(1500) { navigator.evalString(FEED_TOP_JS) } == "ok") {
+                    delay(3000)   // the pictures have been painted (the story tray's are background images: not seen by the check, they come a moment later)
+                    if (withTimeoutOrNull(1500) { navigator.evalString(FEED_TOP_JS) } == "ok") {
+                        val view = mainWebView
+                        if (view != null && activity != null) FeedSnapshot.capture(activity, view)
+                        break
+                    }
+                }
+            }
+            delay(700)
+        }
+    }
+    if (isLoading && !snapshotVisible) {
         SplashLoading(
             if (loadingState is LoadingState.Loading) {
                 loadingState.progress
@@ -1259,6 +1317,22 @@ fun MaterialbookWebView(
                 0.8F
             }
         )
+    }
+    if (snapshot != null) {
+        val bars = WindowInsets.systemBars.asPaddingValues()
+        androidx.compose.animation.AnimatedVisibility(
+            visible = snapshotVisible,
+            exit = androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(300)),
+            modifier = Modifier.zIndex(2F)
+        ) {
+            FeedSnapshotOverlay(
+                snapshot,
+                Modifier.fillMaxSize().then(
+                    if (isImmersiveMode) Modifier
+                    else Modifier.padding(top = bars.calculateTopPadding(), bottom = bars.calculateBottomPadding())
+                )
+            )
+        }
     }
 
 

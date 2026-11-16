@@ -73,10 +73,24 @@
     // flattening) instead of replacing the feed at once. clip-path, not scale: the video is not stretched. The card is the
     // first thing around the tap that is card sized. A reel opened some other way (link, Reels tab) has no card: it fades in.
     let card = null, wasIn = false, cardRect = null;   // cardRect: where this viewer opened from, where it closes to
+    // What the feed was showing when the tap landed: the id, where its video was and a copy of its current frame. The viewer then
+    // continues the same video (seek) and the copy flies from the feed's place to the viewer's (the "hero" below).
+    let feedShot = null, heroEl = null, playback = null;
+    const idOfPath = () => { const m = location.pathname.match(/\/(?:reel|videos)\/(?:[^/]+\/)?(\d{8,})\/?$/); return m && m[1]; };
+    const heroStyle = document.createElement('style');
+    heroStyle.textContent = 'html.mb-hero body{visibility:hidden !important}html.mb-hero{background:#000 !important}';
+    document.head.appendChild(heroStyle);
     // Noted at pointerdown: for a normal video Facebook navigates before the click arrives. A video at the page's whole width
     // counts (only a box as big as the screen does not).
     const noteCard = (e) => {
         if (inReel()) return;
+        const box = e.target.closest && e.target.closest('[data-video-id]');
+        const fv = box && box.querySelector('video');
+        const fr = fv && frameOf(fv);
+        if (fr) {
+            feedShot = { id: box.getAttribute('data-video-id'), t: fv.currentTime, at: Date.now(), playing: !fv.paused, ...fr };
+            playback = { id: feedShot.id, t: feedShot.t, at: feedShot.at, playing: feedShot.playing };
+        }
         for (let n = e.target; n && n !== document.body; n = n.parentElement) {
             const r = n.getBoundingClientRect();
             if (r.width >= 120 && r.height >= 150 && !(r.width >= innerWidth * 0.98 && r.height >= innerHeight * 0.9)) { card = { r, t: Date.now() }; return; }
@@ -85,11 +99,84 @@
     };
     document.addEventListener('pointerdown', noteCard, true);
     document.addEventListener('click', noteCard, true);
+    // Facebook keeps the reel list it had, and where it was left, for the same address: a card that opens a reel showed the last
+    // one watched in the earlier visit (opened at 2, then 5, then 9 of the list...), not the one tapped. The reel whose id is
+    // in the address is brought to the top of the viewer. Not once a finger is on the screen.
+    const showTargetReel = () => {
+        const T = window.__mbTouch;
+        if (T && (T.down || Date.now() - T.endAt < 1000)) return;
+        const m = location.pathname.match(/\/(?:reel|videos)\/(?:[^/]+\/)?(\d{8,})\/?$/);
+        if (!m) return;
+        const items = [...document.querySelectorAll('.vscroller > .vertically-snappable')].filter(e => e.offsetHeight > 200 && getComputedStyle(e).display !== 'none');
+        const target = items.find(e => e.querySelector('[data-video-id="' + m[1] + '"]'));
+        if (!target) return;
+        if (Math.abs(target.getBoundingClientRect().top - target.parentElement.getBoundingClientRect().top) > 3) target.scrollIntoView({ behavior: 'instant', block: 'start' });
+    };
     // Started the moment the address changes (Facebook navigates with pushState), before the viewer is drawn: a poll came
     // late and the cover showed at full brightness for a moment before the animation began.
+    // The "hero": a copy of the feed video's frame sits where the video was, and once the viewer's video is on screen it flies to
+    // the viewer's place and fades out when that video shows, so the video you were watching seems to be the one that opens.
+    const startHero = (shot) => {
+        const root = document.documentElement, r = shot.rect;
+        const el = heroEl = document.createElement('div');
+        el.id = 'mb-hero';
+        el.style.cssText = 'position:fixed;z-index:2147483647;pointer-events:none;overflow:hidden;background:#000;border-radius:12px;left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
+        shot.cv.style.cssText = 'display:block;width:100%;height:100%;object-fit:' + shot.fit;
+        el.appendChild(shot.cv);
+        root.appendChild(el);
+        root.classList.add('mb-hero');
+        setTimeout(() => { if (heroEl === el && !el._flying) endHero(el); }, 1600);   // the viewer never came: give the page back
+    };
+    const endHero = (el) => {
+        if (heroEl === el) heroEl = null;
+        el.remove();
+        document.documentElement.classList.remove('mb-hero');
+    };
+    const maybeStartHero = () => {
+        if (heroEl || wasIn || !feedShot) return;
+        const id = idOfPath();
+        if (!id || id !== feedShot.id || Date.now() - feedShot.at > 6000) return;
+        const s0 = feedShot; feedShot = null;
+        startHero(s0);
+    };
+    const flyHero = (el) => {
+        el._flying = true;
+        const t0 = Date.now();
+        const step = () => {
+            if (heroEl !== el) return;
+            const v = document.querySelector('.vertically-snappable video');
+            if (!v && Date.now() - t0 < 1500) { requestAnimationFrame(step); return; }
+            showTargetReel();
+            [200, 500, 1000].forEach(ms => setTimeout(showTargetReel, ms));
+            const to = v && v.getBoundingClientRect();
+            document.documentElement.classList.remove('mb-hero');
+            document.body.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' });
+            if (!to || !to.width) { endHero(el); return; }
+            const r = el.getBoundingClientRect();
+            const px = (b, rad) => ({ left: b.left + 'px', top: b.top + 'px', width: b.width + 'px', height: b.height + 'px', borderRadius: rad });
+            el.animate([px(r, '12px'), px(to, '0px')], { duration: 300, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' }).onfinish = () => {
+                const t1 = Date.now();
+                const out = () => {
+                    if (heroEl !== el) return;
+                    const nv = document.querySelector('.vertically-snappable video');
+                    if (!(nv && nv.readyState >= 2 && nv.currentTime > 0.05 && !nv.paused) && Date.now() - t1 < 1000) { setTimeout(out, 50); return; }
+                    el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, fill: 'forwards' }).onfinish = () => endHero(el);
+                };
+                out();
+            };
+        };
+        step();
+    };
     const entering = () => {
         const now = inReel();
-        if (now && !wasIn) {
+        // the viewer is gone and no history call told us (Facebook may have kept its own reference to them): close it from here
+        if (!now && wasIn) closeViewer();
+        if (now && !wasIn && (maybeStartHero(), heroEl)) {
+            // the feed video's frame flies into the viewer (see the hero above)
+            const c = card && Date.now() - card.t < 4000 ? card.r : null;
+            card = null; cardRect = c;
+            flyHero(heroEl);
+        } else if (now && !wasIn) {
             const c = card && Date.now() - card.t < 4000 ? card.r : null;
             card = null; cardRect = c;
             // The viewer is drawn some time after the address changes (up to a second or more on a slow load): the animation
@@ -99,6 +186,8 @@
             root.style.opacity = '0';
             const go = () => {
                 if (!document.querySelector('.vertically-snappable video') && Date.now() - t0 < 1500) { requestAnimationFrame(go); return; }
+                showTargetReel();
+                [200, 500, 1000].forEach(ms => setTimeout(showTargetReel, ms));   // Facebook may put its remembered position back a moment later
                 root.style.opacity = '';
                 if (from) root.animate([{ clipPath: from, opacity: 0 }, { opacity: 1, offset: .6 }, { clipPath: 'inset(0px 0px 0px 0px round 0px)', opacity: 1 }], { duration: 340, easing: 'cubic-bezier(.2,.8,.2,1)' });
                 else root.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' });
@@ -107,6 +196,27 @@
         }
         wasIn = now;
     };
+    // The frame of the video on screen as a small canvas, with where it sits; null when there is none to take.
+    const frameOf = (v) => {
+        if (!v || v.readyState < 2 || !v.videoWidth) return null;
+        const k = Math.min(1, 540 / v.videoWidth), cv = document.createElement('canvas');
+        cv.width = Math.round(v.videoWidth * k); cv.height = Math.round(v.videoHeight * k);
+        try { cv.getContext('2d').drawImage(v, 0, 0, cv.width, cv.height); } catch (e) { return null; }
+        const r = v.getBoundingClientRect();
+        return { cv, left: r.left, top: r.top, width: r.width, height: r.height, rect: r, fit: getComputedStyle(v).objectFit };
+    };
+    const frameOfActiveVideo = () => {
+        let v = null, area = 0;
+        document.querySelectorAll('video').forEach(e => {
+            const r = e.getBoundingClientRect();
+            const a = Math.max(0, Math.min(r.right, innerWidth) - Math.max(r.left, 0)) * Math.max(0, Math.min(r.bottom, innerHeight) - Math.max(r.top, 0));
+            if (a > area) { area = a; v = e; }
+        });
+        return frameOf(v);
+    };
+    let lastShot = null;
+    setInterval(() => { if (wasIn && !document.hidden) lastShot = frameOfActiveVideo() || lastShot; else if (!wasIn) lastShot = null; }, 600);
+
     // Leaving the viewer (Back): a still of the video's frame closes over the page into the card it opened from (or fades
     // out when it did not open from one). Runs when the address changes (Back calls replaceState while the viewer is still
     // drawn; by `popstate` Facebook has already removed it), before Facebook swaps the viewer for the feed.
@@ -118,18 +228,13 @@
         const root = document.documentElement;
         root.classList.add('mb-closing');
         setTimeout(() => root.classList.remove('mb-closing'), 600);
-        let v = null, area = 0;
-        document.querySelectorAll('video').forEach(e => {
-            const r = e.getBoundingClientRect();
-            const a = Math.max(0, Math.min(r.right, innerWidth) - Math.max(r.left, 0)) * Math.max(0, Math.min(r.bottom, innerHeight) - Math.max(r.top, 0));
-            if (a > area) { area = a; v = e; }
-        });
-        if (!v || v.readyState < 2 || !v.videoWidth) return;
-        const k = Math.min(1, 540 / v.videoWidth), cv = document.createElement('canvas');
-        cv.width = Math.round(v.videoWidth * k); cv.height = Math.round(v.videoHeight * k);
-        try { cv.getContext('2d').drawImage(v, 0, 0, cv.width, cv.height); } catch (e) { return; }
-        const vr = v.getBoundingClientRect(), c = cardRect;
-        cv.style.cssText = 'position:absolute;left:' + vr.left + 'px;top:' + vr.top + 'px;width:' + vr.width + 'px;height:' + vr.height + 'px;object-fit:' + getComputedStyle(v).objectFit;
+        // The video's frame now, or the one kept a moment ago when Facebook has already taken the viewer off the page (some
+        // exits reach here only at popstate, with no video left).
+        const shotNow = frameOfActiveVideo();
+        const shot = shotNow || lastShot;
+        if (!shot) return;
+        const cv = shot.cv, c = cardRect;
+        cv.style.cssText = 'position:absolute;left:' + shot.left + 'px;top:' + shot.top + 'px;width:' + shot.width + 'px;height:' + shot.height + 'px;object-fit:' + shot.fit;
         const ov = document.createElement('div');
         ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#000;pointer-events:none';
         ov.appendChild(cv);
@@ -153,9 +258,9 @@
     };
     ['pushState', 'replaceState'].forEach(n => {
         const f = history[n];
-        history[n] = function() { const r = f.apply(this, arguments); viewerClass(); closeViewer(); entering(); return r; };
+        history[n] = function() { const r = f.apply(this, arguments); maybeStartHero(); viewerClass(); closeViewer(); entering(); return r; };
     });
-    window.addEventListener('popstate', () => { viewerClass(); closeViewer(); entering(); });
+    window.addEventListener('popstate', () => { maybeStartHero(); viewerClass(); closeViewer(); entering(); });
     // A normal video opens the same viewer on a /videos/ address, which counts as the viewer only once its reel is drawn:
     // looked for as it is added, before it is painted, so the opening starts without a frame of the bare viewer.
     new MutationObserver(() => { if (!wasIn && location.pathname.indexOf('/videos/') !== -1) entering(); })
@@ -185,6 +290,14 @@
     document.addEventListener('loadeddata', (e) => {
         const v = e.target;
         if (!(v instanceof HTMLVideoElement) || !v.requestVideoFrameCallback || !inReel() || !v.closest(REEL)) return;
+        // The video the feed was playing goes on from where it was (Facebook starts it from where the tap landed; a moment has
+        // passed since): the viewer's copy is moved to the present.
+        const id = idOfPath();
+        if (playback && id && id === playback.id && Date.now() - playback.at < 8000) {
+            const want = playback.t + (playback.playing ? (Date.now() - playback.at) / 1000 : 0) + 0.1;
+            playback = null;
+            if (isFinite(v.duration) && want > 0.5 && want < v.duration - 1 && want - v.currentTime > 0.3) v.currentTime = want;
+        }
         v.style.opacity = '0';
         setTimeout(() => { if (v.style.opacity === '0' && !v.getAnimations().length) v.style.opacity = ''; }, 1500);   // never stays hidden
     }, true);
