@@ -72,7 +72,7 @@
     // Opening a reel from the feed: the viewer opens out from the card that was tapped (its rectangle, rounded corners
     // flattening) instead of replacing the feed at once. clip-path, not scale: the video is not stretched. The card is the
     // first thing around the tap that is card sized. A reel opened some other way (link, Reels tab) has no card: it fades in.
-    let card = null, wasIn = false;
+    let card = null, wasIn = false, cardRect = null;   // cardRect: where this viewer opened from, where it closes to
     document.addEventListener('click', (e) => {
         if (inReel()) return;
         for (let n = e.target; n && n !== document.body; n = n.parentElement) {
@@ -87,20 +87,57 @@
         const now = inReel();
         if (now && !wasIn) {
             const c = card && Date.now() - card.t < 4000 ? card.r : null;
-            card = null;
-            const root = document.documentElement;
-            if (c) {
-                const inset = 'inset(' + Math.round(c.top) + 'px ' + Math.round(innerWidth - c.right) + 'px ' + Math.round(innerHeight - c.bottom) + 'px ' + Math.round(c.left) + 'px round 18px)';
-                root.animate([{ clipPath: inset }, { clipPath: 'inset(0px 0px 0px 0px round 0px)' }], { duration: 340, easing: 'cubic-bezier(.2,.8,.2,1)' });
-            } else document.body.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: 'ease-out' });
+            card = null; cardRect = c;
+            // The viewer is drawn some time after the address changes (up to a second or more on a slow load): the animation
+            // waits for its first video, so the opening is not used up on an empty screen. Hidden meanwhile; shown anyway after 1.5 s.
+            const root = document.documentElement, t0 = Date.now();
+            const from = c ? 'inset(' + Math.round(c.top) + 'px ' + Math.round(innerWidth - c.right) + 'px ' + Math.round(innerHeight - c.bottom) + 'px ' + Math.round(c.left) + 'px round 18px)' : null;
+            root.style.opacity = '0';
+            const go = () => {
+                if (!document.querySelector('.vertically-snappable video') && Date.now() - t0 < 1500) { requestAnimationFrame(go); return; }
+                root.style.opacity = '';
+                if (from) root.animate([{ clipPath: from, opacity: 0 }, { opacity: 1, offset: .6 }, { clipPath: 'inset(0px 0px 0px 0px round 0px)', opacity: 1 }], { duration: 340, easing: 'cubic-bezier(.2,.8,.2,1)' });
+                else root.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' });
+            };
+            go();
         }
         wasIn = now;
     };
+    // Leaving the viewer (Back): a still of the video's frame closes over the page into the card it opened from (or fades
+    // out when it did not open from one). Runs when the address changes (Back calls replaceState while the viewer is still
+    // drawn; by `popstate` Facebook has already removed it), before Facebook swaps the viewer for the feed.
+    const closeViewer = () => {
+        const p = location.pathname;
+        if (!wasIn || p.indexOf('/reel/') === 0 || p.indexOf('/videos/') !== -1) return;
+        let v = null, area = 0;
+        document.querySelectorAll('video').forEach(e => {
+            const r = e.getBoundingClientRect();
+            const a = Math.max(0, Math.min(r.right, innerWidth) - Math.max(r.left, 0)) * Math.max(0, Math.min(r.bottom, innerHeight) - Math.max(r.top, 0));
+            if (a > area) { area = a; v = e; }
+        });
+        if (!v || v.readyState < 2 || !v.videoWidth) return;
+        const k = Math.min(1, 540 / v.videoWidth), cv = document.createElement('canvas');
+        cv.width = Math.round(v.videoWidth * k); cv.height = Math.round(v.videoHeight * k);
+        try { cv.getContext('2d').drawImage(v, 0, 0, cv.width, cv.height); } catch (e) { return; }
+        const vr = v.getBoundingClientRect(), c = cardRect;
+        cv.style.cssText = 'position:absolute;left:' + vr.left + 'px;top:' + vr.top + 'px;width:' + vr.width + 'px;height:' + vr.height + 'px;object-fit:' + getComputedStyle(v).objectFit;
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#000;pointer-events:none';
+        ov.appendChild(cv);
+        document.body.appendChild(ov);
+        const to = c ? 'inset(' + Math.round(c.top) + 'px ' + Math.round(innerWidth - c.right) + 'px ' + Math.round(innerHeight - c.bottom) + 'px ' + Math.round(c.left) + 'px round 18px)' : 'inset(0px round 0px)';
+        // the opposite of opening: it shrinks into the card while it fades out, over the whole movement
+        const a = ov.animate([
+            { clipPath: 'inset(0px round 0px)', opacity: 1 },
+            { clipPath: to, opacity: 0 }
+        ], { duration: 300, easing: 'cubic-bezier(.4,0,.2,1)' });
+        a.onfinish = () => ov.remove();
+    };
     ['pushState', 'replaceState'].forEach(n => {
         const f = history[n];
-        history[n] = function() { const r = f.apply(this, arguments); entering(); return r; };
+        history[n] = function() { const r = f.apply(this, arguments); closeViewer(); entering(); return r; };
     });
-    window.addEventListener('popstate', entering);
+    window.addEventListener('popstate', () => { closeViewer(); entering(); });
     setInterval(entering, 100);     // a /videos/ link only counts once its reels are in the page
     let lastGrab = 0;
     document.addEventListener('scroll', (e) => {

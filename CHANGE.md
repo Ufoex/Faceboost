@@ -57,6 +57,9 @@
 * Feature: Opening a reel from the feed now opens out from the card you tapped instead of replacing the feed at once; without a card (link, Reels tab) the viewer fades in.
 * Fix: The reel's cover no longer cuts to the video: the video fades in from its first frame, with no single frame of video before the fade. The reel you return to no longer keeps a frozen still over its video.
 * Feature: With the icons hidden only the eye stays; the download button now has the same press and tap animation as the others.
+* Feature: Leaving a reel (Back) closes it into the card it opened from while it fades out; opening fades in as it grows and now waits for the viewer to be drawn, so a slow load no longer skips the animation.
+* Tweak: The playback bar has the same translucent black as the caption bar, without the gradient.
+* Fix: Liking a reel while the playback bar is shown no longer drops the like button and the other icons to their original place.
 
 ---
 

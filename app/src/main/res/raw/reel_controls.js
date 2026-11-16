@@ -55,7 +55,7 @@
                 (/\d+:\d\d/.test(c.innerText) ? time : info).push(c);
             }
         }
-        return { rail, info, time };
+        return { rail, info, time, layer };
     };
     // Lifts them by h px (the playback bar's height) so the bar does not cover them; 0 puts them back.
     let lifted = [], timeRows = [], seekRows = [];
@@ -72,13 +72,18 @@
         timeRows.forEach(e => { if (rows.indexOf(e) === -1) e.style.opacity = ''; });
         rows.forEach(e => { e.style.opacity = '0'; });
         timeRows = rows;
-        const want = o ? o.rail.concat(o.info) : [];
-        lifted.forEach(e => { if (want.indexOf(e) === -1) { e.style.transform = ''; delete e.dataset.mbLift; } });
+        // Facebook re-renders the rail when the reel is liked: for a moment the like button is not found. What is lifted
+        // stays where it is then, instead of dropping to its place.
+        if (h && !o && lifted.length) return;
+        // The whole layer rises (its time row is invisible anyway): Facebook replaces the rail's own elements when the reel is
+        // liked, which dropped the like button until the next pass, but the layer that holds them stays.
+        const want = o ? [o.layer] : [];
+        // The lift is an attribute plus a CSS rule (!important), not an inline transform: when Facebook rewrote the element's
+        // style (the like) the inline value was lost and the old check ("already lifted") never put it back.
+        if (h) document.documentElement.style.setProperty('--mb-lift', h);
+        lifted.forEach(e => { if (want.indexOf(e) === -1) { e.removeAttribute('data-mb-lift'); e.style.transform = ''; } });
         want.forEach(e => {
-            if (e.dataset.mbLift === String(h)) return;
-            e.dataset.mbLift = h;
-            e.style.transition = 'transform .25s ease';
-            e.style.transform = 'translateY(-' + h + 'px)';
+            if (!e.hasAttribute('data-mb-lift')) { e.style.transition = 'transform .25s ease'; e.setAttribute('data-mb-lift', ''); }
         });
         lifted = want;
     };
@@ -89,7 +94,7 @@
         bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:2147483000;display:none;' +
             'transform:translateY(100%);opacity:0;transition:transform .25s ease,opacity .25s ease;' +
             'padding:10px 16px 12px;box-sizing:border-box;color:#fff;font:600 15px sans-serif;' +
-            'background:transparent;text-shadow:0 1px 3px rgba(0,0,0,.75);';
+            'background:rgba(0,0,0,.35);text-shadow:0 1px 3px rgba(0,0,0,.75);';
         bar.innerHTML =
             '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">' +
             '<span id="mb-reel-time">0:00 / 0:00</span>' +
@@ -194,7 +199,8 @@
     };
 
     const style = document.createElement('style');
-    style.textContent = 'html.mb-hide-reel-ui [data-mb-hid]{opacity:0 !important;pointer-events:none !important}' +
+    style.textContent = '[data-mb-lift]{transform:translateY(calc(-1px * var(--mb-lift,0))) !important}' +
+        'html.mb-hide-reel-ui [data-mb-hid]{opacity:0 !important;pointer-events:none !important}' +
         'html.mb-hide-reel-ui [data-mb-fade]{opacity:0 !important}' +
         // fade / slide when hiding and showing; the marks stay ~0.45 s after showing so the way back animates too
         '[data-mb-hid],[data-mb-fade]{transition:opacity .3s ease}' +
