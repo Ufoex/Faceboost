@@ -90,7 +90,7 @@ Off by default (opt-in):
 *  Keeps a Picture-in-Picture video's audio playing when the screen locks
 
 Always on:
-*  Keeps the reel you are watching in place when Facebook rebuilds the reel list or an ad is hidden, and fades the thumbnail into the video when it starts
+*  Keeps the reel you are watching in place when Facebook rebuilds the reel list or an ad is hidden, fades the thumbnail into the video when it starts, and opens a reel out from the card you tapped
 *  Supports real fullscreen video, including landscape, from Facebook's fullscreen button
    (on phones the app otherwise stays in portrait, since Facebook's mobile site breaks in landscape)
 *  Fullscreen video rotates by the sensor, even with the system auto-rotate off

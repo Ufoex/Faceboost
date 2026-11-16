@@ -213,10 +213,12 @@
         'html.mb-hide-reel-ui .vscroller{transform:translateY(calc(-1 * var(--mb-up,0px)));transition:transform .3s ease}';
     document.head.appendChild(style);
     // Button feedback: shrink while pressed, small bounce on tap.
-    style.textContent += '#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio,#materialbook-global-downloader{transition:transform .12s ease-out,background .2s,left .2s ease,top .2s ease}' +
-        '#mb-reel-hide:active,#mb-reel-fit:active,#mb-reel-auto:active,#mb-reel-audio:active{transform:scale(.82);background:rgba(255,255,255,.28) !important}';
+    style.textContent += '#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio,#materialbook-global-downloader{transition:transform .12s ease-out,background .2s,left .2s ease,top .2s ease,opacity .3s ease}' +
+        // icons hidden: only the eye stays
+        'html.mb-hide-reel-ui #mb-reel-fit,html.mb-hide-reel-ui #mb-reel-auto,html.mb-hide-reel-ui #mb-reel-audio,html.mb-hide-reel-ui #materialbook-global-downloader{opacity:0 !important;pointer-events:none !important}' +
+        '#mb-reel-hide:active,#mb-reel-fit:active,#mb-reel-auto:active,#mb-reel-audio:active,#materialbook-global-downloader:active{transform:scale(.82);background:rgba(255,255,255,.28) !important}';
     document.addEventListener('click', (e) => {
-        const b = e.target.closest && e.target.closest('#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio');
+        const b = e.target.closest && e.target.closest(BTN_SEL);
         if (b) b.animate([{ transform: 'scale(.8)' }, { transform: 'scale(1.18)' }, { transform: 'scale(1)' }], { duration: 260, easing: 'ease-out' });
     }, true);
 

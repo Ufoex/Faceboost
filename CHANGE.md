@@ -54,6 +54,9 @@
 * Tweak: LICENSE updated from upstream.
 * Tweak: Settings dialog status bar icons follow its background.
 * Tweak: New applicationId `com.ufoex.materialbook`; runtime scripts are fetched from this repo.
+* Feature: Opening a reel from the feed now opens out from the card you tapped instead of replacing the feed at once; without a card (link, Reels tab) the viewer fades in.
+* Fix: The reel's cover no longer cuts to the video: the video fades in from its first frame, with no single frame of video before the fade. The reel you return to no longer keeps a frozen still over its video.
+* Feature: With the icons hidden only the eye stays; the download button now has the same press and tap animation as the others.
 
 ---
 

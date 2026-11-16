@@ -56,13 +56,52 @@
     };
     const showStills = () => snaps.forEach((sn, item) => {
         if (!item.isConnected) { snaps.delete(item); return; }
+        // The video is back in this reel (moved in by Facebook, which fires no `playing`): the still goes once it has a frame.
+        const rv = item.querySelector('video');
+        if (rv) { if (rv.readyState >= 2 && rv.videoWidth) { sn.c.remove(); snaps.delete(item); } return; }
         const pic = item.querySelector('img.img'), wrap = pic && pic.parentElement;
-        if (!wrap || item.querySelector('video') || sn.c.parentElement === wrap) return;
+        if (!wrap || sn.c.parentElement === wrap) return;
         // In the box that holds the picture, after the cover and before the reel's own interface (name, caption, icons),
         // which paints over it: not on top of everything.
         sn.c.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;object-fit:' + sn.fit;
         wrap.appendChild(sn.c);
     });
+    setInterval(() => { if (snaps.size && inReel()) showStills(); }, 300);
+    // Opening a reel (from the feed or a link): the whole viewer (header and buttons too) fades in. Opacity only: a zoom
+    // moves the list while the cover copy below is placed from its position, and the two showed offset.
+    // Opening a reel from the feed: the viewer opens out from the card that was tapped (its rectangle, rounded corners
+    // flattening) instead of replacing the feed at once. clip-path, not scale: the video is not stretched. The card is the
+    // first thing around the tap that is card sized. A reel opened some other way (link, Reels tab) has no card: it fades in.
+    let card = null, wasIn = false;
+    document.addEventListener('click', (e) => {
+        if (inReel()) return;
+        for (let n = e.target; n && n !== document.body; n = n.parentElement) {
+            const r = n.getBoundingClientRect();
+            if (r.width >= 120 && r.height >= 150 && r.width < innerWidth * 0.98) { card = { r, t: Date.now() }; return; }
+        }
+        card = null;
+    }, true);
+    // Started the moment the address changes (Facebook navigates with pushState), before the viewer is drawn: a poll came
+    // late and the cover showed at full brightness for a moment before the animation began.
+    const entering = () => {
+        const now = inReel();
+        if (now && !wasIn) {
+            const c = card && Date.now() - card.t < 4000 ? card.r : null;
+            card = null;
+            const root = document.documentElement;
+            if (c) {
+                const inset = 'inset(' + Math.round(c.top) + 'px ' + Math.round(innerWidth - c.right) + 'px ' + Math.round(innerHeight - c.bottom) + 'px ' + Math.round(c.left) + 'px round 18px)';
+                root.animate([{ clipPath: inset }, { clipPath: 'inset(0px 0px 0px 0px round 0px)' }], { duration: 340, easing: 'cubic-bezier(.2,.8,.2,1)' });
+            } else document.body.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: 'ease-out' });
+        }
+        wasIn = now;
+    };
+    ['pushState', 'replaceState'].forEach(n => {
+        const f = history[n];
+        history[n] = function() { const r = f.apply(this, arguments); entering(); return r; };
+    });
+    window.addEventListener('popstate', entering);
+    setInterval(entering, 100);     // a /videos/ link only counts once its reels are in the page
     let lastGrab = 0;
     document.addEventListener('scroll', (e) => {
         if (!(e.target.classList && e.target.classList.contains('vscroller')) || !inReel()) return;
@@ -82,26 +121,63 @@
     // it is swiped) and drawn where the video's picture is, filling it (the cover has other proportions than the video,
     // so at its own size it showed offset from the video).
     const FADE_MS = 350;
+    // `playing` comes just after the video paints its first frame, so hiding it there left one frame of video on screen
+    // before the fade. It is hidden from `loadeddata`, a step earlier (`playing` then clears it or fades it in).
+    document.addEventListener('loadeddata', (e) => {
+        const v = e.target;
+        if (!(v instanceof HTMLVideoElement) || !v.requestVideoFrameCallback || !inReel() || !v.closest(REEL)) return;
+        v.style.opacity = '0';
+        setTimeout(() => { if (v.style.opacity === '0' && !v.getAnimations().length) v.style.opacity = ''; }, 1500);   // never stays hidden
+    }, true);
     document.addEventListener('playing', (e) => {
         const v = e.target, it = v instanceof HTMLVideoElement && v.closest(REEL);
         if (!it) return;
         const sn = snaps.get(it);
         if (sn) requestAnimationFrame(() => requestAnimationFrame(() => { sn.c.remove(); snaps.delete(it); }));
-        if (v.currentTime > 0.6 || !inReel()) return;       // a video that resumes, not one that starts
+        if (v.currentTime > 0.6 || !inReel()) { v.style.opacity = ''; return; }       // a video that resumes, not one that starts
         const pic = it.querySelector('img.img'), wrap = pic && pic.parentElement;
-        if (!wrap || !pic.naturalWidth || !v.videoWidth) return;
+        if (!wrap || !pic.naturalWidth || !v.videoWidth) {
+            // No cover of ours to cross-fade from: the video stays transparent from `playing` until it presents its first frame
+            // (~250 ms later, when whatever is under it, Facebook's picture or black, gets replaced) and fades in from there.
+            if (v.requestVideoFrameCallback) {
+                let done = false;
+                // the inline 0 stays until the animation ends (dropping it here showed one frame of the whole video before the fade began)
+                const fin = () => {
+                    if (done) return; done = true;
+                    const a = v.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FADE_MS, easing: 'ease-out', fill: 'forwards' });
+                    a.onfinish = () => { v.style.opacity = ''; a.cancel(); };
+                };
+                v.style.opacity = '0';
+                v.requestVideoFrameCallback(fin);
+                setTimeout(fin, 900);       // a video that never presents a frame must not stay hidden
+            }
+            return;
+        }
         const wr = wrap.getBoundingClientRect(), vr = v.getBoundingClientRect();
         let w = vr.width, h = vr.height, l = vr.left - wr.left, t = vr.top - wr.top;
         if (getComputedStyle(v).objectFit === 'contain') {          // the picture, not the box it sits in
             const k = Math.min(vr.width / v.videoWidth, vr.height / v.videoHeight);
             w = v.videoWidth * k; h = v.videoHeight * k; l += (vr.width - w) / 2; t += (vr.height - h) / 2;
         }
+        v.style.opacity = '';       // the cover copy holds the place until the video shows
         const c = new Image();
         c.src = pic.currentSrc || pic.src;
         c.style.cssText = 'position:absolute;left:' + Math.round(l) + 'px;top:' + Math.round(t) + 'px;width:' + Math.round(w) + 'px;height:' +
             Math.round(h) + 'px;object-fit:cover;pointer-events:none;opacity:1;transition:opacity ' + FADE_MS + 'ms ease-out';
         wrap.appendChild(c);
-        requestAnimationFrame(() => requestAnimationFrame(() => { c.style.opacity = '0'; }));
-        setTimeout(() => c.remove(), FADE_MS + 150);
+        // `playing` comes ~200 ms before the video paints its first frame: fading from there ended before any video showed and
+        // the cover cut to it. The fade starts on the first frame the video really presents.
+        let started = false;
+        const go = () => {
+            if (started) return; started = true;
+            requestAnimationFrame(() => requestAnimationFrame(() => { c.style.opacity = '0'; }));
+            setTimeout(() => c.remove(), FADE_MS + 150);
+        };
+        setTimeout(go, 900);        // no frame callback (old WebView) or a video that never presents
+        if (v.requestVideoFrameCallback) {
+            let tries = 0;
+            const cb = (_, md) => { if (md.mediaTime > 0.03 || tries++ > 8) go(); else v.requestVideoFrameCallback(cb); };
+            v.requestVideoFrameCallback(cb);
+        } else go();
     }, true);
 })();
