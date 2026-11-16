@@ -32,38 +32,31 @@
   });
 })();
 
-// Hide group posts from the main feed (mobile)
+// Hide group posts from the main feed (mobile). The mobile site no longer renders a link to the group in the post's
+// header, so a group post is told by its avatar: the square group icon with the author's round avatar over it (a normal
+// post starts with one round avatar). The older header link still counts. The whole feed is looked over on every burst
+// of changes, since a post's header renders after its container.
 (() => {
-  const hideGroupPosts = (nodes) => {
+  const isGroupPost = (p) => {
+    if (p.querySelector('h3[data-tti-phase="-1"] a[href*="/groups/"]')) return true;
+    const [icon, overlay] = p.querySelectorAll('img');
+    return !!(icon && overlay && !icon.classList.contains('rounded') && overlay.classList.contains('rounded'));
+  };
+
+  const hideGroupPosts = () => {
     if (window.location.pathname !== '/') return;
-
-    nodes.forEach(node => {
-      if (!(node instanceof HTMLElement)) return;
-
-      const containers = node.matches('[data-tracking-duration-id]')
-        ? [node]
-        : Array.from(node.querySelectorAll?.('[data-tracking-duration-id]') || []);
-
-      containers.forEach(container => {
-        // Only match a group link in the post's header/byline (h3), not
-        // anywhere in the post body, so posts that merely mention/share a
-        // group link aren't hidden along with actual group-origin posts.
-        const header = container.querySelector('h3[data-tti-phase="-1"]');
-        if (header?.querySelector('a[href*="/groups/"]')) {
-          if (!window.hideFeedPost(container)) container.style.display = 'none';
-        }
-      });
+    document.querySelectorAll('[data-tracking-duration-id]').forEach(p => {
+      if (p.style.display === 'none') return;
+      if (isGroupPost(p) && !window.hideFeedPost(p)) p.style.display = 'none';
     });
   };
 
-  hideGroupPosts([document.body]);
+  hideGroupPosts();
 
-  let queued = [], scheduled = false;
-  new MutationObserver(muts => {
-    muts.forEach(m => queued.push(...m.addedNodes));
+  let scheduled = false;
+  new MutationObserver(() => {
     if (scheduled) return;
     scheduled = true;
-    requestAnimationFrame(() => { scheduled = false; const nodes = queued; queued = []; hideGroupPosts(nodes); });
+    requestAnimationFrame(() => { scheduled = false; hideGroupPosts(); });
   }).observe(document.body, { childList: true, subtree: true });
 })();
-

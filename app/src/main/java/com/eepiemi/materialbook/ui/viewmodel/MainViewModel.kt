@@ -34,11 +34,8 @@ class MainViewModel(
         _themeColor.value = color
     }
 
-    private fun loadScripts(
-        resources: Resources,
-        settings: SettingsViewModel
-    ) {
-        val scripts = listOf(
+    // The scripts the settings turn on, and the values they read (the bundle is built from these).
+    private fun scriptList(settings: SettingsViewModel): List<Script> = listOf(
             Script(true, R.raw.scripts, "scripts.js"), // always apply
             Script(settings.messagesDesktop.value, R.raw.messages_tab, "messages_tab.js"),
             Script(settings.removeAds.value, R.raw.adblock, "adblock.js"),
@@ -68,10 +65,26 @@ class MainViewModel(
             // start running any sooner than the slowest script in this list,
             // they're all evaluated together as one combined blob. Loaded separately, directly from the bundled
             // resource, in MaterialbookWV.kt instead.
-        ) + debugRecorder(resources)
+    )
+
+    private fun scriptConfig(settings: SettingsViewModel) =
+        "window.__mbReel={rate:${settings.reelHoldRate.value},skip:${settings.reelSkipSeconds.value},fit:${settings.reelFit.value && settings.reelControls.value}};\n"
+
+    // What the page was last loaded with: Settings closed with Back (not the Apply button) reloads the page when it differs.
+    private fun signature(settings: SettingsViewModel) =
+        scriptConfig(settings) + scriptList(settings).filter { it.isEnabled }.joinToString(",") { it.scriptTitle }
+    private var applied = signature(settings)
+    fun pageSettingsChanged(settings: SettingsViewModel) = signature(settings) != applied
+
+    private fun loadScripts(
+        resources: Resources,
+        settings: SettingsViewModel
+    ) {
+        applied = signature(settings)
+        val scripts = scriptList(settings) + debugRecorder(resources)
 
         viewModelScope.launch {
-            val cfg = "window.__mbReel={rate:${settings.reelHoldRate.value},skip:${settings.reelSkipSeconds.value},fit:${settings.reelFit.value && settings.reelControls.value}};\n"
+            val cfg = scriptConfig(settings)
             _scripts.value = cfg +
                 bundleScripts(scripts) { resId ->
                     resources.openRawResource(resId).bufferedReader().use { it.readText() }

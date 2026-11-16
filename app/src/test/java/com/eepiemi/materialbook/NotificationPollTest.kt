@@ -1,7 +1,10 @@
 package com.eepiemi.materialbook
 
+import com.eepiemi.materialbook.utils.isFacebookHttps
 import com.eepiemi.materialbook.utils.parseCounts
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NotificationPollTest {
@@ -16,5 +19,15 @@ class NotificationPollTest {
     @Test
     fun noLabelsMeansNoCounts() {
         assertEquals(listOf(0, 0, 0), parseCounts("<html></html>"))
+    }
+
+    @Test
+    fun onlyFacebooksOwnHttpsPagesGetTheLoginsCookies() {
+        assertTrue(isFacebookHttps(java.net.URL("https://m.facebook.com/notifications/")))
+        assertTrue(isFacebookHttps(java.net.URL("https://www.facebook.com/")))
+        assertFalse(isFacebookHttps(java.net.URL("http://m.facebook.com/")))
+        assertFalse(isFacebookHttps(java.net.URL("https://facebook.com.evil.example/")))
+        assertFalse(isFacebookHttps(java.net.URL("https://notfacebook.com/")))
+        assertFalse(isFacebookHttps(java.net.URL("https://example.com/")))
     }
 }

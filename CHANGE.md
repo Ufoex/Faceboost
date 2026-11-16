@@ -60,6 +60,16 @@
 * Feature: Leaving a reel (Back) closes it into the card it opened from while it fades out; opening fades in as it grows and now waits for the viewer to be drawn, so a slow load no longer skips the animation.
 * Tweak: The playback bar has the same translucent black as the caption bar, without the gradient.
 * Fix: Liking a reel while the playback bar is shown no longer drops the like button and the other icons to their original place.
+* Feature: Normal videos in the feed open and close with the same animation as the reels (growing from the video, shrinking back into it on Back, with a fade).
+* Fix: The download button no longer slides from the corner to its place when a video opens, and the app's buttons fade out with the closing animation instead of showing over the page.
+* Fix: Hide groups works again: the mobile site no longer renders a link to the group, so group posts are told by their avatar. Suggested posts with a middle dot (·) separator are hidden too.
+* Fix: Settings closed with Back (not the Apply button) applies a changed page setting; the page reloads with it.
+* Fix: Turning Desktop layout off no longer leaves the app on the desktop site (a cached redirect from m.facebook.com).
+* Fix: Back is no longer ignored while a page is still loading or busy: without an answer from the page in 1.5 s it steps back.
+* Fix: A share taken once is not taken again when Android recreates the app (font size or language change, process killed, opened from Recents).
+* Fix: No crash when the PiP window closes while the page reports the video state.
+* Tweak: The notification check follows redirects by hand and sends the Facebook login's cookies only to https pages of facebook.com.
+* Tweak: tools/canary.mjs: a live check of the app on the phone against today's Facebook (feed, group and suggested posts, reel viewer), run by hand before a release.
 
 ---
 

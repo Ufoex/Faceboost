@@ -220,6 +220,10 @@
     document.head.appendChild(style);
     // Button feedback: shrink while pressed, small bounce on tap.
     style.textContent += '#mb-reel-hide,#mb-reel-fit,#mb-reel-auto,#mb-reel-audio,#materialbook-global-downloader{transition:transform .12s ease-out,background .2s,left .2s ease,top .2s ease,opacity .3s ease}' +
+        // closing the viewer (reel_transition.js): the buttons go with the animation, not after it
+        'html.mb-closing #mb-reel-hide,html.mb-closing #mb-reel-fit,html.mb-closing #mb-reel-auto,html.mb-closing #mb-reel-audio,html.mb-closing #materialbook-global-downloader,html.mb-closing #mb-reel-controls{opacity:0 !important;pointer-events:none !important;transition:opacity .12s ease !important}' +
+        // in the reel viewer the download button waits, unseen, for its place (see layoutBtns)
+        'html.mb-in-reels #materialbook-global-downloader:not([data-mb-placed]){opacity:0 !important}' +
         // icons hidden: only the eye stays
         'html.mb-hide-reel-ui #mb-reel-fit,html.mb-hide-reel-ui #mb-reel-auto,html.mb-hide-reel-ui #mb-reel-audio,html.mb-hide-reel-ui #materialbook-global-downloader{opacity:0 !important;pointer-events:none !important}' +
         '#mb-reel-hide:active,#mb-reel-fit:active,#mb-reel-auto:active,#mb-reel-audio:active,#materialbook-global-downloader:active{transform:scale(.82);background:rgba(255,255,255,.28) !important}';
@@ -571,6 +575,7 @@
         grid.rmin = Math.round((baseTop - grid.y0) / STEP) - 1; // the row of the download button
         const col = Math.round((baseLeft - grid.x0) / STEP);
         let k = 0; // the download button keeps its row, the others stack under it
+        const firsts = [];
         const def = (b) => b.id === DLID ? [col, grid.rmin] : [col, grid.rmin + 1 + k++];
         const sv = savedLayout();
         const useSaved = sv && items.every(b => sv[b.id]);
@@ -578,10 +583,16 @@
         items.forEach((b) => {
             const d = def(b);
             if (drag && drag.el === b) return;
+            // The download button is shown by download_content.js at its own spot (top right) before this runs: its first placement
+            // jumps there (only its fade-in animates): a slide from the corner to the saved cell showed every time a video opened.
+            const first = b.id === DLID && !b.hasAttribute('data-mb-placed');
+            if (first) { b.style.transition = 'opacity .3s ease'; firsts.push(b); }
             place(b, lay && lay[b.id] ? lay[b.id] : d);
             if (b.id === DLID) { b.style.right = 'auto'; b.style.zIndex = '2147483000'; }
+            if (first) b.setAttribute('data-mb-placed', '');
         });
         if (!editing && !drag && !hideOn) avoidRail(items);
+        firsts.forEach(b => { void b.offsetWidth; b.style.transition = ''; });
     }
 
     const buildEditUI = () => {
@@ -696,7 +707,9 @@
     setInterval(() => {
         const path = location.pathname;
         const inReels = path.indexOf('/reel/') === 0 || path.indexOf('/videos/') !== -1 && !!document.querySelector('.vertically-snappable video');
-        document.documentElement.classList.toggle('mb-in-reels', inReels);
+        // (a /videos/ address counts as the viewer for 1.5 s before its reel is drawn: reel_transition.js sets the class from the address)
+        const early = path.indexOf('/videos/') !== -1 && Date.now() - (window.__mbViewerAt || 0) < 1500;
+        document.documentElement.classList.toggle('mb-in-reels', inReels || early);
         const active = inReels ? activeVideo() : null;
 
 
@@ -736,7 +749,7 @@
         } else {
             if (editing) endEdit(false);
             const dl0 = document.getElementById(DLID);
-            if (dl0) { dl0.style.left = dl0.style.top = dl0.style.right = dl0.style.zIndex = ''; }
+            if (dl0) { dl0.style.left = dl0.style.top = dl0.style.right = dl0.style.zIndex = ''; dl0.removeAttribute('data-mb-placed'); }
             if (hideBtn) hideBtn.style.display = 'none';
             if (fitBtn) fitBtn.style.display = 'none';
             if (autoBtn) autoBtn.style.display = 'none';

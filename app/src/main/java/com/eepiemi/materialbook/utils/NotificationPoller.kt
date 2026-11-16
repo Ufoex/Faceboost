@@ -66,23 +66,46 @@ internal fun parseCounts(html: String): List<Int> = KEYS.map { key ->
     m?.groupValues?.get(1)?.filter { it.isDigit() }?.toIntOrNull() ?: 0
 }
 
+/** A redirect the poller may follow with the login's cookies: an https page of facebook.com itself. */
+internal fun isFacebookHttps(url: URL) =
+    url.protocol == "https" && (url.host == "facebook.com" || url.host.endsWith(".facebook.com"))
+
+// HttpURLConnection follows any redirect on its own and sends the cookies header on with it. Redirects are followed by hand
+// here, to facebook.com's own https pages only (found in AstryxBook); anything else ends the poll with no page.
+private fun fetchWithLogin(start: URL, context: Context, cookies: String): String {
+    var url = start
+    repeat(4) {
+        val c = url.openConnection() as HttpURLConnection
+        try {
+            c.instanceFollowRedirects = false
+            c.setRequestProperty("Cookie", cookies)
+            c.setRequestProperty("User-Agent", android.webkit.WebSettings.getDefaultUserAgent(context))
+            c.setRequestProperty("Accept-Language", "en-US,en;q=0.9") // the "new" in the labels is English
+            c.setRequestProperty("Upgrade-Insecure-Requests", "1")
+            c.setRequestProperty("Sec-Fetch-Dest", "document")
+            c.setRequestProperty("Sec-Fetch-Mode", "navigate")
+            c.setRequestProperty("Sec-Fetch-Site", "none")
+            c.setRequestProperty("Sec-Fetch-User", "?1")
+            c.connectTimeout = 15000
+            c.readTimeout = 20000
+            val code = c.responseCode
+            if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308) {
+                val next = c.getHeaderField("Location")?.let { runCatching { URL(url, it) }.getOrNull() } ?: return ""
+                if (!isFacebookHttps(next)) return ""
+                url = next
+                return@repeat
+            }
+            return if (code == 200) c.inputStream.bufferedReader().readText() else ""
+        } finally { c.disconnect() }
+    }
+    return ""
+}
+
 private fun pollNotifications(context: Context) {
     val cookies = CookieManager.getInstance().getCookie(HOME)
     if (cookies == null || !cookies.contains("c_user=")) return // not signed in
     // The notifications page is the lightest one that carries the tab bar with its counts.
-    val html = (URL(HOME + "notifications/").openConnection() as HttpURLConnection).run {
-        setRequestProperty("Cookie", cookies)
-        setRequestProperty("User-Agent", android.webkit.WebSettings.getDefaultUserAgent(context))
-        setRequestProperty("Accept-Language", "en-US,en;q=0.9") // the "new" in the labels is English
-        setRequestProperty("Upgrade-Insecure-Requests", "1")
-        setRequestProperty("Sec-Fetch-Dest", "document")
-        setRequestProperty("Sec-Fetch-Mode", "navigate")
-        setRequestProperty("Sec-Fetch-Site", "none")
-        setRequestProperty("Sec-Fetch-User", "?1")
-        connectTimeout = 15000
-        readTimeout = 20000
-        try { if (responseCode == 200) inputStream.bufferedReader().readText() else "" } finally { disconnect() }
-    }
+    val html = fetchWithLogin(URL(HOME + "notifications/"), context, cookies)
     if (!html.contains("role=\"tablist\"")) return // an error page: keep what we had
     val counts = parseCounts(html)
     val prefs = context.getSharedPreferences("notif_poll", Context.MODE_PRIVATE)

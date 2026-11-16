@@ -39,7 +39,8 @@
           );
 
           textSpans.forEach(textSpan => {
-            if (textSpan.textContent.trim() === '•') window.hideFeedPost(textSpan);
+            // The "· Follow"/"• Join" separator is a bullet (U+2022) or a middle dot (U+00B7).
+            if (['•', '·'].includes(textSpan.textContent.trim())) window.hideFeedPost(textSpan);
           });
         }
 

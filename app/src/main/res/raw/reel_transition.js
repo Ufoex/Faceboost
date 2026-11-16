@@ -73,14 +73,18 @@
     // flattening) instead of replacing the feed at once. clip-path, not scale: the video is not stretched. The card is the
     // first thing around the tap that is card sized. A reel opened some other way (link, Reels tab) has no card: it fades in.
     let card = null, wasIn = false, cardRect = null;   // cardRect: where this viewer opened from, where it closes to
-    document.addEventListener('click', (e) => {
+    // Noted at pointerdown: for a normal video Facebook navigates before the click arrives. A video at the page's whole width
+    // counts (only a box as big as the screen does not).
+    const noteCard = (e) => {
         if (inReel()) return;
         for (let n = e.target; n && n !== document.body; n = n.parentElement) {
             const r = n.getBoundingClientRect();
-            if (r.width >= 120 && r.height >= 150 && r.width < innerWidth * 0.98) { card = { r, t: Date.now() }; return; }
+            if (r.width >= 120 && r.height >= 150 && !(r.width >= innerWidth * 0.98 && r.height >= innerHeight * 0.9)) { card = { r, t: Date.now() }; return; }
         }
         card = null;
-    }, true);
+    };
+    document.addEventListener('pointerdown', noteCard, true);
+    document.addEventListener('click', noteCard, true);
     // Started the moment the address changes (Facebook navigates with pushState), before the viewer is drawn: a poll came
     // late and the cover showed at full brightness for a moment before the animation began.
     const entering = () => {
@@ -109,6 +113,11 @@
     const closeViewer = () => {
         const p = location.pathname;
         if (!wasIn || p.indexOf('/reel/') === 0 || p.indexOf('/videos/') !== -1) return;
+        // The app's own buttons (fixed on the page) would show over the page the closing opens up, until reel_controls.js
+        // hides them on its next poll: they fade out with it.
+        const root = document.documentElement;
+        root.classList.add('mb-closing');
+        setTimeout(() => root.classList.remove('mb-closing'), 600);
         let v = null, area = 0;
         document.querySelectorAll('video').forEach(e => {
             const r = e.getBoundingClientRect();
@@ -133,11 +142,24 @@
         ], { duration: 300, easing: 'cubic-bezier(.4,0,.2,1)' });
         a.onfinish = () => ov.remove();
     };
+    // reel_controls.js's buttons wait, unseen, for their place while this class is on (it sets it too, polling every 250 ms): set from
+    // the address right away, since the download button shows (top right) as soon as the viewer is drawn. It takes the class off again
+    // if the page turns out not to be a viewer.
+    const viewerClass = () => {
+        const p = location.pathname;
+        const viewer = p.indexOf('/reel/') === 0 || p.indexOf('/videos/') !== -1;
+        if (viewer) window.__mbViewerAt = Date.now();   // reel_controls.js leaves the class alone for a moment (see its poll)
+        document.documentElement.classList.toggle('mb-in-reels', viewer);
+    };
     ['pushState', 'replaceState'].forEach(n => {
         const f = history[n];
-        history[n] = function() { const r = f.apply(this, arguments); closeViewer(); entering(); return r; };
+        history[n] = function() { const r = f.apply(this, arguments); viewerClass(); closeViewer(); entering(); return r; };
     });
-    window.addEventListener('popstate', () => { closeViewer(); entering(); });
+    window.addEventListener('popstate', () => { viewerClass(); closeViewer(); entering(); });
+    // A normal video opens the same viewer on a /videos/ address, which counts as the viewer only once its reel is drawn:
+    // looked for as it is added, before it is painted, so the opening starts without a frame of the bare viewer.
+    new MutationObserver(() => { if (!wasIn && location.pathname.indexOf('/videos/') !== -1) entering(); })
+        .observe(document.body, { childList: true, subtree: true });
     setInterval(entering, 100);     // a /videos/ link only counts once its reels are in the page
     let lastGrab = 0;
     document.addEventListener('scroll', (e) => {

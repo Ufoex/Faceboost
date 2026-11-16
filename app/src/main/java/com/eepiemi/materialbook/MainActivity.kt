@@ -336,7 +336,10 @@ class MainActivity : FragmentActivity() {
         )
 
         urlState.value = appLinkUrl(intent?.data?.toString())
-        receiveShare(intent)
+        // Android creates the activity again with the intent it started with (a font size or language change, the process
+        // killed in the background, Recents after it was closed): a share is taken once, not every time, or its photos were
+        // put in Facebook's composer again. Found in AstryxBook.
+        if (savedInstanceState == null && (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) receiveShare(intent)
 
         lockIfNeeded(cold = true)
 
@@ -401,6 +404,13 @@ class MainActivity : FragmentActivity() {
         lifecycleScope.launch {
             settingsVM.pipPortraitRatio.collect { reapplyPipParams() }
         }
+    }
+
+    // setPictureInPictureParams throws for an activity that is finishing: a video-state report from the page arriving then
+    // crashed the app. Found in AstryxBook.
+    private fun setPipParams(params: android.app.PictureInPictureParams) {
+        if (isFinishing || isDestroyed) return
+        runCatching { setPictureInPictureParams(params) }.onFailure { Log.w(TAG, "setPictureInPictureParams failed", it) }
     }
 
     // Something shared to the app (a link, text, pictures): the page host asks what to do with it.
@@ -473,7 +483,7 @@ class MainActivity : FragmentActivity() {
         if (isInPictureInPictureMode && isVideoPlaying) {
             isVideoPlaying = false
             Log.d(TAG, "onPictureInPictureModeChanged: immediate icon flip to Play")
-            setPictureInPictureParams(
+            setPipParams(
                 pipParamsBuilder()
                     .setAspectRatio(currentAspectRatio)
                     .setActions(listOf(buildPlayPauseAction(false)))
@@ -529,7 +539,7 @@ class MainActivity : FragmentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val autoEnter = isVideoPlaying && settingsVM.pipEnabled.value
             Log.d(TAG, "reapplyPipParams: autoEnter=$autoEnter, ratio=$currentAspectRatio")
-            setPictureInPictureParams(
+            setPipParams(
                 pipParamsBuilder()
                     .setAspectRatio(currentAspectRatio)
                     .setAutoEnterEnabled(autoEnter)
@@ -592,7 +602,7 @@ class MainActivity : FragmentActivity() {
                 .setAutoEnterEnabled(autoEnter)
                 .setActions(listOf(buildPlayPauseAction(isPlaying)))
                 .build()
-            setPictureInPictureParams(pipParams)
+            setPipParams(pipParams)
         }
     }
 
