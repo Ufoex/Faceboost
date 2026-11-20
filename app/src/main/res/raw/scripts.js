@@ -771,8 +771,45 @@ if (!window._mbBannerObserver) {
     const ROW_HEIGHT = 56;
     const COPY_GLYPH = '\u{F310F}';
     const LABELS = { es: 'Compartir con\u2026', pt: 'Compartilhar com\u2026', fr: 'Partager via\u2026', de: 'Teilen \u00fcber\u2026', it: 'Condividi con\u2026', pl: 'Udost\u0119pnij przez\u2026', he: '\u05e9\u05d9\u05ea\u05d5\u05e3 \u05d1\u05d0\u05de\u05e6\u05e2\u05d5\u05ea\u2026', iw: '\u05e9\u05d9\u05ea\u05d5\u05e3 \u05d1\u05d0\u05de\u05e6\u05e2\u05d5\u05ea\u2026' };
-    const LABEL = LABELS[(navigator.language || '').slice(0, 2).toLowerCase()] || 'Share via\u2026';
+    // The language Facebook is shown in (the page's), not the phone's: they can differ.
+    const pick = (labels, fallback) => labels[(document.documentElement.lang || navigator.language || '').slice(0, 2).toLowerCase()] || fallback;
     const SHARE_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>';
+    const REPLY_GLYPH = '\u{F30FB}';
+    const NM_ID = 'mb-copy-nomention';
+    const NM_LABELS = {
+        es: 'Copiar sin menci\u00f3n',
+        pt: 'Copiar sem men\u00e7\u00e3o',
+        fr: 'Copier sans mention',
+        de: 'Ohne Erw\u00e4hnung kopieren',
+        it: 'Copia senza menzione',
+        pl: 'Kopiuj bez wzmianki',
+        ru: '\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0431\u0435\u0437 \u0443\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u044f',
+        uk: '\u041a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0431\u0435\u0437 \u0437\u0433\u0430\u0434\u043a\u0438',
+        tr: 'Bahsetmeden kopyala',
+        id: 'Salin tanpa sebutan',
+        ms: 'Salin tanpa sebutan',
+        nl: 'Kopi\u00ebren zonder vermelding',
+        ro: 'Copiaz\u0103 f\u0103r\u0103 men\u021biune',
+        cs: 'Kop\u00edrovat bez zm\u00ednky',
+        sv: 'Kopiera utan omn\u00e4mnande',
+        da: 'Kopi\u00e9r uden omtale',
+        nb: 'Kopier uten omtale',
+        no: 'Kopier uten omtale',
+        fi: 'Kopioi ilman mainintaa',
+        hu: 'M\u00e1sol\u00e1s eml\u00edt\u00e9s n\u00e9lk\u00fcl',
+        el: '\u0391\u03bd\u03c4\u03b9\u03b3\u03c1\u03b1\u03c6\u03ae \u03c7\u03c9\u03c1\u03af\u03c2 \u03b1\u03bd\u03b1\u03c6\u03bf\u03c1\u03ac',
+        ar: '\u0646\u0633\u062e \u0628\u062f\u0648\u0646 \u0625\u0634\u0627\u0631\u0629',
+        he: '\u05d4\u05e2\u05ea\u05e7\u05d4 \u05dc\u05dc\u05d0 \u05ea\u05d9\u05d5\u05d2',
+        iw: '\u05d4\u05e2\u05ea\u05e7\u05d4 \u05dc\u05dc\u05d0 \u05ea\u05d9\u05d5\u05d2',
+        hi: '\u092c\u093f\u0928\u093e \u092e\u0947\u0902\u0936\u0928 \u0915\u0947 \u0915\u0949\u092a\u0940 \u0915\u0930\u0947\u0902',
+        ja: '\u30e1\u30f3\u30b7\u30e7\u30f3\u306a\u3057\u3067\u30b3\u30d4\u30fc',
+        ko: '\uba58\uc158 \uc5c6\uc774 \ubcf5\uc0ac',
+        zh: '\u590d\u5236\uff08\u4e0d\u542b\u63d0\u53ca\uff09',
+        vi: 'Sao ch\u00e9p kh\u00f4ng c\u00f3 l\u01b0\u1ee3t nh\u1eafc',
+        th: '\u0e04\u0e31\u0e14\u0e25\u0e2d\u0e01\u0e42\u0e14\u0e22\u0e44\u0e21\u0e48\u0e21\u0e35\u0e01\u0e32\u0e23\u0e01\u0e25\u0e48\u0e32\u0e27\u0e16\u0e36\u0e07',
+        fil: 'Kopyahin nang walang banggit',
+        tl: 'Kopyahin nang walang banggit',
+    };
 
     // The last text the page put on the clipboard, however it did it.
     let lastCopied = null;
@@ -810,42 +847,43 @@ if (!window._mbBannerObserver) {
         }, 100);
     };
 
-    const addRow = () => {
-        // Checked here, not at load: the listener object can show up after this script runs.
-        if (!window.FaceboostPage || document.getElementById(ROW_ID)) return;
+    const findCopyRow = () => {
         const glyph = Array.from(document.querySelectorAll('[role="presentation"] [role="button"] span'))
             .find(span => span.textContent === COPY_GLYPH);
         const copyButton = glyph && glyph.closest('[role="button"]');
         const row = copyButton && copyButton.parentElement;
-        if (!row || !row.parentElement) return;
+        return row && row.parentElement ? { copyButton, row } : null;
+    };
 
+    // A row under Copy's: its button cloned, with its own label and tap, and an SVG icon (Copy's own
+    // glyph when icon is null). The sheet's boxes have fixed heights: they grow to make room for it.
+    const addRowAfterCopy = ({ copyButton, row }, id, label, icon, onTap) => {
         const clone = row.cloneNode(true);
-        clone.id = ROW_ID;
+        clone.id = id;
         const button = clone.querySelector('[role="button"]');
         if (!button) return;
         const copyLabel = copyButton.getAttribute('aria-label') || '';
-        button.setAttribute('aria-label', LABEL);
-        // text: the leaf that holds the Copy link label; icon: the glyph span becomes an SVG
+        button.setAttribute('aria-label', label);
+        // text: the leaf that holds Copy's label; icon: the glyph span
         const leaves = Array.from(button.querySelectorAll('*')).filter(e => e.children.length === 0);
         const iconSpan = leaves.find(e => e.textContent === COPY_GLYPH);
         const textLeaf = leaves.find(e => copyLabel && e.textContent === copyLabel) || leaves.filter(e => e !== iconSpan).pop();
-        if (textLeaf) textLeaf.textContent = LABEL;
-        if (iconSpan) { iconSpan.textContent = ''; iconSpan.innerHTML = SHARE_ICON; iconSpan.style.fontSize = '0'; }
-        // The label's box is sized to "Copy link".
+        if (textLeaf) textLeaf.textContent = label;
+        if (iconSpan && icon) { iconSpan.textContent = ''; iconSpan.innerHTML = icon; iconSpan.style.fontSize = '0'; }
+        // The label's box is sized to Copy's label.
         clone.querySelectorAll('[style*="width"]').forEach(el => {
-            if (el !== clone && el !== button && el.textContent === LABEL) el.style.width = 'auto';
+            if (el !== clone && el !== button && el.textContent === label) el.style.width = 'auto';
         });
-        // Facebook's own handlers must not see taps on the copy: they would run Copy link twice.
+        // Facebook's own handlers must not see taps on the copy: they would run Copy twice.
         ['touchstart', 'touchend', 'pointerdown', 'pointerup', 'mousedown', 'mouseup'].forEach(type =>
             clone.addEventListener(type, e => e.stopPropagation(), true));
         clone.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            shareCopiedLink(copyButton);
+            onTap();
         }, true);
         row.parentElement.insertBefore(clone, row.nextSibling);
 
-        // The sheet's boxes have fixed heights: make room for the new row.
         let el = row.parentElement;
         for (let i = 0; i < 9 && el && el !== document.body; i++, el = el.parentElement) {
             const height = parseFloat(el.style.height);
@@ -853,11 +891,71 @@ if (!window._mbBannerObserver) {
         }
     };
 
+    const addRow = () => {
+        // Checked here, not at load: the listener object can show up after this script runs.
+        if (!window.FaceboostPage || document.getElementById(ROW_ID)) return;
+        const copy = findCopyRow();
+        if (copy) addRowAfterCopy(copy, ROW_ID, pick(LABELS, 'Share via\u2026'), SHARE_ICON, () => shareCopiedLink(copy.copyButton));
+    };
+
+    // "Copy without mention": under Copy in a comment's options sheet (long press), only when the comment
+    // starts with mentions (the blue names). It runs Facebook's own Copy and puts on the clipboard what
+    // that copied, minus those leading names.
+    let pressed = null;   // what the finger last landed on, while no sheet is open
+    document.addEventListener('touchstart', e => { if (!document.getElementById(NM_ID)) pressed = e.target; }, { capture: true, passive: true });
+
+    // The leading mentions of the comment holding el: blue-name links at the start of its text
+    // (not hashtags or addresses). A comment's text areas (TextArea or ServerTextArea, depending on how Facebook
+    // rendered it) come in order: its author's name, then its text.
+    const leadingMentions = (el) => {
+        let area = null;
+        for (let p = el; p && p !== document.body && !area; p = p.parentElement) {
+            const found = p.querySelectorAll('[data-mcomponent$="TextArea"]');
+            if (found.length > 1) area = found[1];
+        }
+        if (!area) return [];
+        const names = [];
+        for (const n of (area.querySelector('.native-text') || area).childNodes) {
+            if (n.nodeType === 3 && !n.textContent.trim()) continue;
+            const name = n.nodeType === 1 && n.matches('span[role="link"]') ? n.textContent.trim() : '';
+            if (!name || /^(#|https?:|www\.)/i.test(name)) break;
+            names.push(name);
+        }
+        return names;
+    };
+
+    const copyWithoutMention = (copyButton, names) => {
+        lastCopied = null;
+        copyButton.click();
+        const started = Date.now();
+        const poll = setInterval(() => {
+            if (!lastCopied && Date.now() - started < 3000) return;
+            clearInterval(poll);
+            let text = (lastCopied || '').replace(/^\s+/, '');
+            if (!text) return;
+            for (const name of names) {
+                if (!text.startsWith(name)) break;
+                text = text.slice(name.length).replace(/^[\s,:;]+/, '');
+            }
+            if (window.FaceboostPage) window.FaceboostPage.postMessage(JSON.stringify({ call: 'copyText', text }));
+            else navigator.clipboard.writeText(text);
+        }, 100);
+    };
+
+    const addNoMentionRow = () => {
+        if (document.getElementById(NM_ID) || !pressed) return;
+        const copy = findCopyRow();
+        // Only a comment's sheet has a Reply row next to Copy.
+        if (!copy || !Array.from(copy.row.parentElement.querySelectorAll('span')).some(s => s.textContent === REPLY_GLYPH)) return;
+        const names = leadingMentions(pressed);
+        if (names.length) addRowAfterCopy(copy, NM_ID, pick(NM_LABELS, 'Copy without mention'), null, () => copyWithoutMention(copy.copyButton, names));
+    };
+
     let scheduled = false;
     new MutationObserver(() => {
         if (scheduled) return;
         scheduled = true;
-        requestAnimationFrame(() => { scheduled = false; addRow(); });
+        requestAnimationFrame(() => { scheduled = false; addRow(); addNoMentionRow(); });
     }).observe(document.documentElement, { childList: true, subtree: true });
 })();
 
