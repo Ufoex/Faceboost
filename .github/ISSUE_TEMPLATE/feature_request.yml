@@ -15,6 +15,15 @@ body:
         - label: I understand that not all requests may be implemented.
           required: true
 
+  - type: input
+    id: app_version
+    attributes:
+      label: App version
+      description: In the app, extra settings > Backup and updates.
+      placeholder: e.g. 1.2.21
+    validations:
+      required: true
+
   - type: textarea
     id: summary
     attributes:

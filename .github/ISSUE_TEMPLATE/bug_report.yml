@@ -16,6 +16,15 @@ body:
           required: true
           
   - type: input
+    id: app_version
+    attributes:
+      label: App version
+      description: In the app, extra settings > Backup and updates.
+      placeholder: e.g. 1.2.21
+    validations:
+      required: true
+
+  - type: input
     id: device_info
     attributes:
       label: Device Info
