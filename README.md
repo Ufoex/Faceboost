@@ -61,7 +61,7 @@ On by default:
 *  Reel controls: time, seek bar, fullscreen and volume on paused reels (also while the icons are hidden), a button to hide the reel icons (fading out; on the desktop site the video then fills the screen) and, optionally, resizing so the whole video shows without cropping. They work on the phone and the desktop site
 *  Desktop layout can be switched off on tablets: Facebook then sends the phone site, at the full width of the screen
 *  Stays in portrait on phones and tablets while browsing (fullscreen video rotates), unless the Desktop layout is on and *Desktop orientation* is set to landscape or automatic (experimental); old cache files are deleted when the app starts
-*  "Share via..." in Facebook's share sheet, and an option to run only the scripts built into the app
+*  "Share via..." in Facebook's share sheet, "Copy without mention" in a comment's options (copies a reply without the names it starts with; it may not be perfect), and an option to run only the scripts built into the app
 *  App lock (Settings, off by default): fingerprint, face or phone PIN to open the app
 *  Messenger voice and video calls in the Messages layer (asks for the camera and microphone when a call starts); log out and share-this-page rows in Settings
 *  Exports and imports your settings as a file; the Messages layer rotates to landscape; text size from 85% to 150%

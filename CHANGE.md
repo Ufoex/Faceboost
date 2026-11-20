@@ -46,6 +46,8 @@
 * Feature: The Messages layer has a close button where the Facebook logo was, styled like the header's other buttons (it follows the light, dark and OLED themes). Closing it, or going home from the layer, no longer reloads the feed.
 * Feature: Turning the app lock on first asks for your fingerprint, face or PIN to confirm it is you.
 * Feature: "Share via..." row in Facebook's share sheet, under Copy link: it copies the post's link and hands it to Android's share sheet.
+* Feature: "Copy without mention" row in a comment's options (hold the comment), under Copy: it shows when the comment starts with mentions (the blue names) and copies its text without them. It works from the comment's own text, so it may not be perfect on every comment.
+* Fix: The "Share via..." and "Copy without mention" labels follow the language Facebook is shown in, not the phone's.
 * Feature: Use only built-in scripts (Settings, off by default): never downloads page scripts, only the copies inside the app run.
 * Tweak: Releases are now numbered 1.2.x.
 * Feature: A Settings gear in the reel viewer, and the gear in the Messages layer header now opens Settings.

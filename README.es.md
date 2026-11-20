@@ -60,7 +60,7 @@ Activadas por defecto:
 *  Controles de reels: tiempo, barra de progreso, pantalla completa y volumen en reels pausados (también con los iconos ocultos), un botón para ocultar los iconos del reel (con desvanecimiento; en el sitio de escritorio el video llena la pantalla) y, opcionalmente, ajuste de tamaño para ver el video completo sin recortes. Funcionan en el teléfono y en el sitio de escritorio
 *  El diseño de escritorio se puede desactivar en tablets: Facebook envía entonces el sitio móvil, al ancho completo de la pantalla
 *  Se mantiene en vertical en teléfonos y tablets al navegar (el video a pantalla completa gira), salvo que el diseño de escritorio esté activo y *Orientación de escritorio* sea horizontal o automática (experimental); los archivos de caché antiguos se borran al iniciar la app
-*  "Compartir vía..." en el menú de compartir de Facebook, y una opción para ejecutar solo los scripts incluidos en la app
+*  "Compartir vía..." en el menú de compartir de Facebook, "Copiar sin mención" en las opciones de un comentario (copia una respuesta sin los nombres con que empieza; puede no ser perfecto), y una opción para ejecutar solo los scripts incluidos en la app
 *  Bloqueo de la app (Ajustes, desactivado por defecto): huella, rostro o PIN del teléfono para abrirla
 *  Llamadas y videollamadas de Messenger en la capa de Mensajes (pide cámara y micrófono al iniciar una llamada); filas para cerrar sesión y compartir la página en Ajustes
 *  Exporta e importa tus ajustes como archivo; la capa de Mensajes gira a horizontal; tamaño de texto del 85% al 150%
